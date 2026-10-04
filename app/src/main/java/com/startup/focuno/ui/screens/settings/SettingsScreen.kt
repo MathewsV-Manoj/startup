@@ -35,7 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
 import com.startup.focuno.data.model.AppSettings
 import com.startup.focuno.domain.model.NudgeSensitivity
-import com.startup.focuno.ui.components.GlassCard
+import com.startup.focuno.ui.components.Panel
 import com.startup.focuno.ui.components.SectionTitle
 import com.startup.focuno.ui.components.SubScreenTopBar
 import com.startup.focuno.ui.theme.FocunoTheme
@@ -95,7 +95,7 @@ fun SettingsContent(
 private fun GoalCard(goalMinutes: Int, onChanged: (Int) -> Unit) {
     // The thumb follows the finger locally and the goal is saved once, when the finger lifts.
     var dragValue by remember(goalMinutes) { mutableFloatStateOf(goalMinutes.toFloat()) }
-    GlassCard(Modifier.fillMaxWidth()) {
+    Panel(Modifier.fillMaxWidth()) {
         SectionTitle(stringResource(R.string.settings_goal_title))
         Spacer(Modifier.height(4.dp))
         Text(stringResource(R.string.settings_goal_explainer), style = MaterialTheme.typography.bodySmall, color = FocunoTheme.colors.textSecondary)
@@ -118,7 +118,7 @@ private fun GoalCard(goalMinutes: Int, onChanged: (Int) -> Unit) {
 
 @Composable
 private fun NudgeCard(settings: AppSettings, onEnabled: (Boolean) -> Unit, onSensitivity: (NudgeSensitivity) -> Unit) {
-    GlassCard(Modifier.fillMaxWidth()) {
+    Panel(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 SectionTitle(stringResource(R.string.settings_nudges_title))
@@ -154,7 +154,7 @@ private fun NudgeCard(settings: AppSettings, onEnabled: (Boolean) -> Unit, onSen
 
 @Composable
 private fun LinkCard(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
-    GlassCard(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+    Panel(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
             Column {

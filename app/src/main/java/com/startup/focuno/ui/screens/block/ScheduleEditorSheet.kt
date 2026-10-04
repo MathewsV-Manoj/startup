@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Lock
@@ -29,13 +30,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -43,9 +44,12 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.startup.focuno.R
+import com.startup.focuno.domain.model.BlockSchedule
 import com.startup.focuno.domain.model.BlockScope
+import com.startup.focuno.domain.usecase.StrictLock
 import com.startup.focuno.ui.components.AppIcon
-import com.startup.focuno.ui.components.GlassCard
+import com.startup.focuno.ui.components.Panel
+import com.startup.focuno.ui.components.StrictSwitch
 import com.startup.focuno.ui.components.LoadingState
 import com.startup.focuno.ui.components.TimePickerDialog
 import com.startup.focuno.ui.components.formatClock
@@ -85,7 +89,7 @@ fun ScheduleEditorSheet(
         when (state.step) {
             EditorStep.PICK_APP -> AppPicker(state, onQuery, onSelectApp)
             EditorStep.WHAT -> WhatStep(state, onChooseScope, onStepBack)
-            EditorStep.WHEN -> WhenStep(state, onChoosePreset, onChooseCustomTime, onStepBack)
+            EditorStep.WHEN -> WhenStep(state, onChoosePreset, onChooseCustomTime, onSetStrict, onStepBack)
             EditorStep.DETAILS -> Details(state, onShowTimePicker, onToggleDay, onSetStrict, onSave, onDelete, onStepBack)
         }
     }
@@ -109,15 +113,20 @@ private fun StepHeader(title: String, packageName: String?, onBack: (() -> Unit)
 }
 
 @Composable
-private fun ChoiceTile(title: String, subtitle: String, onClick: () -> Unit) {
-    GlassCard(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 18.dp),
+private fun ChoiceTile(title: String, subtitle: String, onClick: () -> Unit, enabled: Boolean = true) {
+    Panel(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.large)
+            .clickable(enabled = enabled, onClick = onClick)
+            .alpha(if (enabled) 1f else 0.45f),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
     ) {
-        Text(title, style = MaterialTheme.typography.titleLarge, color = FocunoTheme.colors.textPrimary)
-        if (subtitle.isNotEmpty()) {
-            Spacer(Modifier.height(2.dp))
-            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textSecondary)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(title, style = MaterialTheme.typography.titleLarge, color = FocunoTheme.colors.textPrimary, modifier = Modifier.weight(1f))
+            if (subtitle.isNotEmpty()) {
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textSecondary)
+            }
         }
     }
 }
@@ -166,13 +175,13 @@ private fun WhatStep(state: ScheduleEditorUiState, onChoose: (BlockScope) -> Uni
     ) {
         StepHeader(stringResource(R.string.editor_what_title), pkg, onBack)
         ChoiceTile(
-            title = stringResource(R.string.editor_what_app, state.appLabel),
-            subtitle = stringResource(R.string.editor_what_app_sub),
+            title = stringResource(R.string.editor_what_app),
+            subtitle = "",
             onClick = { onChoose(BlockScope.APP) },
         )
         ChoiceTile(
             title = stringResource(R.string.editor_what_feed, feed),
-            subtitle = stringResource(R.string.editor_what_feed_sub, state.appLabel, feed),
+            subtitle = "",
             onClick = { onChoose(BlockScope.SHORT_VIDEO) },
         )
         Spacer(Modifier.height(16.dp))
@@ -180,22 +189,48 @@ private fun WhatStep(state: ScheduleEditorUiState, onChoose: (BlockScope) -> Uni
 }
 
 @Composable
-private fun WhenStep(state: ScheduleEditorUiState, onPreset: (WhenPreset) -> Unit, onCustom: () -> Unit, onBack: () -> Unit) {
+private fun WhenStep(
+    state: ScheduleEditorUiState,
+    onPreset: (WhenPreset) -> Unit,
+    onCustom: () -> Unit,
+    onSetStrict: (Boolean) -> Unit,
+    onBack: () -> Unit,
+) {
     val pkg = state.packageName ?: return
     Column(
         Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         StepHeader(stringResource(R.string.editor_when_title), pkg, onBack)
-        ChoiceTile(stringResource(R.string.when_all_day), stringResource(R.string.when_all_day_sub)) { onPreset(WhenPreset.ALL_DAY) }
-        ChoiceTile(stringResource(R.string.when_night), stringResource(R.string.when_night_sub)) { onPreset(WhenPreset.NIGHT) }
-        ChoiceTile(stringResource(R.string.when_school), stringResource(R.string.when_school_sub)) { onPreset(WhenPreset.SCHOOL) }
-        ChoiceTile(stringResource(R.string.when_evening), stringResource(R.string.when_evening_sub)) { onPreset(WhenPreset.EVENING) }
-        OutlinedButton(onClick = onCustom, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+        // Above the presets on purpose: a preset saves on tap, so the choice has to be made first.
+        StrictSwitch(strict = state.strict, onChange = onSetStrict)
+        WhenPreset.entries.forEach { preset ->
+            val allowed = !state.strict || StrictLock.allowsStrict(preset.startMinute, preset.endMinute, BlockSchedule.ALL_DAYS)
+            ChoiceTile(
+                title = stringResource(presetName(preset)),
+                subtitle = if (!allowed) {
+                    stringResource(R.string.when_not_with_strict)
+                } else if (preset.startMinute == preset.endMinute) {
+                    ""
+                } else {
+                    "${formatClock(preset.startMinute)}–${formatClock(preset.endMinute)}"
+                },
+                onClick = { onPreset(preset) },
+                enabled = allowed,
+            )
+        }
+        OutlinedButton(onClick = onCustom, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(50)) {
             Text(stringResource(R.string.when_custom))
         }
         Spacer(Modifier.height(16.dp))
     }
+}
+
+private fun presetName(preset: WhenPreset): Int = when (preset) {
+    WhenPreset.ALL_DAY -> R.string.when_all_day
+    WhenPreset.NIGHT -> R.string.when_night
+    WhenPreset.SCHOOL -> R.string.when_school
+    WhenPreset.EVENING -> R.string.when_evening
 }
 
 @Composable
@@ -219,15 +254,13 @@ private fun Details(
             packageName = pkg,
             onBack = if (state.isEditing) null else onBack,
         )
-        Text(
-            text = if (state.scope == BlockScope.SHORT_VIDEO) {
-                stringResource(R.string.schedule_scope_feed, shortVideoName(pkg))
-            } else {
-                stringResource(R.string.schedule_scope_app)
-            },
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.secondary,
-        )
+        if (state.scope == BlockScope.SHORT_VIDEO) {
+            Text(
+                text = stringResource(R.string.editor_what_feed, shortVideoName(pkg)),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+        }
 
         state.lockedUntilMs?.let { until ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -262,7 +295,6 @@ private fun Details(
             )
         }
 
-        Text(stringResource(R.string.editor_days), style = MaterialTheme.typography.titleSmall, color = FocunoTheme.colors.textPrimary)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             DayOfWeek.entries.forEachIndexed { index, day ->
                 DayToggle(
@@ -278,19 +310,20 @@ private fun Details(
             Text(stringResource(R.string.editor_pick_a_day), style = MaterialTheme.typography.bodySmall, color = FocunoTheme.colors.distracting)
         }
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(stringResource(R.string.editor_strict), style = MaterialTheme.typography.titleSmall, color = FocunoTheme.colors.textPrimary)
-                Text(stringResource(R.string.editor_strict_explainer), style = MaterialTheme.typography.bodySmall, color = FocunoTheme.colors.textSecondary)
-            }
-            Switch(checked = state.strict, onCheckedChange = onSetStrict, enabled = !locked)
-        }
+        StrictSwitch(
+            strict = state.strict,
+            onChange = onSetStrict,
+            enabled = !locked && (state.strict || state.strictAllowed),
+            note = if (!state.strictAllowed) stringResource(R.string.strict_needs_break) else null,
+        )
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
             if (state.isEditing) {
-                OutlinedButton(onClick = onDelete, enabled = !locked, modifier = Modifier.height(52.dp)) { Text(stringResource(R.string.action_delete)) }
+                OutlinedButton(onClick = onDelete, enabled = !locked, modifier = Modifier.height(52.dp), shape = RoundedCornerShape(50)) {
+                    Text(stringResource(R.string.action_delete))
+                }
             }
-            Button(onClick = onSave, enabled = state.canSave, modifier = Modifier.weight(1f).height(52.dp)) {
+            Button(onClick = onSave, enabled = state.canSave, modifier = Modifier.weight(1f).height(52.dp), shape = RoundedCornerShape(50)) {
                 Text(stringResource(R.string.action_save))
             }
         }

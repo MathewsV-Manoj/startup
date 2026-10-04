@@ -15,6 +15,8 @@ data class AppSettings(
     /** Epoch ms until which every distracting app is blocked ("Block now" or a focus session). 0 = off. */
     val quickBlockUntilMs: Long = 0L,
     val quickBlockLabel: String = "",
+    /** A strict focus session cannot be ended early and its pause screen has no unlock. */
+    val quickBlockStrict: Boolean = false,
     val lastNudgeAtMs: Long = 0L,
     val nudgeDay: String = "",
     val nudgeCountToday: Int = 0,

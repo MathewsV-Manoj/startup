@@ -47,7 +47,9 @@ data class FocusUiState(
     val goalMinutes: Int = 240,
     val week: List<WeekDay> = emptyList(),
     val protection: ProtectionStatus? = null,
+    val sessionStartedAtMs: Long? = null,
     val sessionEndsAtMs: Long? = null,
+    val sessionStrict: Boolean = false,
     val updatedAtMs: Long = 0L,
 )
 
@@ -114,7 +116,9 @@ class FocusViewModel @Inject constructor(
                 goalMinutes = settings.dailyGoalMinutes,
                 week = week,
                 protection = protection,
+                sessionStartedAtMs = session?.startTs,
                 sessionEndsAtMs = session?.endTs,
+                sessionStrict = session != null && settings.quickBlockStrict,
                 updatedAtMs = System.currentTimeMillis(),
             )
         } catch (e: CancellationException) {
@@ -124,14 +128,15 @@ class FocusViewModel @Inject constructor(
         }
     }
 
-    fun startFocusSession(minutes: Int) {
+    fun startFocusSession(minutes: Int, strict: Boolean) {
         viewModelScope.launch {
             val label = context.getString(R.string.quick_block_label_focus)
-            focusSessions.start(minutes * 60_000L, label)
+            focusSessions.start(minutes * 60_000L, label, strict)
             refresh()
         }
     }
 
+    /** Does nothing during a strict session: the repository refuses to end it early. */
     fun stopFocusSession() {
         viewModelScope.launch {
             focusSessions.stopEarly()

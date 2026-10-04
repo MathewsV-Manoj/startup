@@ -301,7 +301,7 @@ class BlockEngine @Inject constructor(
         val base = when {
             appWindow != null -> buildModel(pkg, BlockKind.SCHEDULE, BlockScope.APP, appWindow.startMinuteOfDay, appWindow.endMinuteOfDay, appWindow.endsAtMs, appWindow.strict, "")
             settings.quickBlockUntilMs > nowMs && isDistracting ->
-                buildModel(pkg, BlockKind.QUICK_BLOCK, BlockScope.APP, 0, 0, settings.quickBlockUntilMs, false, settings.quickBlockLabel)
+                buildModel(pkg, BlockKind.QUICK_BLOCK, BlockScope.APP, 0, 0, settings.quickBlockUntilMs, settings.quickBlockStrict, settings.quickBlockLabel)
             inShortVideo -> {
                 val feedWindow = ScheduleEvaluator.activeWindow(schedules, pkg, zoned, BlockScope.SHORT_VIDEO) ?: return null
                 buildModel(pkg, BlockKind.SCHEDULE, BlockScope.SHORT_VIDEO, feedWindow.startMinuteOfDay, feedWindow.endMinuteOfDay, feedWindow.endsAtMs, feedWindow.strict, "")

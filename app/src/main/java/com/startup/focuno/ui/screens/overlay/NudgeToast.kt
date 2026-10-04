@@ -12,14 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.startup.focuno.ui.components.GlassCard
+import com.startup.focuno.ui.components.Panel
 import com.startup.focuno.ui.theme.FocunoTheme
 
 /** A brief, dismissible card. Never a block: tapping anywhere on it closes it. */
 @Composable
 fun NudgeToast(text: String, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     FocunoTheme {
-        GlassCard(
+        Panel(
             modifier = modifier
                 .statusBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 8.dp)

@@ -45,7 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
 import com.startup.focuno.data.repository.ProtectionIssue
 import com.startup.focuno.ui.components.AppIcon
-import com.startup.focuno.ui.components.GlassCard
+import com.startup.focuno.ui.components.Panel
 import com.startup.focuno.ui.components.LoadingState
 import com.startup.focuno.ui.components.OemAutostartCard
 import com.startup.focuno.ui.components.RefreshWhileResumed
@@ -268,7 +268,7 @@ private fun StatusPill(granted: Boolean) {
 
 @Composable
 private fun StatusRow(label: String, granted: Boolean, actionLabel: String, onAction: () -> Unit) {
-    GlassCard(Modifier.fillMaxWidth()) {
+    Panel(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(label, style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textPrimary)

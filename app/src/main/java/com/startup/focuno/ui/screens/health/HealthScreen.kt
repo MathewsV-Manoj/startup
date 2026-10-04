@@ -28,7 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
 import com.startup.focuno.data.repository.ProtectionIssue
 import com.startup.focuno.data.repository.ProtectionStatus
-import com.startup.focuno.ui.components.GlassCard
+import com.startup.focuno.ui.components.Panel
 import com.startup.focuno.ui.components.LoadingState
 import com.startup.focuno.ui.components.OemAutostartCard
 import com.startup.focuno.ui.components.RefreshWhileResumed
@@ -108,7 +108,7 @@ private fun isGranted(status: ProtectionStatus, issue: ProtectionIssue): Boolean
 
 @Composable
 private fun HealthRow(issue: ProtectionIssue, why: String, granted: Boolean, note: String?, onFix: () -> Unit) {
-    GlassCard(Modifier.fillMaxWidth()) {
+    Panel(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Icon(
                 imageVector = if (granted) Icons.Rounded.CheckCircle else Icons.Rounded.Warning,

@@ -9,11 +9,12 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.EmojiEvents
-import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Shield
-import androidx.compose.material.icons.rounded.Insights
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
@@ -52,10 +54,10 @@ import com.startup.focuno.ui.theme.DeepVoidPurple
 import com.startup.focuno.ui.theme.FocunoTheme
 
 private enum class Tab(val labelRes: Int, val icon: ImageVector) {
-    HOME(R.string.tab_home, Icons.Rounded.Home),
-    SHIELD(R.string.tab_shield, Icons.Rounded.Shield),
-    STATS(R.string.tab_stats, Icons.Rounded.Insights),
-    TROPHIES(R.string.tab_trophies, Icons.Rounded.EmojiEvents),
+    FOCUS(R.string.tab_focus, Icons.Rounded.Timer),
+    BLOCK(R.string.tab_block, Icons.Rounded.Shield),
+    STATS(R.string.tab_stats, Icons.Rounded.BarChart),
+    ME(R.string.tab_me, Icons.Rounded.EmojiEvents),
 }
 
 private const val ROUTE_SETTINGS = 0
@@ -98,7 +100,7 @@ private fun MainScaffold(openHealthRequest: Int) {
         Scaffold(
             containerColor = DeepVoidPurple,
             bottomBar = {
-                NavigationBar(containerColor = FocunoTheme.colors.surfaceElevated) {
+                NavigationBar(containerColor = DeepVoidPurple, tonalElevation = 0.dp) {
                     Tab.entries.forEachIndexed { index, tab ->
                         NavigationBarItem(
                             selected = index == tabIndex,
@@ -108,7 +110,7 @@ private fun MainScaffold(openHealthRequest: Int) {
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = FocunoTheme.colors.textPrimary,
                                 selectedTextColor = FocunoTheme.colors.textPrimary,
-                                indicatorColor = FocunoTheme.colors.trackInactive,
+                                indicatorColor = MaterialTheme.colorScheme.primary,
                                 unselectedIconColor = FocunoTheme.colors.textTertiary,
                                 unselectedTextColor = FocunoTheme.colors.textTertiary,
                             ),
@@ -120,11 +122,11 @@ private fun MainScaffold(openHealthRequest: Int) {
             Box(Modifier.padding(padding)) {
                 Crossfade(targetState = tabIndex, label = "tabs") { index ->
                     when (Tab.entries[index]) {
-                        Tab.HOME -> HomeScreen(
+                        Tab.FOCUS -> HomeScreen(
                             onOpenSettings = { stack = stack + ROUTE_SETTINGS },
                             onOpenHealth = { stack = stack + ROUTE_HEALTH },
                         )
-                        Tab.SHIELD -> BlockScreen(
+                        Tab.BLOCK -> BlockScreen(
                             onOpenHealth = { stack = stack + ROUTE_HEALTH },
                             onAddSchedule = editor::openNew,
                             onEditSchedule = editor::openEdit,
@@ -133,7 +135,7 @@ private fun MainScaffold(openHealthRequest: Int) {
                             onOpenHealth = { stack = stack + ROUTE_HEALTH },
                             onScheduleApp = editor::openForApp,
                         )
-                        Tab.TROPHIES -> TrophiesScreen()
+                        Tab.ME -> TrophiesScreen()
                     }
                 }
             }

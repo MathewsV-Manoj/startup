@@ -90,6 +90,36 @@ class ScheduleEvaluatorTest {
     }
 }
 
+class StrictLockTest {
+
+    private val zone = ZoneId.of("UTC")
+
+    private fun at(date: String, hour: Int): ZonedDateTime = LocalDate.parse(date).atTime(hour, 0).atZone(zone)
+
+    private fun strict(start: Int, end: Int, mask: Int = BlockSchedule.ALL_DAYS) =
+        BlockSchedule(id = 1, packageName = "ig", startMinuteOfDay = start, endMinuteOfDay = end, daysOfWeekMask = mask, strictMode = true)
+
+    @Test
+    fun strictWindowIsLockedOnlyWhileOpen() {
+        val s = strict(22 * 60, 6 * 60)
+        assertEquals(at("2026-10-06", 6).toInstant().toEpochMilli(), StrictLock.lockedUntilMs(s, at("2026-10-05", 23)))
+        assertNull(StrictLock.lockedUntilMs(s, at("2026-10-06", 12)))
+    }
+
+    @Test
+    fun allDayEveryDayCannotBeStrictAndIsNeverLocked() {
+        assertFalse(StrictLock.allowsStrict(0, 0, BlockSchedule.ALL_DAYS))
+        assertNull(StrictLock.lockedUntilMs(strict(0, 0), at("2026-10-05", 12)))
+    }
+
+    @Test
+    fun allDayOnSomeDaysCanBeStrict() {
+        val weekdays = 0b0011111
+        assertTrue(StrictLock.allowsStrict(0, 0, weekdays))
+        assertTrue(StrictLock.allowsStrict(22 * 60, 6 * 60, BlockSchedule.ALL_DAYS))
+    }
+}
+
 class BypassPolicyTest {
 
     private val minute = 60_000L

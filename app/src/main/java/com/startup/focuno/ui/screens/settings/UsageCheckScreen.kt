@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
-import com.startup.focuno.ui.components.GlassCard
+import com.startup.focuno.ui.components.Panel
 import com.startup.focuno.ui.components.LoadingState
 import com.startup.focuno.ui.components.RefreshWhileResumed
 import com.startup.focuno.ui.components.SectionTitle
@@ -47,7 +47,7 @@ fun UsageCheckScreen(onBack: () -> Unit, modifier: Modifier = Modifier, viewMode
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            GlassCard(Modifier.fillMaxWidth()) {
+            Panel(Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.usage_check_counted_total), style = MaterialTheme.typography.labelLarge, color = FocunoTheme.colors.textSecondary)
                 Text(durationText(state.totalMs), style = MaterialTheme.typography.displaySmall, color = FocunoTheme.colors.textPrimary)
                 Spacer(Modifier.height(4.dp))
@@ -73,7 +73,7 @@ fun UsageCheckScreen(onBack: () -> Unit, modifier: Modifier = Modifier, viewMode
 
 @Composable
 private fun UsageList(title: String, lines: List<UsageLine>, emptyText: String) {
-    GlassCard(Modifier.fillMaxWidth()) {
+    Panel(Modifier.fillMaxWidth()) {
         SectionTitle(title)
         Spacer(Modifier.height(8.dp))
         if (lines.isEmpty()) {

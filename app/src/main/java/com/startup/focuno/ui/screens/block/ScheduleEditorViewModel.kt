@@ -53,7 +53,8 @@ data class ScheduleEditorUiState(
 ) {
     val isEditing: Boolean get() = id != 0L
     val isOvernight: Boolean get() = endMinute <= startMinute
-    val canSave: Boolean get() = packageName != null && daysMask != 0 && lockedUntilMs == null
+    val strictAllowed: Boolean get() = StrictLock.allowsStrict(startMinute, endMinute, daysMask)
+    val canSave: Boolean get() = packageName != null && daysMask != 0 && lockedUntilMs == null && (!strict || strictAllowed)
     val supportsShortVideo: Boolean get() = ShortVideoApps.supports(packageName)
 }
 
@@ -140,10 +141,11 @@ class ScheduleEditorViewModel @Inject constructor(
         _state.update { it.copy(scope = scope, step = EditorStep.WHEN) }
     }
 
-    /** Saves straight away: every day, not strict. Strict mode and exact days live under "pick my own time". */
+    /** Saves straight away for every day, strict if the Strict switch above the presets is on. */
     fun choosePreset(preset: WhenPreset) {
         val current = _state.value
         val pkg = current.packageName ?: return
+        if (current.strict && !StrictLock.allowsStrict(preset.startMinute, preset.endMinute, BlockSchedule.ALL_DAYS)) return
         viewModelScope.launch {
             scheduleRepository.save(
                 BlockSchedule(
@@ -152,6 +154,7 @@ class ScheduleEditorViewModel @Inject constructor(
                     startMinuteOfDay = preset.startMinute,
                     endMinuteOfDay = preset.endMinute,
                     daysOfWeekMask = BlockSchedule.ALL_DAYS,
+                    strictMode = current.strict,
                 ),
             )
             dismiss()

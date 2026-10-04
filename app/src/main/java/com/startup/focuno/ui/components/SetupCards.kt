@@ -26,7 +26,7 @@ import com.startup.focuno.ui.theme.FocunoTheme
 @Composable
 fun RestrictedSettingCard(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    GlassCard(modifier.fillMaxWidth()) {
+    Panel(modifier.fillMaxWidth()) {
         Text(stringResource(R.string.restricted_title), style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.warning)
         Spacer(Modifier.height(6.dp))
         Text(stringResource(R.string.restricted_body), style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textSecondary)
@@ -45,7 +45,7 @@ fun RestrictedSettingCard(modifier: Modifier = Modifier) {
 @Composable
 fun OemAutostartCard(modifier: Modifier = Modifier, family: OemFamily = OemAutostart.detect()) {
     val context = LocalContext.current
-    GlassCard(modifier.fillMaxWidth()) {
+    Panel(modifier.fillMaxWidth()) {
         Text(
             stringResource(R.string.oem_card_title, stringResource(OemAutostart.nameRes(family))),
             style = MaterialTheme.typography.titleMedium,

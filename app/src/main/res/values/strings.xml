@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">Focuno</string>
 
-
     <!-- Accessibility service -->
     <string name="accessibility_service_description">Focuno uses this to notice which app is in front, so it can pause apps you chose to block. If you block only Reels or Shorts, it also checks whether that video screen is open. It never reads your messages or anything you type.</string>
 
@@ -37,23 +36,20 @@
     <string name="duration_under_a_minute">&lt;1m</string>
 
     <!-- Block screen -->
-    <string name="block_title">%1$s is paused for now</string>
-    <string name="block_subtitle">You set this up for yourself. A pause is a good moment to come back to what matters.</string>
-    <string name="block_source_schedule">Blocked %1$s to %2$s</string>
+    <string name="block_title">%1$s is paused</string>
     <string name="block_source_quick">Quick block</string>
-    <string name="block_remaining">Back in %1$s</string>
-    <string name="block_back_to_focus">Back to focus</string>
-    <string name="block_i_need_this">I need this</string>
-    <string name="block_cooldown">You can ask again in %1$s.</string>
-    <string name="block_strict_note">Strict mode is on, so there is no unlock until this window ends. It can still be switched off in Android Settings: a speed bump, not a lock.</string>
-    <string name="friction_calm_line">Cravings usually rise and fade within a couple of minutes. Take a slow breath while this runs.</string>
+    <string name="block_back_to_focus">Go back</string>
+    <string name="block_i_need_this">I need it</string>
+    <string name="block_cooldown">Ask again in %1$s</string>
+    <string name="block_strict_note">Strict mode: no unlock</string>
+    <string name="friction_calm_line">Take a slow breath.</string>
     <plurals name="friction_wait_seconds">
         <item quantity="one">Wait %1$d second</item>
         <item quantity="other">Wait %1$d seconds</item>
     </plurals>
-    <string name="friction_reason_prompt">What do you need %1$s for right now?</string>
+    <string name="friction_reason_prompt">Why do you need %1$s now?</string>
     <string name="friction_reason_counter">%1$d / %2$d characters</string>
-    <string name="friction_unlock">Unlock for 5 minutes</string>
+    <string name="friction_unlock">Unlock for 5 min</string>
 
     <!-- Common -->
     <string name="action_back">Back</string>
@@ -63,7 +59,7 @@
     <string name="action_ok">OK</string>
     <string name="action_save">Save</string>
     <string name="action_try_again">Try again</string>
-    <string name="error_generic">Something went wrong while loading. Please try again.</string>
+    <string name="error_generic">Couldn\'t load. Try again.</string>
     <string name="day_today">Today</string>
     <string name="day_yesterday">Yesterday</string>
     <string name="days_every_day">Every day</string>
@@ -72,115 +68,53 @@
     <string name="category_distracting">Time eater</string>
     <string name="category_productive">Helpful</string>
     <string name="category_neutral">Okay</string>
-    <plurals name="opens_count">
-        <item quantity="one">%1$d open</item>
-        <item quantity="other">%1$d opens</item>
-    </plurals>
 
     <!-- Tabs -->
     <string name="tab_focus">Focus</string>
-    <string name="tab_apps">Apps</string>
     <string name="tab_block">Block</string>
-    <string name="tab_insights">Insights</string>
 
     <!-- Focus tab -->
     <string name="gauge_dash">—</string>
     <string name="gauge_label">Focus score</string>
-    <string name="gauge_description">Focus score %1$d out of 100</string>
-    <string name="gauge_no_data">Focus score is not available yet</string>
-    <string name="score_msg_no_access">Allow usage access to see your score.</string>
-    <string name="score_msg_no_data">Your score appears once Focuno has seen some phone use.</string>
-    <string name="score_msg_great">Calm and focused today.</string>
-    <string name="score_msg_good">Mostly on track. Nice.</string>
-    <string name="score_msg_scattered">A little scattered today. A short break can reset it.</string>
-    <string name="score_msg_rough">A tougher day. Tomorrow is a fresh start.</string>
     <string name="focus_allow_usage_access">Allow usage access</string>
-    <string name="focus_today">Today</string>
-    <string name="focus_total">Total</string>
-    <string name="focus_productive">Productive</string>
-    <string name="focus_distracting">Distracting</string>
-    <plurals name="focus_pickups">
-        <item quantity="one">%1$d pickup today</item>
-        <item quantity="other">%1$d pickups today</item>
-    </plurals>
-    <string name="focus_top_distractions">Top distractions today</string>
-    <string name="focus_no_distractions">No distracting apps used yet today.</string>
     <plurals name="streak_days">
         <item quantity="one">%1$d day in a row</item>
         <item quantity="other">%1$d days in a row</item>
     </plurals>
-    <string name="streak_explainer">Days within your %1$dh %2$02dm screen-time goal</string>
-    <string name="session_title">Focus session</string>
-    <string name="session_explainer">A timed stretch where every distracting app is paused.</string>
-    <string name="session_minutes_chip">%1$d min</string>
-    <string name="session_remaining">%1$02d:%2$02d left</string>
-    <string name="session_running_note">Distracting apps are paused until the timer ends.</string>
-    <string name="session_end_early">End early</string>
     <string name="quick_block_label_focus">Focus session</string>
-    <string name="quick_block_label_block_now">Block now</string>
 
     <!-- Protection banner -->
-    <string name="banner_blocking_off_title">Focuno protection is OFF</string>
-    <string name="banner_blocking_off_body">Blocking is not running, so apps you chose to block will open normally. Needs: %1$s.</string>
-    <string name="banner_usage_off_title">Screen time can\'t be measured</string>
-    <string name="banner_usage_off_body">Focuno needs %1$s to count your screen time.</string>
-    <string name="banner_fix_now">Fix now</string>
+    <string name="banner_fix_now">Fix</string>
 
     <!-- Apps tab -->
     <string name="apps_no_access_title">Allow usage access</string>
     <string name="apps_no_access_message">Focuno needs usage access to count how long you spend in each app.</string>
-    <string name="apps_empty_title">No usage recorded</string>
-    <string name="apps_empty_message">Nothing was used on this day, or Android has no history for it yet.</string>
-    <string name="apps_schedule_block">Schedule a block for %1$s</string>
-
-    <!-- Block tab -->
-    <string name="block_add_schedule">Protect an app</string>
-    <string name="block_empty_title">Nothing is protected yet</string>
-    <string name="block_empty_message">Pick an app and Focuno will pause it when you do not want it. You can still open it if you really need to, after a short wait.</string>
-    <string name="quick_block_title">Pause now</string>
-    <string name="quick_block_explainer">Pause all your time-eater apps right now for a little while.</string>
-    <string name="quick_block_active">Pausing distracting apps. %1$s left.</string>
-    <string name="quick_block_active_note">Apps marked as distracting are paused. You can still unlock one with the short wait and a reason.</string>
-    <string name="schedule_strict">Strict mode</string>
-    <string name="schedule_strict_locked">Strict mode: locked right now</string>
+    <string name="apps_empty_title">No usage yet</string>
+    <string name="apps_schedule_block">Block %1$s</string>
 
     <!-- Schedule editor -->
-    <string name="editor_pick_app">Which app should be blocked?</string>
+    <string name="editor_pick_app">Pick an app</string>
     <string name="editor_search_apps">Search apps</string>
-    <string name="editor_new_title">New block schedule</string>
-    <string name="editor_edit_title">Edit block schedule</string>
-    <string name="editor_change_app">Change app</string>
     <string name="editor_from">From</string>
     <string name="editor_until">Until</string>
     <string name="editor_start_time">Start time</string>
     <string name="editor_end_time">End time</string>
-    <string name="editor_overnight">Overnight window: it ends the next morning.</string>
-    <string name="editor_all_day">Start and end are the same, so this blocks for a full 24 hours.</string>
-    <string name="editor_days">Days</string>
-    <string name="editor_pick_a_day">Pick at least one day.</string>
-    <string name="editor_strict">Strict mode</string>
-    <string name="editor_strict_explainer">No unlock at all during this window, and it cannot be edited until the window ends. Strict mode can still be defeated by disabling Focuno in Android Settings. It\'s a speed bump, not a lock.</string>
-    <string name="editor_locked">Strict window in progress. Locked until %1$s.</string>
+    <string name="editor_overnight">Ends the next morning</string>
+    <string name="editor_all_day">All day (24 hours)</string>
+    <string name="editor_pick_a_day">Pick at least one day</string>
+    <string name="editor_locked">Locked until %1$s</string>
 
     <!-- Insights -->
     <string name="insights_7_days">7 days</string>
     <string name="insights_30_days">30 days</string>
-    <string name="insights_empty_title">Nothing to show yet</string>
-    <string name="insights_empty_message">Use your phone for a day or two and your trends will appear here.</string>
+    <string name="insights_empty_title">Nothing yet</string>
     <string name="insights_score_trend">Focus score</string>
-    <string name="insights_average_score">Average score: %1$d</string>
-    <string name="insights_no_scores">No scores yet in this range.</string>
-    <string name="insights_distracting_trend">Distracting time (minutes per day)</string>
-    <string name="insights_worst_hour">Your worst hour</string>
-    <string name="insights_worst_hour_none">No distracting use recorded yet.</string>
-    <string name="insights_worst_hour_value">%1$s to %2$s is when distracting apps pull you in most: %3$s in total.</string>
-    <string name="insights_bypass_title">When you wanted in</string>
-    <string name="insights_bypass_explainer">Each time you tapped \"I need this\", did you go through with it? Giving up means you chose to stay focused.</string>
-    <string name="insights_bypass_started">Started</string>
-    <string name="insights_bypass_abandoned">Gave up</string>
+    <string name="insights_average_score">avg %1$d</string>
+    <string name="insights_distracting_trend">Time-eater minutes</string>
+    <string name="insights_worst_hour">Worst hour</string>
+    <string name="insights_bypass_title">Urges</string>
+    <string name="insights_bypass_abandoned">Resisted</string>
     <string name="insights_bypass_granted">Unlocked</string>
-    <string name="insights_blocks_and_sessions">Pause screens shown: %1$d. Focus sessions completed: %2$d.</string>
-    <string name="insights_self_comparison">Only you versus your own past. No leaderboards, no rankings.</string>
 
     <!-- Settings and privacy -->
     <string name="settings_title">Settings</string>
@@ -257,30 +191,30 @@
 
     <!-- Onboarding -->
     <string name="onb_purpose_title">Take your attention back</string>
-    <string name="onb_purpose_body">Focuno helps you stop doomscrolling while you prepare for GATE, JEE, NEET or UPSC. It counts your screen time honestly, pauses the apps you choose, and adds a short pause before you open them.</string>
-    <string name="onb_purpose_point1">No account, no ads, no internet access.</string>
-    <string name="onb_purpose_point2">Everything stays on this phone.</string>
-    <string name="onb_purpose_point3">Setup takes about two minutes. Each step explains why it is needed.</string>
-    <string name="onb_purpose_cta">Let\'s set it up</string>
-    <string name="onb_usage_title">Count your screen time</string>
-    <string name="onb_usage_body">Android calls this Usage access. Focuno uses it to count your time and to notice when you open an app you want paused. It never sees what you do inside apps.</string>
+    <string name="onb_purpose_body">Block distracting apps. See your real screen time. Study more.</string>
+    <string name="onb_purpose_point1">No account, no ads, no internet</string>
+    <string name="onb_purpose_point2">Everything stays on this phone</string>
+    <string name="onb_purpose_point3">Setup takes about 2 minutes</string>
+    <string name="onb_purpose_cta">Let\'s start</string>
+    <string name="onb_usage_title">Count screen time</string>
+    <string name="onb_usage_body">Turn on Usage access for Focuno. It only sees app names and times.</string>
     <string name="onb_accessibility_title">Faster blocking (optional)</string>
-    <string name="onb_accessibility_body">Focuno can already pause apps without this. Turning on Accessibility makes it react faster and lets it block only Reels or Shorts. If Android says it is restricted, you can skip this step.</string>
+    <string name="onb_accessibility_body">Only needed to block just Reels or Shorts. Skip it if Android says it is restricted.</string>
     <string name="onb_overlay_title">Show the pause screen</string>
-    <string name="onb_overlay_body">Focuno draws a calm pause screen on top of a blocked app. This permission is what lets it appear over other apps.</string>
+    <string name="onb_overlay_body">Turn on Display over other apps, so the pause screen can show.</string>
     <string name="onb_stay_alive_title">Keep Focuno running</string>
-    <string name="onb_stay_alive_body">Some phones close background apps to save battery, and that also switches blocking off. Allow notifications so Focuno can warn you if that happens, and ask Android not to optimise Focuno.</string>
-    <string name="onb_autostart_title">One last step for your phone</string>
-    <string name="onb_autostart_body">Phone makers add their own battery managers that can stop apps in the background. Follow the steps below for your phone so Focuno stays on.</string>
+    <string name="onb_stay_alive_body">Allow notifications and turn off battery optimisation, so your phone doesn\'t stop Focuno.</string>
+    <string name="onb_autostart_title">One more phone setting</string>
+    <string name="onb_autostart_body">Your phone maker adds its own battery saver. Do these steps once.</string>
     <string name="onb_autostart_done">I\'ve done this</string>
     <string name="onb_pick_title">Which apps pull you in?</string>
-    <string name="onb_pick_body">We guessed from popular apps. Switch on the ones you want Focuno to help you with. You can change this any time.</string>
-    <string name="onb_schedule_title">Pick a first block time</string>
-    <string name="onb_schedule_body">Choose when these apps should pause. You can add more times, or different ones for each app, later.</string>
+    <string name="onb_pick_body">Switch on the ones to block.</string>
+    <string name="onb_schedule_title">When should they pause?</string>
+    <string name="onb_schedule_body">You can change this later.</string>
     <string name="onb_schedule_create">Create schedule</string>
     <string name="onb_schedule_skip">Skip for now</string>
     <string name="onb_schedule_none_selected">Pick at least one app on the previous step to create a schedule.</string>
-    <string name="onb_schedule_honest">Blocking adds friction, not a lock: you can still unlock an app with a short wait and a reason. Android does not allow an app to be made unbypassable.</string>
+    <string name="onb_schedule_honest">You can still get in after a short wait. Turn on Strict mode in the Block tab to stop that.</string>
     <plurals name="onb_schedule_summary">
         <item quantity="one">This will pause %1$d app.</item>
         <item quantity="other">This will pause %1$d apps.</item>
@@ -297,26 +231,18 @@
     <!-- Reels / Shorts blocking -->
     <string name="feed_reels">Reels</string>
     <string name="feed_shorts">Shorts</string>
-    <string name="block_title_feed">%1$s are paused for now</string>
+    <string name="block_title_feed">%1$s are paused</string>
     <string name="block_leave_feed">Leave %1$s</string>
-    <string name="schedule_scope_feed">Only %1$s</string>
-    <string name="schedule_scope_app">Blocks the whole app</string>
 
     <!-- Easy add flow -->
-    <string name="editor_what_title">What should I block?</string>
-    <string name="editor_what_app">The whole app</string>
-    <string name="editor_what_app_sub">Everything inside it</string>
+    <string name="editor_what_title">Block what?</string>
+    <string name="editor_what_app">Whole app</string>
     <string name="editor_what_feed">Only %1$s</string>
-    <string name="editor_what_feed_sub">%1$s stays open for messages and posts. Just the endless %2$s are paused.</string>
-    <string name="editor_when_title">When should it be blocked?</string>
-    <string name="when_all_day">All day, every day</string>
-    <string name="when_all_day_sub">Always blocked</string>
-    <string name="when_night">At night</string>
-    <string name="when_night_sub">10 pm to 6 am</string>
-    <string name="when_school">School and study time</string>
-    <string name="when_school_sub">9 am to 5 pm</string>
-    <string name="when_evening">Evenings</string>
-    <string name="when_evening_sub">6 pm to 11 pm</string>
+    <string name="editor_when_title">When?</string>
+    <string name="when_all_day">All day</string>
+    <string name="when_night">Night</string>
+    <string name="when_school">Study time</string>
+    <string name="when_evening">Evening</string>
     <string name="when_custom">Pick my own time</string>
 
     <!-- Screen time check -->
@@ -338,23 +264,12 @@
     <string name="health_log_empty">Nothing yet. Open a blocked app and come back.</string>
 
     <!-- Tabs (game version) -->
-    <string name="tab_home">Home</string>
-    <string name="tab_shield">Shield</string>
     <string name="tab_stats">Stats</string>
-    <string name="tab_trophies">Trophies</string>
-    <string name="stats_today_on_phone">Phone time today</string>
-    <string name="stats_apps">Apps</string>
     <string name="stats_trends">Trends</string>
 
     <!-- Buddy and levels -->
     <string name="buddy_description">Your Focuno buddy</string>
-    <string name="buddy_msg_new">Hi! I\'m your buddy. Use your phone as usual and I\'ll start counting.</string>
-    <string name="buddy_msg_happy">I feel great! You are doing really well today.</string>
-    <string name="buddy_msg_okay">Doing okay. A little break would be nice.</string>
-    <string name="buddy_msg_sleepy">I\'m a bit sleepy. Let\'s rest from the phone for a bit.</string>
-    <string name="level_line">Level %1$d: %2$s</string>
-    <string name="xp_progress">%1$d of %2$d points</string>
-    <string name="xp_today">+%1$d points today</string>
+    <string name="xp_progress">%1$d / %2$d</string>
     <string-array name="level_titles">
         <item>Seedling</item>
         <item>Sprout</item>
@@ -368,30 +283,16 @@
         <item>Mythic</item>
     </string-array>
 
-    <!-- Home -->
-    <string name="home_start_focus">Start focus time</string>
-    <string name="home_start_focus_hint">25 minutes with your time-eater apps paused. Finish it to earn points.</string>
-
     <!-- Missions -->
     <string name="quests_title">Today\'s missions</string>
     <string name="quest_reward">+%1$d</string>
-    <string name="quest_done">Done! Nice work.</string>
-    <string name="quest_focus_title">Finish a focus time</string>
-    <string name="quest_focus_todo">Let the timer run all the way to the end.</string>
-    <string name="quest_goal_title">Stay under your time goal</string>
-    <string name="quest_goal_ok">On track. %1$s left today.</string>
-    <string name="quest_goal_over">Past the goal today. Tomorrow is a fresh start.</string>
-    <string name="quest_urge_title">Say no to a scroll urge</string>
-    <string name="quest_urge_todo">Tap \"I need this\" on a paused app, then change your mind.</string>
+    <string name="quest_focus_title">Finish a focus timer</string>
+    <string name="quest_goal_title">Stay under your goal</string>
+    <string name="quest_goal_ok">%1$s left</string>
+    <string name="quest_goal_over">Over the goal today</string>
+    <string name="quest_urge_title">Resist one urge</string>
 
     <!-- Trophies -->
-    <string name="trophies_total_points">%1$d points in total</string>
-    <string name="trophies_next_level">%1$d points to the next level</string>
-    <string name="earn_title">How to earn points</string>
-    <string name="earn_session">Finish a focus time: +30</string>
-    <string name="earn_urge">Say no to a scroll urge: +10</string>
-    <string name="earn_day">When a day ends: your focus score, plus 40 if you stayed under your goal</string>
-    <string name="earn_never_down">Points never go down.</string>
     <string name="badges_title">Badges</string>
     <string name="badge_first_steps">First Steps</string>
     <string name="badge_first_steps_hint">Set up Focuno</string>
@@ -425,12 +326,52 @@
     <string name="celebrate_button">Yay!</string>
 
     <!-- Shield -->
-    <string name="shield_on_title">Shield is ON</string>
-    <string name="shield_on_body">Your protected apps will be paused.</string>
-    <string name="shield_off_title">Shield is OFF</string>
-    <string name="shield_off_body">Android switched it off, so apps will open normally. Tap to turn it back on.</string>
 
     <string name="issue_background">Focuno must be running (open the app)</string>
     <string name="health_basic_mode">Basic blocking is working. Turn on Accessibility for faster blocking and Reels-only blocking.</string>
-    <string name="shield_basic_body">Basic blocking is working. Turn on Accessibility to block only Reels or Shorts.</string>
+
+    <!-- Minimal redesign -->
+    <string name="tab_me">Me</string>
+    <string name="cd_screen_time_today">Screen time today: %1$s</string>
+    <string name="cd_minutes">%1$d minutes</string>
+    <string name="home_minutes_unit">min</string>
+    <string name="home_start">Start</string>
+    <string name="home_focusing">Focusing</string>
+    <string name="home_locked_until">Locked until %1$s</string>
+    <string name="home_end_early">End early</string>
+    <string name="timer_clock">%1$02d:%2$02d</string>
+    <string name="end_early_title">End early?</string>
+    <string name="end_early_body">You won\'t get the +30 points.\n\nTip: turn on Strict mode next time, so you can\'t quit halfway.</string>
+    <string name="end_early_keep_going">Keep going</string>
+    <string name="end_early_confirm">End</string>
+
+    <!-- Strict mode -->
+    <string name="strict_label">Strict mode</string>
+    <string name="strict_on_note">Locked. No ending early, no unlock.</string>
+    <string name="strict_off_warning">You can still end early. Turn on to lock it.</string>
+    <string name="strict_needs_break">Needs a break in the day</string>
+    <string name="strict_confirm_title">Lock for %1$d min?</string>
+    <string name="strict_confirm_body">You won\'t be able to end early or unlock apps until the timer ends.</string>
+    <string name="strict_confirm_ok">Lock and start</string>
+    <string name="when_not_with_strict">Not with Strict</string>
+    <string name="cd_strict_on">Strict: can\'t end early</string>
+    <string name="cd_strict_off">Not strict: can end early</string>
+
+    <!-- Block tab -->
+    <string name="status_on">On</string>
+    <string name="status_off">Off</string>
+    <string name="block_add">Add app</string>
+    <string name="block_empty">No blocks yet</string>
+    <string name="block_focus_running">Focus on · %1$s left</string>
+    <string name="block_row_feed">%1$s · %2$s</string>
+    <string name="banner_blocking_off">Blocking is off</string>
+    <string name="banner_usage_off">Screen time can\'t be counted</string>
+    <string name="block_left">left</string>
+
+    <!-- Stats and Me -->
+    <string name="stats_day">Day</string>
+    <string name="insights_sessions">Focus done</string>
+    <string name="level_number">Level %1$d</string>
+    <string name="streak_label">streak</string>
+    <string name="points_label">points</string>
 </resources>

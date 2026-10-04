@@ -1,7 +1,5 @@
 package com.startup.focuno.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
@@ -127,7 +123,9 @@ fun EmptyState(
     ) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.secondary, modifier = Modifier.size(48.dp))
         Text(title, style = MaterialTheme.typography.titleLarge, color = FocunoTheme.colors.textPrimary, textAlign = TextAlign.Center)
-        Text(message, style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textSecondary, textAlign = TextAlign.Center)
+        if (message.isNotEmpty()) {
+            Text(message, style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textSecondary, textAlign = TextAlign.Center)
+        }
         if (actionLabel != null && onAction != null) {
             Button(onClick = onAction) { Text(actionLabel) }
         }
@@ -161,19 +159,3 @@ fun categoryLabel(category: AppCategory): String = stringResource(
         AppCategory.NEUTRAL -> R.string.category_neutral
     },
 )
-
-@Composable
-fun CategoryChip(category: AppCategory, onClick: (() -> Unit)?, modifier: Modifier = Modifier) {
-    val color = categoryColor(category)
-    Box(
-        modifier = modifier
-            .background(color.copy(alpha = 0.16f), RoundedCornerShape(50))
-            .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Box(Modifier.size(6.dp).background(color, CircleShape))
-            Text(categoryLabel(category), style = MaterialTheme.typography.labelMedium, color = color)
-        }
-    }
-}

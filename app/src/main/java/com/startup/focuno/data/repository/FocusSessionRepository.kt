@@ -5,6 +5,7 @@ import com.startup.focuno.data.room.BypassEventDao
 import com.startup.focuno.data.room.FocusSessionDao
 import com.startup.focuno.data.room.FocusSessionEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -15,10 +16,10 @@ class FocusSessionRepository @Inject constructor(
     private val bypassDao: BypassEventDao,
     private val settings: SettingsStore,
 ) {
-    suspend fun start(plannedMs: Long, label: String, nowMs: Long = System.currentTimeMillis()) {
+    suspend fun start(plannedMs: Long, label: String, strict: Boolean, nowMs: Long = System.currentTimeMillis()) {
         finalizeDue(nowMs)
         dao.insert(FocusSessionEntity(startTs = nowMs, endTs = nowMs + plannedMs, plannedMs = plannedMs, completed = false, interruptions = 0))
-        settings.setQuickBlock(nowMs + plannedMs, label)
+        settings.setQuickBlock(nowMs + plannedMs, label, strict)
     }
 
     suspend fun active(nowMs: Long = System.currentTimeMillis()): FocusSessionEntity? {
@@ -26,11 +27,15 @@ class FocusSessionRepository @Inject constructor(
         return dao.active(nowMs)
     }
 
-    suspend fun stopEarly(nowMs: Long = System.currentTimeMillis()) {
-        val session = dao.active(nowMs) ?: return
+    /** Ends the running session now. Returns false, and changes nothing, while a strict session is running. */
+    suspend fun stopEarly(nowMs: Long = System.currentTimeMillis()): Boolean {
+        val session = dao.active(nowMs) ?: return true
+        val settingsNow = settings.settings.first()
+        if (settingsNow.quickBlockStrict && settingsNow.quickBlockUntilMs > nowMs) return false
         val interruptions = bypassDao.grantedBetween(session.startTs, nowMs)
         dao.update(session.copy(endTs = nowMs, interruptions = interruptions, completed = false))
         settings.clearQuickBlock()
+        return true
     }
 
     /** Marks sessions that ran their full length as completed and records how often they were interrupted. */

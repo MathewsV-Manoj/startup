@@ -37,6 +37,7 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         val lastActiveDate = stringPreferencesKey("last_active_date")
         val quickBlockUntil = longPreferencesKey("quick_block_until")
         val quickBlockLabel = stringPreferencesKey("quick_block_label")
+        val quickBlockStrict = booleanPreferencesKey("quick_block_strict")
         val lastNudgeAt = longPreferencesKey("last_nudge_at")
         val nudgeDay = stringPreferencesKey("nudge_day")
         val nudgeCountToday = intPreferencesKey("nudge_count_today")
@@ -64,6 +65,7 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
                 lastActiveDate = prefs[Keys.lastActiveDate],
                 quickBlockUntilMs = prefs[Keys.quickBlockUntil] ?: defaults.quickBlockUntilMs,
                 quickBlockLabel = prefs[Keys.quickBlockLabel] ?: defaults.quickBlockLabel,
+                quickBlockStrict = prefs[Keys.quickBlockStrict] ?: defaults.quickBlockStrict,
                 lastNudgeAtMs = prefs[Keys.lastNudgeAt] ?: defaults.lastNudgeAtMs,
                 nudgeDay = prefs[Keys.nudgeDay] ?: defaults.nudgeDay,
                 nudgeCountToday = prefs[Keys.nudgeCountToday] ?: defaults.nudgeCountToday,
@@ -102,14 +104,15 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         }
     }
 
-    suspend fun setQuickBlock(untilMs: Long, label: String) {
+    suspend fun setQuickBlock(untilMs: Long, label: String, strict: Boolean = false) {
         context.focunoDataStore.edit {
             it[Keys.quickBlockUntil] = untilMs
             it[Keys.quickBlockLabel] = label
+            it[Keys.quickBlockStrict] = strict
         }
     }
 
-    suspend fun clearQuickBlock() = setQuickBlock(0L, "")
+    suspend fun clearQuickBlock() = setQuickBlock(0L, "", strict = false)
 
     suspend fun recordNudge(nowMs: Long, day: String, countToday: Int) {
         context.focunoDataStore.edit {

@@ -10,11 +10,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -22,13 +28,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -42,7 +47,6 @@ import com.startup.focuno.domain.model.BlockOverlayModel
 import com.startup.focuno.domain.usecase.BypassPolicy
 import com.startup.focuno.service.accessibility.FrictionState
 import com.startup.focuno.ui.components.AppIcon
-import com.startup.focuno.ui.components.GlassCard
 import com.startup.focuno.ui.components.durationText
 import com.startup.focuno.ui.components.formatClock
 import com.startup.focuno.ui.components.shortVideoName
@@ -76,7 +80,7 @@ fun BlockOverlayScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(DeepVoidPurple, Color(0xFF1A0F2E))))
+            .background(DeepVoidPurple)
             .systemBarsPadding()
             .imePadding(),
     ) {
@@ -101,37 +105,31 @@ fun BlockOverlayScreen(
                 color = FocunoTheme.colors.textPrimary,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(4.dp))
             Text(
-                text = stringResource(R.string.block_subtitle),
-                style = MaterialTheme.typography.bodyLarge,
-                color = FocunoTheme.colors.textSecondary,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(24.dp))
-
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
-                val source = when (model.kind) {
-                    BlockKind.SCHEDULE -> stringResource(
-                        R.string.block_source_schedule,
-                        formatClock(model.startMinuteOfDay),
-                        formatClock(model.endMinuteOfDay),
-                    )
+                text = when (model.kind) {
+                    BlockKind.SCHEDULE -> if (model.startMinuteOfDay == model.endMinuteOfDay) {
+                        stringResource(R.string.when_all_day)
+                    } else {
+                        "${formatClock(model.startMinuteOfDay)}–${formatClock(model.endMinuteOfDay)}"
+                    }
                     BlockKind.QUICK_BLOCK -> model.quickLabel.ifBlank { stringResource(R.string.block_source_quick) }
-                }
-                Text(source, style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textPrimary)
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = stringResource(R.string.block_remaining, durationText((model.endsAtMs - nowMs).coerceAtLeast(0), roundUp = true)),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = FocunoTheme.colors.textSecondary,
-                )
-            }
-
-            Spacer(Modifier.height(24.dp))
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = FocunoTheme.colors.textTertiary,
+            )
+            Spacer(Modifier.height(32.dp))
+            Text(
+                text = durationText((model.endsAtMs - nowMs).coerceAtLeast(0), roundUp = true),
+                style = MaterialTheme.typography.displayMedium,
+                color = FocunoTheme.colors.productive,
+            )
+            Text(stringResource(R.string.block_left), style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textSecondary)
+            Spacer(Modifier.height(40.dp))
             Button(
                 onClick = onBackToFocus,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(60.dp),
+                shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             ) {
                 Text(
@@ -160,13 +158,14 @@ private fun BypassSection(
     onUnlock: () -> Unit,
 ) {
     if (model.strict) {
-        Text(
-            text = stringResource(R.string.block_strict_note),
-            style = MaterialTheme.typography.bodySmall,
-            color = FocunoTheme.colors.textTertiary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp),
-        )
+        Row(
+            modifier = Modifier.padding(top = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(Icons.Rounded.Lock, contentDescription = null, tint = FocunoTheme.colors.textTertiary, modifier = Modifier.size(16.dp))
+            Text(stringResource(R.string.block_strict_note), style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textTertiary)
+        }
         return
     }
 
@@ -174,12 +173,12 @@ private fun BypassSection(
         FrictionState.Idle -> {
             val cooldownEnd = model.bypassAvailableAtMs
             val coolingDown = cooldownEnd != null && cooldownEnd > nowMs
-            OutlinedButton(
+            TextButton(
                 onClick = onNeedThis,
                 enabled = !coolingDown,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
             ) {
-                Text(stringResource(R.string.block_i_need_this))
+                Text(stringResource(R.string.block_i_need_this), color = FocunoTheme.colors.textTertiary)
             }
             if (coolingDown && cooldownEnd != null) {
                 Text(
@@ -207,7 +206,7 @@ private fun BypassSection(
                 trackColor = FocunoTheme.colors.trackInactive,
             )
             Spacer(Modifier.height(12.dp))
-            OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+            OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(50)) {
                 Text(pluralStringResource(R.plurals.friction_wait_seconds, friction.secondsLeft, friction.secondsLeft))
             }
         }
@@ -245,6 +244,7 @@ private fun BypassSection(
                 onClick = onUnlock,
                 enabled = BypassPolicy.isReasonValid(friction.text),
                 modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(50),
             ) {
                 Text(stringResource(R.string.friction_unlock))
             }

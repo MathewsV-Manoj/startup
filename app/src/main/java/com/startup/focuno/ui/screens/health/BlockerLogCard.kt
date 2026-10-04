@@ -18,14 +18,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.startup.focuno.R
-import com.startup.focuno.ui.components.GlassCard
+import com.startup.focuno.ui.components.Panel
 import com.startup.focuno.ui.theme.FocunoTheme
 
 /** The last things the blocker saw and decided. Handy for a screenshot when a block misbehaves. */
 @Composable
 fun BlockerLogCard(lines: List<String>, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    GlassCard(modifier.fillMaxWidth()) {
+    Panel(modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 stringResource(R.string.health_log_title),

@@ -36,6 +36,10 @@ data class AppsUiState(
     val days: List<LocalDate> = emptyList(),
     val rows: List<AppRow> = emptyList(),
     val totalMs: Long = 0,
+    val productiveMs: Long = 0,
+    val neutralMs: Long = 0,
+    val distractingMs: Long = 0,
+    val focusScore: Int? = null,
 )
 
 @HiltViewModel
@@ -73,7 +77,22 @@ class AppsViewModel @Inject constructor(
                 }
                 _state.update {
                     // Ignore a result for a day the person has already moved away from.
-                    if (it.dayOffset != offset) it else it.copy(isLoading = false, hasError = false, hasUsageAccess = true, days = days, rows = rows, totalMs = stats.totalMs)
+                    if (it.dayOffset != offset) {
+                        it
+                    } else {
+                        it.copy(
+                            isLoading = false,
+                            hasError = false,
+                            hasUsageAccess = true,
+                            days = days,
+                            rows = rows,
+                            totalMs = stats.totalMs,
+                            productiveMs = stats.productiveMs,
+                            neutralMs = stats.neutralMs,
+                            distractingMs = stats.distractingMs,
+                            focusScore = stats.focusScore,
+                        )
+                    }
                 }
             } catch (e: CancellationException) {
                 throw e

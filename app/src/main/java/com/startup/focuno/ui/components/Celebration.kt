@@ -102,7 +102,7 @@ fun CelebrationDialog(
         }
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Confetti(Modifier.fillMaxSize())
-            GlassCard(
+            Panel(
                 modifier = Modifier.padding(28.dp).fillMaxWidth().scale(scale.value),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(24.dp),
             ) {
