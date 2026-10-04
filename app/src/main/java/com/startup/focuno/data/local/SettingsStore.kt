@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.startup.focuno.data.model.AppSettings
+import com.startup.focuno.domain.model.FocusSound
 import com.startup.focuno.domain.model.NudgeSensitivity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -47,6 +48,7 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         val badgesUnlocked = stringSetPreferencesKey("badges_unlocked")
         val celebratedLevel = intPreferencesKey("celebrated_level")
         val subjects = stringPreferencesKey("subjects")
+        val focusSound = stringPreferencesKey("focus_sound")
     }
 
     val settings: Flow<AppSettings> = context.focunoDataStore.data
@@ -75,6 +77,9 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
                 xpBankedThrough = prefs[Keys.xpBankedThrough],
                 badgesUnlocked = prefs[Keys.badgesUnlocked] ?: defaults.badgesUnlocked,
                 celebratedLevel = prefs[Keys.celebratedLevel] ?: defaults.celebratedLevel,
+                focusSound = prefs[Keys.focusSound]
+                    ?.let { name -> FocusSound.entries.firstOrNull { it.name == name } }
+                    ?: defaults.focusSound,
                 subjects = prefs[Keys.subjects]?.split(SUBJECT_SEPARATOR)?.filter { it.isNotBlank() } ?: defaults.subjects,
             )
         }
@@ -137,6 +142,10 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
             it[Keys.xpBanked] = (it[Keys.xpBanked] ?: 0) + amount
             it[Keys.xpBankedThrough] = throughDay
         }
+    }
+
+    suspend fun setFocusSound(sound: FocusSound) {
+        context.focunoDataStore.edit { it[Keys.focusSound] = sound.name }
     }
 
     /** Stored as one string so the order the person chose is kept. */

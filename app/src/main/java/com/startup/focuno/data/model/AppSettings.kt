@@ -1,5 +1,6 @@
 package com.startup.focuno.data.model
 
+import com.startup.focuno.domain.model.FocusSound
 import com.startup.focuno.domain.model.NudgeSensitivity
 
 data class AppSettings(
@@ -30,4 +31,6 @@ data class AppSettings(
     val celebratedLevel: Int = 1,
     /** The person's own study subjects, in the order they added them. */
     val subjects: List<String> = emptyList(),
+    /** Background sound that plays during a focus timer. */
+    val focusSound: FocusSound = FocusSound.OFF,
 )

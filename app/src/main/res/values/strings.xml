@@ -403,4 +403,12 @@
     <string name="subject_add_button">Add</string>
     <string name="subject_none">No subject</string>
     <string name="insights_study_time">Study time</string>
+
+    <!-- Focus sounds -->
+    <string name="sound_title">Focus sound</string>
+    <string name="sound_off">Off</string>
+    <string name="sound_white">White noise</string>
+    <string name="sound_pink">Soft rain</string>
+    <string name="sound_brown">Deep waterfall</string>
+    <string name="sound_waves">Ocean waves</string>
 </resources>

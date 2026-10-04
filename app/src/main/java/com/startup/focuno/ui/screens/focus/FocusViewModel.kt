@@ -13,8 +13,10 @@ import com.startup.focuno.data.repository.SummaryRepository
 import com.startup.focuno.data.repository.UsageTrackingRepository
 import com.startup.focuno.domain.model.AppDayUsage
 import com.startup.focuno.domain.model.DayStats
+import com.startup.focuno.domain.model.FocusSound
 import com.startup.focuno.domain.usecase.ComputeDayStatsUseCase
 import com.startup.focuno.domain.usecase.StreakCalculator
+import com.startup.focuno.service.sound.FocusSoundPlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
@@ -52,6 +54,7 @@ data class FocusUiState(
     val sessionStrict: Boolean = false,
     val sessionSubject: String = "",
     val subjects: List<String> = emptyList(),
+    val focusSound: FocusSound = FocusSound.OFF,
     val updatedAtMs: Long = 0L,
 )
 
@@ -65,6 +68,7 @@ class FocusViewModel @Inject constructor(
     private val settingsStore: SettingsStore,
     private val installedApps: InstalledAppsRepository,
     private val focusSessions: FocusSessionRepository,
+    private val soundPlayer: FocusSoundPlayer,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FocusUiState())
@@ -123,6 +127,7 @@ class FocusViewModel @Inject constructor(
                 sessionStrict = session != null && settings.quickBlockStrict,
                 sessionSubject = session?.subject.orEmpty(),
                 subjects = settings.subjects,
+                focusSound = settings.focusSound,
                 updatedAtMs = System.currentTimeMillis(),
             )
         } catch (e: CancellationException) {
@@ -136,7 +141,23 @@ class FocusViewModel @Inject constructor(
         viewModelScope.launch {
             // The pause screen shows this, so "Signals" says more than "Focus session".
             val label = subject.ifBlank { context.getString(R.string.quick_block_label_focus) }
-            focusSessions.start(minutes * 60_000L, label, strict, subject)
+            val startedAt = System.currentTimeMillis()
+            focusSessions.start(minutes * 60_000L, label, strict, subject, startedAt)
+            soundPlayer.play(settingsStore.settings.first().focusSound, untilMs = startedAt + minutes * 60_000L)
+            refresh()
+        }
+    }
+
+    /**
+     * Saves the choice. During a timer the new sound plays at once; otherwise a short preview plays so the
+     * person can hear what they picked.
+     */
+    fun setFocusSound(sound: FocusSound) {
+        viewModelScope.launch {
+            settingsStore.setFocusSound(sound)
+            val endsAt = focusSessions.active()?.endTs
+            val now = System.currentTimeMillis()
+            soundPlayer.play(sound, untilMs = endsAt ?: (now + PREVIEW_MS))
             refresh()
         }
     }
@@ -161,12 +182,13 @@ class FocusViewModel @Inject constructor(
     /** Does nothing during a strict session: the repository refuses to end it early. */
     fun stopFocusSession() {
         viewModelScope.launch {
-            focusSessions.stopEarly()
+            if (focusSessions.stopEarly()) soundPlayer.stop()
             refresh()
         }
     }
 
     private companion object {
         const val MAX_SUBJECT_LENGTH = 24
+        const val PREVIEW_MS = 8_000L
     }
 }

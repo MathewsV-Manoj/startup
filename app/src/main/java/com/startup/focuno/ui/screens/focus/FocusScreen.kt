@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.PhoneAndroid
@@ -29,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -51,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
+import com.startup.focuno.domain.model.FocusSound
 import com.startup.focuno.ui.components.ProtectionBanner
 import com.startup.focuno.ui.components.RefreshWhileResumed
 import com.startup.focuno.ui.components.StrictSwitch
@@ -80,6 +83,7 @@ fun HomeScreen(
         onStopSession = focusViewModel::stopFocusSession,
         onAddSubject = focusViewModel::addSubject,
         onRemoveSubject = focusViewModel::removeSubject,
+        onSetSound = focusViewModel::setFocusSound,
         modifier = modifier,
     )
 }
@@ -93,8 +97,13 @@ fun HomeContent(
     onStopSession: () -> Unit,
     onAddSubject: (String) -> Unit,
     onRemoveSubject: (String) -> Unit,
+    onSetSound: (FocusSound) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var choosingSound by rememberSaveable { mutableStateOf(false) }
+    if (choosingSound) {
+        SoundDialog(current = focus.focusSound, onSelect = onSetSound, onDismiss = { choosingSound = false })
+    }
     Column(
         modifier
             .fillMaxSize()
@@ -102,7 +111,7 @@ fun HomeContent(
             .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        TopRow(focus, onOpenSettings, onOpenHealth)
+        TopRow(focus, onOpenSettings, onOpenHealth, onOpenSound = { choosingSound = true })
         ProtectionBanner(focus.protection, onFix = onOpenHealth)
         Spacer(Modifier.height(28.dp))
         val endsAt = focus.sessionEndsAtMs
@@ -122,7 +131,7 @@ fun HomeContent(
 }
 
 @Composable
-private fun TopRow(focus: FocusUiState, onOpenSettings: () -> Unit, onOpenHealth: () -> Unit) {
+private fun TopRow(focus: FocusUiState, onOpenSettings: () -> Unit, onOpenHealth: () -> Unit, onOpenSound: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -139,6 +148,13 @@ private fun TopRow(focus: FocusUiState, onOpenSettings: () -> Unit, onOpenHealth
             onClick = if (focus.hasUsageAccess) null else onOpenHealth,
         )
         Spacer(Modifier.weight(1f))
+        IconButton(onClick = onOpenSound) {
+            Icon(
+                Icons.Rounded.Headphones,
+                contentDescription = stringResource(R.string.sound_title),
+                tint = if (focus.focusSound == FocusSound.OFF) FocunoTheme.colors.textSecondary else MaterialTheme.colorScheme.secondary,
+            )
+        }
         IconButton(onClick = onOpenSettings) {
             Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings_title), tint = FocunoTheme.colors.textSecondary)
         }
@@ -254,6 +270,42 @@ private fun Chip(text: String, selected: Boolean, onClick: () -> Unit, descripti
             .padding(horizontal = 14.dp, vertical = 8.dp)
             .let { if (description != null) it.semantics { contentDescription = description } else it },
     )
+}
+
+/** Pick the background sound. Picking one plays it: for the rest of a running timer, or as a short preview. */
+@Composable
+private fun SoundDialog(current: FocusSound, onSelect: (FocusSound) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Rounded.Headphones, contentDescription = null) },
+        title = { Text(stringResource(R.string.sound_title)) },
+        text = {
+            Column {
+                FocusSound.entries.forEach { sound ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { onSelect(sound) }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selected = sound == current, onClick = { onSelect(sound) })
+                        Text(stringResource(soundName(sound)), style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_done)) } },
+    )
+}
+
+private fun soundName(sound: FocusSound): Int = when (sound) {
+    FocusSound.OFF -> R.string.sound_off
+    FocusSound.WHITE -> R.string.sound_white
+    FocusSound.PINK -> R.string.sound_pink
+    FocusSound.BROWN -> R.string.sound_brown
+    FocusSound.WAVES -> R.string.sound_waves
 }
 
 /** Add a subject, or remove one. Kept in a dialog so the Focus tab stays clean. */
