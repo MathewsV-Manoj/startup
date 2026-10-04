@@ -58,9 +58,19 @@ fun HealthScreen(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: H
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Text(
-                text = stringResource(if (status.blockingActive) R.string.health_all_good else R.string.health_needs_attention),
+                text = stringResource(
+                    when {
+                        !status.blockingActive -> R.string.health_needs_attention
+                        status.basicModeOnly -> R.string.health_basic_mode
+                        else -> R.string.health_all_good
+                    },
+                ),
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (status.blockingActive) FocunoTheme.colors.productive else FocunoTheme.colors.distracting,
+                color = when {
+                    !status.blockingActive -> FocunoTheme.colors.distracting
+                    status.basicModeOnly -> FocunoTheme.colors.warning
+                    else -> FocunoTheme.colors.productive
+                },
             )
 
             val items = listOf(
@@ -93,6 +103,7 @@ private fun isGranted(status: ProtectionStatus, issue: ProtectionIssue): Boolean
     ProtectionIssue.USAGE_ACCESS -> status.usageAccess
     ProtectionIssue.NOTIFICATIONS -> status.notificationsGranted
     ProtectionIssue.BATTERY -> status.batteryExempt
+    ProtectionIssue.BACKGROUND_SERVICE -> status.monitorRunning
 }
 
 @Composable

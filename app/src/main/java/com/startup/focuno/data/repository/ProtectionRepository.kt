@@ -10,11 +10,12 @@ import android.provider.Settings
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.startup.focuno.service.accessibility.FocunoAccessibilityService
+import com.startup.focuno.service.monitor.FocunoMonitorService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-enum class ProtectionIssue { USAGE_ACCESS, ACCESSIBILITY, OVERLAY, NOTIFICATIONS, BATTERY }
+enum class ProtectionIssue { USAGE_ACCESS, ACCESSIBILITY, OVERLAY, NOTIFICATIONS, BATTERY, BACKGROUND_SERVICE }
 
 data class ProtectionStatus(
     val usageAccess: Boolean,
@@ -22,9 +23,26 @@ data class ProtectionStatus(
     val overlayGranted: Boolean,
     val notificationsGranted: Boolean,
     val batteryExempt: Boolean,
+    /** True while Focuno's own background service is running, which basic blocking depends on. */
+    val monitorRunning: Boolean = false,
 ) {
-    /** Blocking only works when Android lets the service run AND the block screen can be drawn. */
-    val blockingActive: Boolean get() = accessibilityEnabled && overlayGranted
+    /**
+     * Blocking works through Accessibility, or through basic mode (Usage access plus the background service).
+     * Either way the pause screen needs permission to draw over other apps.
+     */
+    val blockingActive: Boolean get() = overlayGranted && (accessibilityEnabled || (usageAccess && monitorRunning))
+
+    /** What is missing for blocking to work, or empty when it already does. */
+    val blockingIssues: List<ProtectionIssue>
+        get() = if (blockingActive) emptyList() else buildList {
+            if (!overlayGranted) add(ProtectionIssue.OVERLAY)
+            if (!accessibilityEnabled) {
+                if (!usageAccess) add(ProtectionIssue.USAGE_ACCESS) else if (!monitorRunning) add(ProtectionIssue.BACKGROUND_SERVICE)
+            }
+        }
+
+    /** Blocking is on, but without Accessibility, so Reels-only blocking is not available. */
+    val basicModeOnly: Boolean get() = blockingActive && !accessibilityEnabled
 
     val issues: List<ProtectionIssue>
         get() = buildList {
@@ -47,6 +65,7 @@ class ProtectionRepository @Inject constructor(
         overlayGranted = Settings.canDrawOverlays(context),
         notificationsGranted = areNotificationsGranted(),
         batteryExempt = isIgnoringBatteryOptimizations(),
+        monitorRunning = FocunoMonitorService.isRunning,
     )
 
     fun isAccessibilityServiceEnabled(): Boolean {

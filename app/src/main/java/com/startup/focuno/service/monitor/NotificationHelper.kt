@@ -59,7 +59,7 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
     /** Shows "protection is OFF" the moment blocking stops working, and clears it once it works again. */
     @SuppressLint("MissingPermission")
     fun updateProtection(status: ProtectionStatus) {
-        val blockingIssues = status.issues.filter { it == ProtectionIssue.ACCESSIBILITY || it == ProtectionIssue.OVERLAY }
+        val blockingIssues = status.blockingIssues
         if (blockingIssues == lastProtectionIssues) return
         lastProtectionIssues = blockingIssues
 
@@ -76,6 +76,7 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
                     ProtectionIssue.USAGE_ACCESS -> R.string.issue_usage_access
                     ProtectionIssue.NOTIFICATIONS -> R.string.issue_notifications
                     ProtectionIssue.BATTERY -> R.string.issue_battery
+                    ProtectionIssue.BACKGROUND_SERVICE -> R.string.issue_background
                 },
             )
         }

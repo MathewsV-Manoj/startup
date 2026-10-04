@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.startup.focuno.data.local.SystemSettingsIntents
 import com.startup.focuno.data.repository.ProtectionIssue
+import com.startup.focuno.service.monitor.MonitorServiceLauncher
 
 /** Returns a function that takes the person to the exact place that fixes a given permission. */
 @Composable
@@ -41,6 +42,7 @@ fun rememberPermissionFixer(): (ProtectionIssue) -> Unit {
                     context,
                     listOf(SystemSettingsIntents.batteryExemption(context), SystemSettingsIntents.batteryOptimizationList()),
                 )
+                ProtectionIssue.BACKGROUND_SERVICE -> MonitorServiceLauncher.start(context)
             }
             Unit
         }

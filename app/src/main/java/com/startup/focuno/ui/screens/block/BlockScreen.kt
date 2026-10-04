@@ -238,7 +238,13 @@ private fun ShieldStatusCard(status: ProtectionStatus?, onOpenHealth: () -> Unit
             Column(Modifier.weight(1f)) {
                 Text(stringResource(if (on) R.string.shield_on_title else R.string.shield_off_title), style = MaterialTheme.typography.titleLarge, color = tint)
                 Text(
-                    stringResource(if (on) R.string.shield_on_body else R.string.shield_off_body),
+                    stringResource(
+                        when {
+                            !on -> R.string.shield_off_body
+                            status.basicModeOnly -> R.string.shield_basic_body
+                            else -> R.string.shield_on_body
+                        },
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = FocunoTheme.colors.textSecondary,
                 )

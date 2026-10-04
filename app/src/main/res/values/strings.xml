@@ -206,7 +206,7 @@
     <string name="health_title">Health check</string>
     <string name="health_all_good">Everything Focuno needs to block apps is on.</string>
     <string name="health_needs_attention">Something needs your attention so blocking can work.</string>
-    <string name="health_accessibility_why">Lets Focuno notice which app is open so it can pause blocked ones. It reads app names only.</string>
+    <string name="health_accessibility_why">Optional. Makes blocking faster and lets Focuno block only Reels or Shorts. Focuno still blocks apps without it.</string>
     <string name="health_overlay_why">Lets the pause screen appear over a blocked app.</string>
     <string name="health_usage_why">Lets Focuno count your screen time in each app.</string>
     <string name="health_notifications_why">Lets Focuno warn you straight away if protection turns off.</string>
@@ -263,9 +263,9 @@
     <string name="onb_purpose_point3">Setup takes about two minutes. Each step explains why it is needed.</string>
     <string name="onb_purpose_cta">Let\'s set it up</string>
     <string name="onb_usage_title">Count your screen time</string>
-    <string name="onb_usage_body">Android calls this Usage access. It lets Focuno see which apps you open and for how long. Focuno never sees what you do inside them.</string>
-    <string name="onb_accessibility_title">Notice when a blocked app opens</string>
-    <string name="onb_accessibility_body">This is how Focuno knows a blocked app just opened, and how it can block only Reels or Shorts. It never reads your messages or what you type. Find Focuno in the list and switch it on.</string>
+    <string name="onb_usage_body">Android calls this Usage access. Focuno uses it to count your time and to notice when you open an app you want paused. It never sees what you do inside apps.</string>
+    <string name="onb_accessibility_title">Faster blocking (optional)</string>
+    <string name="onb_accessibility_body">Focuno can already pause apps without this. Turning on Accessibility makes it react faster and lets it block only Reels or Shorts. If Android says it is restricted, you can skip this step.</string>
     <string name="onb_overlay_title">Show the pause screen</string>
     <string name="onb_overlay_body">Focuno draws a calm pause screen on top of a blocked app. This permission is what lets it appear over other apps.</string>
     <string name="onb_stay_alive_title">Keep Focuno running</string>
@@ -429,4 +429,8 @@
     <string name="shield_on_body">Your protected apps will be paused.</string>
     <string name="shield_off_title">Shield is OFF</string>
     <string name="shield_off_body">Android switched it off, so apps will open normally. Tap to turn it back on.</string>
+
+    <string name="issue_background">Focuno must be running (open the app)</string>
+    <string name="health_basic_mode">Basic blocking is working. Turn on Accessibility for faster blocking and Reels-only blocking.</string>
+    <string name="shield_basic_body">Basic blocking is working. Turn on Accessibility to block only Reels or Shorts.</string>
 </resources>

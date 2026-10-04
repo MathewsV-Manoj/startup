@@ -100,6 +100,11 @@ class UsageTrackingRepository @Inject constructor(
             ?.packageName
     }
 
+    /** Raw events in a short window, for following the foreground app without the accessibility service. */
+    suspend fun recentEvents(fromMs: Long, toMs: Long): List<RawUsageEvent> = withContext(Dispatchers.IO) {
+        if (hasUsageAccess()) readEvents(fromMs, toMs) else emptyList()
+    }
+
     private fun readEvents(fromMs: Long, toMs: Long): List<RawUsageEvent> {
         val usageEvents = usageStatsManager.queryEvents(fromMs, toMs)
         val event = UsageEvents.Event()

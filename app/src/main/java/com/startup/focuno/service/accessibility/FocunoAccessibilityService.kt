@@ -102,7 +102,8 @@ class FocunoAccessibilityService : AccessibilityService(), BlockHost {
 
     private fun shutDown() {
         isConnected = false
-        engine.stop()
+        // The engine may already be running on the basic-mode host. Only stop it if it is still ours.
+        if (engine.usesHost(this)) engine.stop()
         if (receiverRegistered) {
             unregisterReceiver(screenReceiver)
             receiverRegistered = false

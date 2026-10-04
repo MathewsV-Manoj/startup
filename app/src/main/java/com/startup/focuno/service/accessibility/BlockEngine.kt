@@ -111,6 +111,10 @@ class BlockEngine @Inject constructor(
     private var shortVideoSuppressedUntilMs = 0L
     private var tickCount = 0
 
+    val isRunning: Boolean get() = host != null
+
+    fun usesHost(candidate: BlockHost): Boolean = host === candidate
+
     fun start(host: BlockHost) {
         stop()
         this.host = host

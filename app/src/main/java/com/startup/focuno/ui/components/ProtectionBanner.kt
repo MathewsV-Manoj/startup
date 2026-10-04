@@ -35,6 +35,7 @@ fun issueLabel(issue: ProtectionIssue): String = stringResource(
         ProtectionIssue.USAGE_ACCESS -> R.string.issue_usage_access
         ProtectionIssue.NOTIFICATIONS -> R.string.issue_notifications
         ProtectionIssue.BATTERY -> R.string.issue_battery
+        ProtectionIssue.BACKGROUND_SERVICE -> R.string.issue_background
     },
 )
 
@@ -51,9 +52,7 @@ fun ProtectionBanner(status: ProtectionStatus?, onFix: () -> Unit, modifier: Mod
 
     val tint = if (blockingBroken) FocunoTheme.colors.distracting else FocunoTheme.colors.warning
     val shape = RoundedCornerShape(20.dp)
-    val missing = status.issues.filter {
-        if (blockingBroken) it == ProtectionIssue.ACCESSIBILITY || it == ProtectionIssue.OVERLAY else it == ProtectionIssue.USAGE_ACCESS
-    }
+    val missing = if (blockingBroken) status.blockingIssues else listOf(ProtectionIssue.USAGE_ACCESS)
 
     // map is inline, so the composable label lookup is allowed here; joinToString is not inline.
     val missingText = missing.map { issueLabel(it) }.joinToString(", ")
