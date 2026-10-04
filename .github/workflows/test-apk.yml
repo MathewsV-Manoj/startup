@@ -34,10 +34,24 @@ jobs:
           key: focuno-debug-keystore-v1
 
       - name: Unit tests
-        run: ./gradlew testDebugUnitTest --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew testDebugUnitTest --console=plain 2>&1 | tee build.log
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew assembleDebug --console=plain 2>&1 | tee -a build.log
+
+      - name: Deprecation warnings (should stay empty)
+        if: always()
+        run: grep -iE "^w: .*deprecat" build.log | sed 's#file:///home/runner/work/startup/startup/##' | sort -u | head -40 || true
+
+      - name: Error summary
+        if: failure()
+        run: |
+          echo "=== ERROR SUMMARY ==="
+          grep -E "^e: |What went wrong|FAILED|AssertionError|Expected|expected:" -A3 build.log | sed 's#file:///home/runner/work/startup/startup/##' | head -120 || true
 
       - name: Publish APK to the fixed download link
         env:

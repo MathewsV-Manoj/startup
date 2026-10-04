@@ -89,7 +89,7 @@ class UsageTrackingRepository @Inject constructor(
         val now = System.currentTimeMillis()
         val windowStart = now - RECENT_MS
         val walk = UsageEventWalker.walk(readEvents(windowStart, now), windowStart, now)
-        val countable = launcherPackages()
+        val countable = context.packageManager.launcherPackages()
         walk.sessions
             .filter { it.endMs >= now - 1_000L && it.packageName in countable }
             .maxByOrNull { it.startMs }
