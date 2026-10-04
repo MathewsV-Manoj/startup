@@ -1,0 +1,23 @@
+package com.startup.focuno.data.room
+
+import com.startup.focuno.domain.model.BlockSchedule
+
+fun BlockScheduleEntity.toDomain() = BlockSchedule(
+    id = id,
+    packageName = packageName,
+    startMinuteOfDay = startMinuteOfDay,
+    endMinuteOfDay = endMinuteOfDay,
+    daysOfWeekMask = daysOfWeekMask,
+    enabled = enabled,
+    strictMode = strictMode,
+)
+
+fun BlockSchedule.toEntity() = BlockScheduleEntity(
+    id = id,
+    packageName = packageName,
+    startMinuteOfDay = startMinuteOfDay,
+    endMinuteOfDay = endMinuteOfDay,
+    daysOfWeekMask = daysOfWeekMask,
+    enabled = enabled,
+    strictMode = strictMode,
+)

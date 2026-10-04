@@ -33,6 +33,9 @@ jobs:
           path: ~/.android/debug.keystore
           key: focuno-debug-keystore-v1
 
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest --stacktrace
+
       - name: Build debug APK
         run: ./gradlew assembleDebug --stacktrace
 

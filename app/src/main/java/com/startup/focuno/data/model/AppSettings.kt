@@ -1,0 +1,23 @@
+package com.startup.focuno.data.model
+
+import com.startup.focuno.domain.model.NudgeSensitivity
+
+data class AppSettings(
+    val onboardingCompleted: Boolean = false,
+    val onboardingStep: Int = 0,
+    val nudgesEnabled: Boolean = true,
+    val nudgeSensitivity: NudgeSensitivity = NudgeSensitivity.MEDIUM,
+    /** Reserved. The app is dark-only by design, so this is stored but never switches the theme. */
+    val theme: String = "dark",
+    val dailyGoalMinutes: Int = 240,
+    val streakCount: Int = 0,
+    val lastActiveDate: String? = null,
+    /** Epoch ms until which every distracting app is blocked ("Block now" or a focus session). 0 = off. */
+    val quickBlockUntilMs: Long = 0L,
+    val quickBlockLabel: String = "",
+    val lastNudgeAtMs: Long = 0L,
+    val nudgeDay: String = "",
+    val nudgeCountToday: Int = 0,
+    /** Goal thresholds already announced today, e.g. "2026-10-04:50". */
+    val goalThresholdsHit: Set<String> = emptySet(),
+)
