@@ -1,7 +1,60 @@
 <resources>
     <string name="app_name">Focuno</string>
 
-    <!-- Phase 0 placeholder screen. Replaced by the dashboard in Phase 5. -->
+    <!-- Placeholder screen, replaced by the real UI in the next commit -->
     <string name="placeholder_tagline">Less scrolling. More of what matters.</string>
     <string name="placeholder_status">Build OK. The dashboard arrives in a later phase.</string>
+
+    <!-- Accessibility service -->
+    <string name="accessibility_service_description">Focuno uses this only to notice which app is in front, so it can pause apps you chose to block. It never reads what is on your screen.</string>
+
+    <!-- Notifications -->
+    <string name="channel_monitor_name">Focuno is running</string>
+    <string name="channel_monitor_description">A quiet reminder that Focuno is active, with today\'s focus score.</string>
+    <string name="channel_protection_name">Protection alerts</string>
+    <string name="channel_protection_description">Tells you right away if Android turns Focuno\'s blocking off.</string>
+    <string name="monitor_notification_title">Focuno is keeping watch</string>
+    <string name="monitor_notification_text">Today\'s focus score: %1$s</string>
+    <string name="protection_off_title">Focuno protection is OFF</string>
+    <string name="protection_off_text">Blocking is not running. Tap to turn back on: %1$s</string>
+    <string name="issue_accessibility">Accessibility</string>
+    <string name="issue_overlay">Display over other apps</string>
+    <string name="issue_usage_access">Usage access</string>
+    <string name="issue_notifications">Notifications</string>
+    <string name="issue_battery">Battery optimisation</string>
+
+    <!-- Nudges: warm, specific, never shaming -->
+    <string name="nudge_this_app">this app</string>
+    <plurals name="nudge_continuous">
+        <item quantity="one">You\'ve been on %1$s for %2$d minute. A short break might feel good.</item>
+        <item quantity="other">You\'ve been on %1$s for %2$d minutes. A short break might feel good.</item>
+    </plurals>
+    <string name="nudge_repeated_opens">You\'ve opened %1$s %2$d times in the last hour. Everything okay?</string>
+    <string name="nudge_goal_progress">You\'re at %1$d%% of today\'s screen-time goal.</string>
+    <string name="nudge_after_focus">Nice focus session. %1$s can wait a few more minutes.</string>
+
+    <!-- Durations -->
+    <string name="duration_hours_minutes">%1$dh %2$dm</string>
+    <string name="duration_hours">%1$dh</string>
+    <string name="duration_minutes">%1$dm</string>
+    <string name="duration_under_a_minute">&lt;1m</string>
+
+    <!-- Block screen -->
+    <string name="block_title">%1$s is paused for now</string>
+    <string name="block_subtitle">You set this up for yourself. A pause is a good moment to come back to what matters.</string>
+    <string name="block_source_schedule">Blocked %1$s to %2$s</string>
+    <string name="block_source_quick">Quick block</string>
+    <string name="block_remaining">Back in %1$s</string>
+    <string name="block_back_to_focus">Back to focus</string>
+    <string name="block_i_need_this">I need this</string>
+    <string name="block_cooldown">You can ask again in %1$s.</string>
+    <string name="block_strict_note">Strict mode is on, so there is no unlock until this window ends. It can still be switched off in Android Settings: a speed bump, not a lock.</string>
+    <string name="friction_calm_line">Cravings usually rise and fade within a couple of minutes. Take a slow breath while this runs.</string>
+    <plurals name="friction_wait_seconds">
+        <item quantity="one">Wait %1$d second</item>
+        <item quantity="other">Wait %1$d seconds</item>
+    </plurals>
+    <string name="friction_reason_prompt">What do you need %1$s for right now?</string>
+    <string name="friction_reason_counter">%1$d / %2$d characters</string>
+    <string name="friction_unlock">Unlock for 5 minutes</string>
 </resources>

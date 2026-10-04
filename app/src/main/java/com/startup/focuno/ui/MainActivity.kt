@@ -25,4 +25,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    companion object {
+        const val EXTRA_OPEN_HEALTH = "com.startup.focuno.OPEN_HEALTH"
+    }
 }
