@@ -392,4 +392,15 @@
         <item quantity="one">%1$d minute left on %2$s today</item>
         <item quantity="other">%1$d minutes left on %2$s today</item>
     </plurals>
+
+    <!-- Subjects -->
+    <string name="action_done">Done</string>
+    <string name="subject_add">+ Subject</string>
+    <string name="subject_manage">Edit subjects</string>
+    <string name="subject_dialog_title">Subjects</string>
+    <string name="subject_remove">Remove %1$s</string>
+    <string name="subject_hint">e.g. Signals</string>
+    <string name="subject_add_button">Add</string>
+    <string name="subject_none">No subject</string>
+    <string name="insights_study_time">Study time</string>
 </resources>

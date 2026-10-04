@@ -46,6 +46,7 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         val xpBankedThrough = stringPreferencesKey("xp_banked_through")
         val badgesUnlocked = stringSetPreferencesKey("badges_unlocked")
         val celebratedLevel = intPreferencesKey("celebrated_level")
+        val subjects = stringPreferencesKey("subjects")
     }
 
     val settings: Flow<AppSettings> = context.focunoDataStore.data
@@ -74,6 +75,7 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
                 xpBankedThrough = prefs[Keys.xpBankedThrough],
                 badgesUnlocked = prefs[Keys.badgesUnlocked] ?: defaults.badgesUnlocked,
                 celebratedLevel = prefs[Keys.celebratedLevel] ?: defaults.celebratedLevel,
+                subjects = prefs[Keys.subjects]?.split(SUBJECT_SEPARATOR)?.filter { it.isNotBlank() } ?: defaults.subjects,
             )
         }
 
@@ -137,10 +139,19 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         }
     }
 
+    /** Stored as one string so the order the person chose is kept. */
+    suspend fun setSubjects(subjects: List<String>) {
+        context.focunoDataStore.edit { it[Keys.subjects] = subjects.joinToString(SUBJECT_SEPARATOR) }
+    }
+
     suspend fun setCelebrated(level: Int, badges: Set<String>) {
         context.focunoDataStore.edit {
             it[Keys.celebratedLevel] = level
             it[Keys.badgesUnlocked] = badges
         }
+    }
+
+    private companion object {
+        const val SUBJECT_SEPARATOR = "\n"
     }
 }

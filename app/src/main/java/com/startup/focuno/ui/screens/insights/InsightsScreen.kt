@@ -1,6 +1,8 @@
 package com.startup.focuno.ui.screens.insights
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Insights
@@ -19,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -67,6 +71,7 @@ fun InsightsContent(state: InsightsUiState, onSelectRange: (InsightsRange) -> Un
         if (!state.hasAnyData) {
             EmptyState(icon = Icons.Rounded.Insights, title = stringResource(R.string.insights_empty_title), message = "")
         } else {
+            SubjectsCard(state)
             ScoreTrendCard(state)
             DistractingTrendCard(state)
             WorstHourCard(state)
@@ -86,6 +91,48 @@ private fun CardHeader(title: String, value: String?) {
         if (value != null) Text(value, style = MaterialTheme.typography.titleLarge, color = FocunoTheme.colors.textPrimary)
     }
     Spacer(Modifier.height(12.dp))
+}
+
+/** Study time per subject, as simple bars. Hidden until a focus timer has run. */
+@Composable
+private fun SubjectsCard(state: InsightsUiState) {
+    val totals = state.subjectTotals
+    if (totals.isEmpty()) return
+    val max = totals.maxOf { it.totalMs }.coerceAtLeast(1L)
+    Panel(Modifier.fillMaxWidth()) {
+        CardHeader(stringResource(R.string.insights_study_time), durationText(totals.sumOf { it.totalMs }))
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            totals.forEach { total ->
+                Column {
+                    Row(Modifier.fillMaxWidth()) {
+                        Text(
+                            total.subject.ifBlank { stringResource(R.string.subject_none) },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = FocunoTheme.colors.textPrimary,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(durationText(total.totalMs), style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textSecondary)
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(FocunoTheme.colors.trackInactive),
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth((total.totalMs.toFloat() / max).coerceIn(0.02f, 1f))
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(MaterialTheme.colorScheme.secondary),
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable

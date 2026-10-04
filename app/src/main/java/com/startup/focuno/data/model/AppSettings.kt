@@ -28,4 +28,6 @@ data class AppSettings(
     val badgesUnlocked: Set<String> = emptySet(),
     /** Highest level whose celebration has already been shown. */
     val celebratedLevel: Int = 1,
+    /** The person's own study subjects, in the order they added them. */
+    val subjects: List<String> = emptyList(),
 )

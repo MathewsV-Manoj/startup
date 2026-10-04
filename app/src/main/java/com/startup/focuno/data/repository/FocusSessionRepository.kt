@@ -4,6 +4,7 @@ import com.startup.focuno.data.local.SettingsStore
 import com.startup.focuno.data.room.BypassEventDao
 import com.startup.focuno.data.room.FocusSessionDao
 import com.startup.focuno.data.room.FocusSessionEntity
+import com.startup.focuno.data.room.SubjectTotal
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -16,9 +17,11 @@ class FocusSessionRepository @Inject constructor(
     private val bypassDao: BypassEventDao,
     private val settings: SettingsStore,
 ) {
-    suspend fun start(plannedMs: Long, label: String, strict: Boolean, nowMs: Long = System.currentTimeMillis()) {
+    suspend fun start(plannedMs: Long, label: String, strict: Boolean, subject: String = "", nowMs: Long = System.currentTimeMillis()) {
         finalizeDue(nowMs)
-        dao.insert(FocusSessionEntity(startTs = nowMs, endTs = nowMs + plannedMs, plannedMs = plannedMs, completed = false, interruptions = 0))
+        dao.insert(
+            FocusSessionEntity(startTs = nowMs, endTs = nowMs + plannedMs, plannedMs = plannedMs, completed = false, interruptions = 0, subject = subject),
+        )
         settings.setQuickBlock(nowMs + plannedMs, label, strict)
     }
 
@@ -48,4 +51,6 @@ class FocusSessionRepository @Inject constructor(
     suspend fun completedBetween(fromMs: Long, toMs: Long): Int = dao.completedBetween(fromMs, toMs)
 
     fun observeCompletedCount(sinceMs: Long): Flow<Int> = dao.observeCompletedCount(sinceMs)
+
+    fun observeSubjectTotals(sinceMs: Long, nowMs: Long): Flow<List<SubjectTotal>> = dao.observeSubjectTotals(sinceMs, nowMs)
 }

@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.PhoneAndroid
@@ -25,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -74,6 +78,8 @@ fun HomeScreen(
         onOpenHealth = onOpenHealth,
         onStartSession = focusViewModel::startFocusSession,
         onStopSession = focusViewModel::stopFocusSession,
+        onAddSubject = focusViewModel::addSubject,
+        onRemoveSubject = focusViewModel::removeSubject,
         modifier = modifier,
     )
 }
@@ -83,8 +89,10 @@ fun HomeContent(
     focus: FocusUiState,
     onOpenSettings: () -> Unit,
     onOpenHealth: () -> Unit,
-    onStartSession: (minutes: Int, strict: Boolean) -> Unit,
+    onStartSession: (minutes: Int, strict: Boolean, subject: String) -> Unit,
     onStopSession: () -> Unit,
+    onAddSubject: (String) -> Unit,
+    onRemoveSubject: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -99,12 +107,13 @@ fun HomeContent(
         Spacer(Modifier.height(28.dp))
         val endsAt = focus.sessionEndsAtMs
         if (endsAt == null) {
-            IdleTimer(onStartSession)
+            IdleTimer(focus.subjects, onStartSession, onAddSubject, onRemoveSubject)
         } else {
             RunningTimer(
                 startedAtMs = focus.sessionStartedAtMs ?: endsAt,
                 endsAtMs = endsAt,
                 strict = focus.sessionStrict,
+                subject = focus.sessionSubject,
                 onStop = onStopSession,
             )
         }
@@ -154,10 +163,19 @@ private fun Pill(icon: ImageVector, text: String, tint: Color, description: Stri
 }
 
 @Composable
-private fun IdleTimer(onStart: (minutes: Int, strict: Boolean) -> Unit) {
+private fun IdleTimer(
+    subjects: List<String>,
+    onStart: (minutes: Int, strict: Boolean, subject: String) -> Unit,
+    onAddSubject: (String) -> Unit,
+    onRemoveSubject: (String) -> Unit,
+) {
     var minutes by rememberSaveable { mutableIntStateOf(25) }
     var strict by rememberSaveable { mutableStateOf(false) }
     var confirmStrict by rememberSaveable { mutableStateOf(false) }
+    var subject by rememberSaveable { mutableStateOf("") }
+    var managing by rememberSaveable { mutableStateOf(false) }
+    // A subject removed elsewhere must not stay selected.
+    val chosen = subject.takeIf { it in subjects }.orEmpty()
 
     TimerDial(progress = minutes / 90f) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -171,11 +189,13 @@ private fun IdleTimer(onStart: (minutes: Int, strict: Boolean) -> Unit) {
             DurationPill(option, selected = option == minutes, onClick = { minutes = option })
         }
     }
-    Spacer(Modifier.height(20.dp))
+    Spacer(Modifier.height(16.dp))
+    SubjectRow(subjects, chosen, onSelect = { subject = if (it == chosen) "" else it }, onManage = { managing = true })
+    Spacer(Modifier.height(16.dp))
     StrictSwitch(strict = strict, onChange = { strict = it })
     Spacer(Modifier.height(20.dp))
     Button(
-        onClick = { if (strict) confirmStrict = true else onStart(minutes, false) },
+        onClick = { if (strict) confirmStrict = true else onStart(minutes, false, chosen) },
         modifier = Modifier.fillMaxWidth().height(60.dp),
         shape = RoundedCornerShape(50),
     ) {
@@ -191,12 +211,88 @@ private fun IdleTimer(onStart: (minutes: Int, strict: Boolean) -> Unit) {
             confirmButton = {
                 Button(onClick = {
                     confirmStrict = false
-                    onStart(minutes, true)
+                    onStart(minutes, true, chosen)
                 }) { Text(stringResource(R.string.strict_confirm_ok)) }
             },
             dismissButton = { TextButton(onClick = { confirmStrict = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
+    if (managing) {
+        SubjectsDialog(subjects, onAdd = onAddSubject, onRemove = onRemoveSubject, onDismiss = { managing = false })
+    }
+}
+
+@Composable
+private fun SubjectRow(subjects: List<String>, chosen: String, onSelect: (String) -> Unit, onManage: () -> Unit) {
+    LazyRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+    ) {
+        items(subjects, key = { it }) { name -> Chip(name, selected = name == chosen, onClick = { onSelect(name) }) }
+        item(key = "+") {
+            Chip(
+                text = if (subjects.isEmpty()) stringResource(R.string.subject_add) else "+",
+                selected = false,
+                onClick = onManage,
+                description = stringResource(R.string.subject_manage),
+            )
+        }
+    }
+}
+
+@Composable
+private fun Chip(text: String, selected: Boolean, onClick: () -> Unit, description: String? = null) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        color = if (selected) FocunoTheme.colors.textPrimary else FocunoTheme.colors.textSecondary,
+        maxLines = 1,
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(if (selected) MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f) else FocunoTheme.colors.surfaceElevated)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+            .let { if (description != null) it.semantics { contentDescription = description } else it },
+    )
+}
+
+/** Add a subject, or remove one. Kept in a dialog so the Focus tab stays clean. */
+@Composable
+private fun SubjectsDialog(subjects: List<String>, onAdd: (String) -> Unit, onRemove: (String) -> Unit, onDismiss: () -> Unit) {
+    var name by rememberSaveable { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.subject_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                subjects.forEach { subject ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(subject, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                        IconButton(onClick = { onRemove(subject) }) {
+                            Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.subject_remove, subject))
+                        }
+                    }
+                }
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it.take(24) },
+                    singleLine = true,
+                    placeholder = { Text(stringResource(R.string.subject_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onAdd(name)
+                    name = ""
+                },
+                enabled = name.isNotBlank(),
+            ) { Text(stringResource(R.string.subject_add_button)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_done)) } },
+    )
 }
 
 @Composable
@@ -216,7 +312,7 @@ private fun DurationPill(minutes: Int, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun RunningTimer(startedAtMs: Long, endsAtMs: Long, strict: Boolean, onStop: () -> Unit) {
+private fun RunningTimer(startedAtMs: Long, endsAtMs: Long, strict: Boolean, subject: String, onStop: () -> Unit) {
     val now by produceState(initialValue = System.currentTimeMillis(), endsAtMs) {
         while (true) {
             value = System.currentTimeMillis()
@@ -234,7 +330,11 @@ private fun RunningTimer(startedAtMs: Long, endsAtMs: Long, strict: Boolean, onS
                 style = MaterialTheme.typography.displayMedium,
                 color = FocunoTheme.colors.textPrimary,
             )
-            Text(stringResource(R.string.home_focusing), style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textSecondary)
+            Text(
+                subject.ifBlank { stringResource(R.string.home_focusing) },
+                style = MaterialTheme.typography.titleMedium,
+                color = FocunoTheme.colors.textSecondary,
+            )
         }
     }
     Spacer(Modifier.height(32.dp))

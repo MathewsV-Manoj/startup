@@ -50,6 +50,8 @@ data class FocusUiState(
     val sessionStartedAtMs: Long? = null,
     val sessionEndsAtMs: Long? = null,
     val sessionStrict: Boolean = false,
+    val sessionSubject: String = "",
+    val subjects: List<String> = emptyList(),
     val updatedAtMs: Long = 0L,
 )
 
@@ -119,6 +121,8 @@ class FocusViewModel @Inject constructor(
                 sessionStartedAtMs = session?.startTs,
                 sessionEndsAtMs = session?.endTs,
                 sessionStrict = session != null && settings.quickBlockStrict,
+                sessionSubject = session?.subject.orEmpty(),
+                subjects = settings.subjects,
                 updatedAtMs = System.currentTimeMillis(),
             )
         } catch (e: CancellationException) {
@@ -128,10 +132,28 @@ class FocusViewModel @Inject constructor(
         }
     }
 
-    fun startFocusSession(minutes: Int, strict: Boolean) {
+    fun startFocusSession(minutes: Int, strict: Boolean, subject: String) {
         viewModelScope.launch {
-            val label = context.getString(R.string.quick_block_label_focus)
-            focusSessions.start(minutes * 60_000L, label, strict)
+            // The pause screen shows this, so "Signals" says more than "Focus session".
+            val label = subject.ifBlank { context.getString(R.string.quick_block_label_focus) }
+            focusSessions.start(minutes * 60_000L, label, strict, subject)
+            refresh()
+        }
+    }
+
+    fun addSubject(name: String) {
+        val clean = name.trim().take(MAX_SUBJECT_LENGTH)
+        if (clean.isEmpty()) return
+        viewModelScope.launch {
+            val current = settingsStore.settings.first().subjects
+            if (current.none { it.equals(clean, ignoreCase = true) }) settingsStore.setSubjects(current + clean)
+            refresh()
+        }
+    }
+
+    fun removeSubject(name: String) {
+        viewModelScope.launch {
+            settingsStore.setSubjects(settingsStore.settings.first().subjects - name)
             refresh()
         }
     }
@@ -142,5 +164,9 @@ class FocusViewModel @Inject constructor(
             focusSessions.stopEarly()
             refresh()
         }
+    }
+
+    private companion object {
+        const val MAX_SUBJECT_LENGTH = 24
     }
 }

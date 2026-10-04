@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
 
 data class HourTotal(val hour: Int, val totalMs: Long)
 
+data class SubjectTotal(val subject: String, val totalMs: Long)
+
 data class LastGranted(val packageName: String, val lastGrantedAt: Long)
 
 @Dao
@@ -137,6 +139,13 @@ interface FocusSessionDao {
 
     @Query("SELECT COUNT(*) FROM focus_session WHERE completed = 1 AND startTs >= :since")
     fun observeCompletedCount(since: Long): Flow<Int>
+
+    /** Time actually spent focusing per subject: a running session counts up to now, a stopped one to its stop. */
+    @Query(
+        "SELECT subject AS subject, SUM(MIN(endTs, :nowMs) - startTs) AS totalMs FROM focus_session " +
+            "WHERE startTs >= :since AND startTs < :nowMs GROUP BY subject ORDER BY totalMs DESC",
+    )
+    fun observeSubjectTotals(since: Long, nowMs: Long): Flow<List<SubjectTotal>>
 }
 
 @Dao

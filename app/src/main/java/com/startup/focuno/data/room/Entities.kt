@@ -73,6 +73,8 @@ data class FocusSessionEntity(
     val plannedMs: Long,
     val completed: Boolean,
     val interruptions: Int,
+    /** What was studied, e.g. "Signals". Empty when no subject was picked. */
+    val subject: String = "",
 )
 
 @Entity(tableName = "app_category")
