@@ -1,0 +1,4 @@
+<resources>
+    <!-- Window, splash and launcher only. App UI colours live in ui/theme/Color.kt. -->
+    <color name="deep_void_purple">#FF0D0417</color>
+</resources>

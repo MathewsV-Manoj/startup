@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Focuno</string>
+
+    <!-- Phase 0 placeholder screen. Replaced by the dashboard in Phase 5. -->
+    <string name="placeholder_tagline">Less scrolling. More of what matters.</string>
+    <string name="placeholder_status">Build OK. The dashboard arrives in a later phase.</string>
+</resources>
