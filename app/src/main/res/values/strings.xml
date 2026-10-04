@@ -1,9 +1,6 @@
 <resources>
     <string name="app_name">Focuno</string>
 
-    <!-- Placeholder screen, replaced by the real UI in the next commit -->
-    <string name="placeholder_tagline">Less scrolling. More of what matters.</string>
-    <string name="placeholder_status">Build OK. The dashboard arrives in a later phase.</string>
 
     <!-- Accessibility service -->
     <string name="accessibility_service_description">Focuno uses this only to notice which app is in front, so it can pause apps you chose to block. It never reads what is on your screen.</string>
@@ -57,4 +54,242 @@
     <string name="friction_reason_prompt">What do you need %1$s for right now?</string>
     <string name="friction_reason_counter">%1$d / %2$d characters</string>
     <string name="friction_unlock">Unlock for 5 minutes</string>
+
+    <!-- Common -->
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_ok">OK</string>
+    <string name="action_save">Save</string>
+    <string name="action_try_again">Try again</string>
+    <string name="error_generic">Something went wrong while loading. Please try again.</string>
+    <string name="day_today">Today</string>
+    <string name="day_yesterday">Yesterday</string>
+    <string name="days_every_day">Every day</string>
+    <string name="days_weekdays">Weekdays</string>
+    <string name="days_weekends">Weekends</string>
+    <string name="category_distracting">Distracting</string>
+    <string name="category_productive">Productive</string>
+    <string name="category_neutral">Neutral</string>
+    <plurals name="opens_count">
+        <item quantity="one">%1$d open</item>
+        <item quantity="other">%1$d opens</item>
+    </plurals>
+
+    <!-- Tabs -->
+    <string name="tab_focus">Focus</string>
+    <string name="tab_apps">Apps</string>
+    <string name="tab_block">Block</string>
+    <string name="tab_insights">Insights</string>
+
+    <!-- Focus tab -->
+    <string name="gauge_dash">—</string>
+    <string name="gauge_label">Focus score</string>
+    <string name="gauge_description">Focus score %1$d out of 100</string>
+    <string name="gauge_no_data">Focus score is not available yet</string>
+    <string name="score_msg_no_access">Allow usage access to see your score.</string>
+    <string name="score_msg_no_data">Your score appears once Focuno has seen some phone use.</string>
+    <string name="score_msg_great">Calm and focused today.</string>
+    <string name="score_msg_good">Mostly on track. Nice.</string>
+    <string name="score_msg_scattered">A little scattered today. A short break can reset it.</string>
+    <string name="score_msg_rough">A tougher day. Tomorrow is a fresh start.</string>
+    <string name="focus_allow_usage_access">Allow usage access</string>
+    <string name="focus_today">Today</string>
+    <string name="focus_total">Total</string>
+    <string name="focus_productive">Productive</string>
+    <string name="focus_distracting">Distracting</string>
+    <plurals name="focus_pickups">
+        <item quantity="one">%1$d pickup today</item>
+        <item quantity="other">%1$d pickups today</item>
+    </plurals>
+    <string name="focus_top_distractions">Top distractions today</string>
+    <string name="focus_no_distractions">No distracting apps used yet today.</string>
+    <plurals name="streak_days">
+        <item quantity="one">%1$d day in a row</item>
+        <item quantity="other">%1$d days in a row</item>
+    </plurals>
+    <string name="streak_explainer">Days within your %1$dh %2$02dm screen-time goal</string>
+    <string name="session_title">Focus session</string>
+    <string name="session_explainer">A timed stretch where every distracting app is paused.</string>
+    <string name="session_minutes_chip">%1$d min</string>
+    <string name="session_remaining">%1$02d:%2$02d left</string>
+    <string name="session_running_note">Distracting apps are paused until the timer ends.</string>
+    <string name="session_end_early">End early</string>
+    <string name="quick_block_label_focus">Focus session</string>
+    <string name="quick_block_label_block_now">Block now</string>
+
+    <!-- Protection banner -->
+    <string name="banner_blocking_off_title">Focuno protection is OFF</string>
+    <string name="banner_blocking_off_body">Blocking is not running, so apps you chose to block will open normally. Needs: %1$s.</string>
+    <string name="banner_usage_off_title">Screen time can\'t be measured</string>
+    <string name="banner_usage_off_body">Focuno needs %1$s to count your screen time.</string>
+    <string name="banner_fix_now">Fix now</string>
+
+    <!-- Apps tab -->
+    <string name="apps_no_access_title">Allow usage access</string>
+    <string name="apps_no_access_message">Focuno needs usage access to count how long you spend in each app.</string>
+    <string name="apps_empty_title">No usage recorded</string>
+    <string name="apps_empty_message">Nothing was used on this day, or Android has no history for it yet.</string>
+    <string name="apps_schedule_block">Schedule a block for %1$s</string>
+
+    <!-- Block tab -->
+    <string name="block_add_schedule">Add schedule</string>
+    <string name="block_empty_title">Nothing is blocked yet</string>
+    <string name="block_empty_message">Blocking pauses an app during times you choose. When you open it, Focuno shows a calm screen and offers a way back to focus. You can still unlock it with a short wait and a reason, unless you turn on strict mode.</string>
+    <string name="quick_block_title">Block now</string>
+    <string name="quick_block_explainer">Pause every distracting app for a set time, starting right now.</string>
+    <string name="quick_block_active">Pausing distracting apps. %1$s left.</string>
+    <string name="quick_block_active_note">Apps marked as distracting are paused. You can still unlock one with the short wait and a reason.</string>
+    <string name="schedule_strict">Strict mode</string>
+    <string name="schedule_strict_locked">Strict mode: locked right now</string>
+
+    <!-- Schedule editor -->
+    <string name="editor_pick_app">Which app should be blocked?</string>
+    <string name="editor_search_apps">Search apps</string>
+    <string name="editor_new_title">New block schedule</string>
+    <string name="editor_edit_title">Edit block schedule</string>
+    <string name="editor_change_app">Change app</string>
+    <string name="editor_from">From</string>
+    <string name="editor_until">Until</string>
+    <string name="editor_start_time">Start time</string>
+    <string name="editor_end_time">End time</string>
+    <string name="editor_overnight">Overnight window: it ends the next morning.</string>
+    <string name="editor_all_day">Start and end are the same, so this blocks for a full 24 hours.</string>
+    <string name="editor_days">Days</string>
+    <string name="editor_pick_a_day">Pick at least one day.</string>
+    <string name="editor_strict">Strict mode</string>
+    <string name="editor_strict_explainer">No unlock at all during this window, and it cannot be edited until the window ends. Strict mode can still be defeated by disabling Focuno in Android Settings. It\'s a speed bump, not a lock.</string>
+    <string name="editor_locked">Strict window in progress. Locked until %1$s.</string>
+
+    <!-- Insights -->
+    <string name="insights_7_days">7 days</string>
+    <string name="insights_30_days">30 days</string>
+    <string name="insights_empty_title">Nothing to show yet</string>
+    <string name="insights_empty_message">Use your phone for a day or two and your trends will appear here.</string>
+    <string name="insights_score_trend">Focus score</string>
+    <string name="insights_average_score">Average score: %1$d</string>
+    <string name="insights_no_scores">No scores yet in this range.</string>
+    <string name="insights_distracting_trend">Distracting time (minutes per day)</string>
+    <string name="insights_worst_hour">Your worst hour</string>
+    <string name="insights_worst_hour_none">No distracting use recorded yet.</string>
+    <string name="insights_worst_hour_value">%1$s to %2$s is when distracting apps pull you in most: %3$s in total.</string>
+    <string name="insights_bypass_title">When you wanted in</string>
+    <string name="insights_bypass_explainer">Each time you tapped \"I need this\", did you go through with it? Giving up means you chose to stay focused.</string>
+    <string name="insights_bypass_started">Started</string>
+    <string name="insights_bypass_abandoned">Gave up</string>
+    <string name="insights_bypass_granted">Unlocked</string>
+    <string name="insights_blocks_and_sessions">Pause screens shown: %1$d. Focus sessions completed: %2$d.</string>
+    <string name="insights_self_comparison">Only you versus your own past. No leaderboards, no rankings.</string>
+
+    <!-- Settings and privacy -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_goal_title">Daily screen-time goal</string>
+    <string name="settings_goal_explainer">The most total screen time you would like in a day. Days within it grow your streak.</string>
+    <string name="settings_goal_value">%1$dh %2$02dm</string>
+    <string name="settings_nudges_title">Nudges</string>
+    <string name="settings_nudges_explainer">Short, friendly messages. At most one every 20 minutes and six a day.</string>
+    <string name="settings_sensitivity">How often</string>
+    <string name="sensitivity_low">Low</string>
+    <string name="sensitivity_medium">Medium</string>
+    <string name="sensitivity_high">High</string>
+    <string name="settings_health_subtitle">See whether every permission is working</string>
+    <string name="settings_privacy_subtitle">What Focuno reads, and what it never does</string>
+    <string name="privacy_title">Privacy</string>
+    <string name="privacy_paragraph">Focuno works entirely on your phone. It has no accounts, no analytics and no internet permission, so nothing about you can leave this device. Your usage history lives in a private database on this phone and is deleted when you uninstall.</string>
+    <string name="privacy_reads_title">What it reads</string>
+    <string name="privacy_reads_body">Which app is in front of you, and how long each app is used. The accessibility service sees only the name of the app that opened, never what is on your screen.</string>
+    <string name="privacy_never_title">What it never touches</string>
+    <string name="privacy_never_body">Messages, photos, passwords, text on screen, your location, contacts, or anything you type in other apps. The only text Focuno keeps is the reason you give when you ask to unlock an app, and that stays on this phone.</string>
+
+    <!-- Health check -->
+    <string name="health_title">Health check</string>
+    <string name="health_all_good">Everything Focuno needs to block apps is on.</string>
+    <string name="health_needs_attention">Something needs your attention so blocking can work.</string>
+    <string name="health_accessibility_why">Lets Focuno notice which app is open so it can pause blocked ones. It reads app names only.</string>
+    <string name="health_overlay_why">Lets the pause screen appear over a blocked app.</string>
+    <string name="health_usage_why">Lets Focuno count your screen time in each app.</string>
+    <string name="health_notifications_why">Lets Focuno warn you straight away if protection turns off.</string>
+    <string name="health_battery_why">Stops your phone\'s battery saver from quietly shutting Focuno down.</string>
+    <string name="health_accessibility_idle">Switched on in Settings, but Android is not running it right now. Try switching it off and on again.</string>
+    <string name="health_fix">Fix</string>
+    <string name="health_status_ok">OK</string>
+    <string name="health_status_needs_fix">Needs fixing</string>
+
+    <!-- Restricted setting help (Android 13+) -->
+    <string name="restricted_title">Accessibility switch greyed out?</string>
+    <string name="restricted_body">Android 13 and newer locks accessibility for apps installed outside an app store. You can unlock it yourself:</string>
+    <string name="restricted_step1">Tap the button below to open Focuno\'s app info.</string>
+    <string name="restricted_step2">Tap the three dots in the top right corner.</string>
+    <string name="restricted_step3">Tap Allow restricted settings and confirm.</string>
+    <string name="restricted_step4">Come back and switch Focuno on under Accessibility.</string>
+    <string name="restricted_open_app_info">Open Focuno app info</string>
+
+    <!-- Phone-maker keep-alive guidance -->
+    <string name="oem_card_title">Keep Focuno running on %1$s</string>
+    <string name="oem_card_body">These settings stop your phone from quietly shutting Focuno down. Exact names vary a little between software versions.</string>
+    <string name="oem_open_settings">Open the settings screen</string>
+    <string name="oem_xiaomi_name">Xiaomi, Redmi or POCO</string>
+    <string name="oem_xiaomi_step1">Open Settings, then Apps, then Manage apps, then Focuno.</string>
+    <string name="oem_xiaomi_step2">Turn on Autostart, and set Battery saver to No restrictions.</string>
+    <string name="oem_xiaomi_step3">In the recent apps screen, press and hold Focuno and tap the lock icon.</string>
+    <string name="oem_oppo_name">Oppo or Realme</string>
+    <string name="oem_oppo_step1">Open Settings, then Apps, then App management, then Focuno.</string>
+    <string name="oem_oppo_step2">Turn on Allow auto-launch (or Auto-start).</string>
+    <string name="oem_oppo_step3">Under Battery usage, choose Allow background activity.</string>
+    <string name="oem_vivo_name">Vivo or iQOO</string>
+    <string name="oem_vivo_step1">Open Settings, then Battery, then Background power consumption management.</string>
+    <string name="oem_vivo_step2">Find Focuno and choose Allow high background power consumption.</string>
+    <string name="oem_vivo_step3">Open i Manager, then App manager, then Autostart, and turn Focuno on.</string>
+    <string name="oem_oneplus_name">OnePlus</string>
+    <string name="oem_oneplus_step1">Open Settings, then Battery, then Battery optimization, then Focuno.</string>
+    <string name="oem_oneplus_step2">Choose Don\'t optimize.</string>
+    <string name="oem_oneplus_step3">Open Settings, then Apps, then Focuno, and allow auto-launch and background activity.</string>
+    <string name="oem_samsung_name">Samsung</string>
+    <string name="oem_samsung_step1">Open Settings, then Battery, then Background usage limits.</string>
+    <string name="oem_samsung_step2">Add Focuno to Never sleeping apps.</string>
+    <string name="oem_samsung_step3">Open Settings, then Apps, then Focuno, then Battery, and choose Unrestricted.</string>
+    <string name="oem_other_name">your phone</string>
+    <string name="oem_other_step1">Open Settings, then Apps, then Focuno, then Battery.</string>
+    <string name="oem_other_step2">Choose Unrestricted (or Don\'t optimize) and allow background activity.</string>
+    <string name="oem_other_step3">If your phone has an Autostart or App launch setting, turn it on for Focuno.</string>
+
+    <!-- Onboarding -->
+    <string name="onb_purpose_title">Take your attention back</string>
+    <string name="onb_purpose_body">Focuno helps you stop doomscrolling while you prepare for GATE, JEE, NEET or UPSC. It counts your screen time honestly, pauses the apps you choose, and adds a short pause before you open them.</string>
+    <string name="onb_purpose_point1">No account, no ads, no internet access.</string>
+    <string name="onb_purpose_point2">Everything stays on this phone.</string>
+    <string name="onb_purpose_point3">Setup takes about two minutes. Each step explains why it is needed.</string>
+    <string name="onb_purpose_cta">Let\'s set it up</string>
+    <string name="onb_usage_title">Count your screen time</string>
+    <string name="onb_usage_body">Android calls this Usage access. It lets Focuno see which apps you open and for how long. Focuno never sees what you do inside them.</string>
+    <string name="onb_accessibility_title">Notice when a blocked app opens</string>
+    <string name="onb_accessibility_body">This is how Focuno knows a blocked app just came to the front. It reads only the app\'s name, never what is on your screen. Find Focuno in the list and switch it on.</string>
+    <string name="onb_overlay_title">Show the pause screen</string>
+    <string name="onb_overlay_body">Focuno draws a calm pause screen on top of a blocked app. This permission is what lets it appear over other apps.</string>
+    <string name="onb_stay_alive_title">Keep Focuno running</string>
+    <string name="onb_stay_alive_body">Some phones close background apps to save battery, and that also switches blocking off. Allow notifications so Focuno can warn you if that happens, and ask Android not to optimise Focuno.</string>
+    <string name="onb_autostart_title">One last step for your phone</string>
+    <string name="onb_autostart_body">Phone makers add their own battery managers that can stop apps in the background. Follow the steps below for your phone so Focuno stays on.</string>
+    <string name="onb_autostart_done">I\'ve done this</string>
+    <string name="onb_pick_title">Which apps pull you in?</string>
+    <string name="onb_pick_body">We guessed from popular apps. Switch on the ones you want Focuno to help you with. You can change this any time.</string>
+    <string name="onb_schedule_title">Pick a first block time</string>
+    <string name="onb_schedule_body">Choose when these apps should pause. You can add more times, or different ones for each app, later.</string>
+    <string name="onb_schedule_create">Create schedule</string>
+    <string name="onb_schedule_skip">Skip for now</string>
+    <string name="onb_schedule_none_selected">Pick at least one app on the previous step to create a schedule.</string>
+    <string name="onb_schedule_honest">Blocking adds friction, not a lock: you can still unlock an app with a short wait and a reason. Android does not allow an app to be made unbypassable.</string>
+    <plurals name="onb_schedule_summary">
+        <item quantity="one">This will pause %1$d app.</item>
+        <item quantity="other">This will pause %1$d apps.</item>
+    </plurals>
+    <string name="preset_night">Night: %1$s to %2$s</string>
+    <string name="preset_study_day">Study day: %1$s to %2$s</string>
+    <string name="preset_evening">Evening: %1$s to %2$s</string>
+    <string name="onb_allow">Allow</string>
+    <string name="onb_open_settings">Open settings</string>
+    <string name="onb_skip">Skip for now</string>
+    <string name="onb_status_on">On</string>
+    <string name="onb_status_off">Not on yet</string>
 </resources>
