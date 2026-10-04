@@ -55,6 +55,9 @@ fun ProtectionBanner(status: ProtectionStatus?, onFix: () -> Unit, modifier: Mod
         if (blockingBroken) it == ProtectionIssue.ACCESSIBILITY || it == ProtectionIssue.OVERLAY else it == ProtectionIssue.USAGE_ACCESS
     }
 
+    // map is inline, so the composable label lookup is allowed here; joinToString is not inline.
+    val missingText = missing.map { issueLabel(it) }.joinToString(", ")
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -74,7 +77,7 @@ fun ProtectionBanner(status: ProtectionStatus?, onFix: () -> Unit, modifier: Mod
         Text(
             text = stringResource(
                 if (blockingBroken) R.string.banner_blocking_off_body else R.string.banner_usage_off_body,
-                missing.joinToString(", ") { issueLabelPlain(it) },
+                missingText,
             ),
             style = MaterialTheme.typography.bodyMedium,
             color = FocunoTheme.colors.textSecondary,
@@ -87,9 +90,6 @@ fun ProtectionBanner(status: ProtectionStatus?, onFix: () -> Unit, modifier: Mod
         }
     }
 }
-
-@Composable
-private fun issueLabelPlain(issue: ProtectionIssue): String = issueLabel(issue)
 
 @Preview(showBackground = true, backgroundColor = 0xFF0D0417)
 @Composable
