@@ -20,4 +20,10 @@ data class AppSettings(
     val nudgeCountToday: Int = 0,
     /** Goal thresholds already announced today, e.g. "2026-10-04:50". */
     val goalThresholdsHit: Set<String> = emptySet(),
+    /** Points from every finished day, added once when the day is rolled up. */
+    val xpBanked: Int = 0,
+    val xpBankedThrough: String? = null,
+    val badgesUnlocked: Set<String> = emptySet(),
+    /** Highest level whose celebration has already been shown. */
+    val celebratedLevel: Int = 1,
 )

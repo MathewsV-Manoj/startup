@@ -48,6 +48,7 @@ data class FocusUiState(
     val week: List<WeekDay> = emptyList(),
     val protection: ProtectionStatus? = null,
     val sessionEndsAtMs: Long? = null,
+    val updatedAtMs: Long = 0L,
 )
 
 @HiltViewModel
@@ -114,6 +115,7 @@ class FocusViewModel @Inject constructor(
                 week = week,
                 protection = protection,
                 sessionEndsAtMs = session?.endTs,
+                updatedAtMs = System.currentTimeMillis(),
             )
         } catch (e: CancellationException) {
             throw e

@@ -35,7 +35,7 @@ private const val SWEEP_ANGLE = 270f
 
 /** Circular score gauge. Counts up on load. A null score shows a dash, never a perfect-looking 100. */
 @Composable
-fun FocusGauge(score: Int?, modifier: Modifier = Modifier, size: Dp = 224.dp) {
+fun FocusGauge(score: Int?, modifier: Modifier = Modifier, size: Dp = 224.dp, compact: Boolean = false) {
     val progress = remember { Animatable(0f) }
     LaunchedEffect(score) {
         progress.animateTo(
@@ -48,7 +48,7 @@ fun FocusGauge(score: Int?, modifier: Modifier = Modifier, size: Dp = 224.dp) {
 
     Box(modifier = modifier.size(size).semantics { contentDescription = description }, contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(size)) {
-            val stroke = 18.dp.toPx()
+            val stroke = (if (compact) 11.dp else 18.dp).toPx()
             val inset = stroke / 2
             val arcSize = Size(this.size.width - stroke, this.size.height - stroke)
             val topLeft = Offset(inset, inset)
@@ -85,14 +85,16 @@ fun FocusGauge(score: Int?, modifier: Modifier = Modifier, size: Dp = 224.dp) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = if (score == null) stringResource(R.string.gauge_dash) else progress.value.roundToInt().toString(),
-                style = MaterialTheme.typography.displayLarge,
+                style = if (compact) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.displayLarge,
                 color = colors.textPrimary,
             )
-            Text(
-                text = stringResource(R.string.gauge_label),
-                style = MaterialTheme.typography.labelLarge,
-                color = colors.textSecondary,
-            )
+            if (!compact) {
+                Text(
+                    text = stringResource(R.string.gauge_label),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colors.textSecondary,
+                )
+            }
         }
     }
 }

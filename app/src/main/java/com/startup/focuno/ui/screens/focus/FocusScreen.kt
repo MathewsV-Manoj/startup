@@ -1,9 +1,11 @@
 package com.startup.focuno.ui.screens.focus
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,14 +15,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.LocalFireDepartment
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -29,54 +35,62 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
-import com.startup.focuno.domain.model.DayStats
-import com.startup.focuno.ui.components.AppIcon
-import com.startup.focuno.ui.components.EmptyState
+import com.startup.focuno.domain.model.Quest
+import com.startup.focuno.domain.model.QuestKind
+import com.startup.focuno.ui.components.BuddyMood
+import com.startup.focuno.ui.components.BuddyView
 import com.startup.focuno.ui.components.ErrorState
-import com.startup.focuno.ui.components.FocusGauge
 import com.startup.focuno.ui.components.GlassCard
 import com.startup.focuno.ui.components.LoadingState
 import com.startup.focuno.ui.components.ProtectionBanner
 import com.startup.focuno.ui.components.RefreshWhileResumed
 import com.startup.focuno.ui.components.ScreenTitle
 import com.startup.focuno.ui.components.SectionTitle
-import com.startup.focuno.ui.components.StatTile
 import com.startup.focuno.ui.components.durationText
+import com.startup.focuno.ui.screens.trophies.GameUiState
+import com.startup.focuno.ui.screens.trophies.GameViewModel
 import com.startup.focuno.ui.theme.FocunoTheme
 import kotlinx.coroutines.delay
 import java.time.format.TextStyle
 import java.util.Locale
 
 @Composable
-fun FocusScreen(
+fun HomeScreen(
     onOpenSettings: () -> Unit,
     onOpenHealth: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: FocusViewModel = hiltViewModel(),
+    focusViewModel: FocusViewModel = hiltViewModel(),
+    gameViewModel: GameViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    RefreshWhileResumed(intervalMs = 30_000L, onRefresh = viewModel::refresh)
-    FocusContent(
-        state = state,
+    val focus by focusViewModel.state.collectAsStateWithLifecycle()
+    val game by gameViewModel.state.collectAsStateWithLifecycle()
+    RefreshWhileResumed(intervalMs = 30_000L, onRefresh = focusViewModel::refresh)
+    HomeContent(
+        focus = focus,
+        game = game,
         onOpenSettings = onOpenSettings,
         onOpenHealth = onOpenHealth,
-        onRetry = viewModel::refresh,
-        onStartSession = viewModel::startFocusSession,
-        onStopSession = viewModel::stopFocusSession,
+        onRetry = focusViewModel::refresh,
+        onStartSession = focusViewModel::startFocusSession,
+        onStopSession = focusViewModel::stopFocusSession,
         modifier = modifier,
     )
 }
 
 @Composable
-fun FocusContent(
-    state: FocusUiState,
+fun HomeContent(
+    focus: FocusUiState,
+    game: GameUiState,
     onOpenSettings: () -> Unit,
     onOpenHealth: () -> Unit,
     onRetry: () -> Unit,
@@ -85,26 +99,27 @@ fun FocusContent(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxSize()) {
-        ScreenTitle(stringResource(R.string.tab_focus)) {
+        ScreenTitle(stringResource(R.string.tab_home)) {
             IconButton(onClick = onOpenSettings) {
                 Icon(Icons.Rounded.Settings, contentDescription = stringResource(R.string.settings_title), tint = FocunoTheme.colors.textSecondary)
             }
         }
         when {
-            state.isLoading -> LoadingState()
-            state.hasError && state.today == null && state.hasUsageAccess ->
-                ErrorState(stringResource(R.string.error_generic), onRetry)
+            focus.isLoading -> LoadingState()
+            focus.hasError && focus.today == null && focus.hasUsageAccess -> ErrorState(stringResource(R.string.error_generic), onRetry)
             else -> Column(
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                ProtectionBanner(state.protection, onFix = onOpenHealth)
-                GaugeCard(state, onOpenHealth)
-                if (state.hasUsageAccess) {
-                    TodayCard(state.today)
-                    FocusSessionCard(state.sessionEndsAtMs, onStartSession, onStopSession)
-                    StreakCard(state)
-                    TopDistractionsCard(state.topDistractions)
+                ProtectionBanner(focus.protection, onFix = onOpenHealth)
+                BuddyCard(game, focus.today?.focusScore, focus.hasUsageAccess)
+                FocusSessionCard(focus.sessionEndsAtMs, onStartSession, onStopSession)
+                QuestsCard(game.quests)
+                StreakCard(focus)
+                if (!focus.hasUsageAccess) {
+                    OutlinedButton(onClick = onOpenHealth, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+                        Text(stringResource(R.string.focus_allow_usage_access))
+                    }
                 }
                 Spacer(Modifier.height(8.dp))
             }
@@ -113,54 +128,56 @@ fun FocusContent(
 }
 
 @Composable
-private fun GaugeCard(state: FocusUiState, onOpenHealth: () -> Unit) {
-    val score = state.today?.focusScore
-    GlassCard(Modifier.fillMaxWidth(), contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 24.dp, horizontal = 20.dp)) {
+private fun BuddyCard(game: GameUiState, score: Int?, hasAccess: Boolean) {
+    val mood = when {
+        !hasAccess || score == null -> BuddyMood.OKAY
+        score >= 70 -> BuddyMood.HAPPY
+        score >= 40 -> BuddyMood.OKAY
+        else -> BuddyMood.SLEEPY
+    }
+    val message = when {
+        !hasAccess || score == null -> R.string.buddy_msg_new
+        score >= 70 -> R.string.buddy_msg_happy
+        score >= 40 -> R.string.buddy_msg_okay
+        else -> R.string.buddy_msg_sleepy
+    }
+    val titles = stringArrayResource(R.array.level_titles)
+    val level = game.level
+    GlassCard(Modifier.fillMaxWidth(), contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp)) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            FocusGauge(score = score)
-            Spacer(Modifier.height(12.dp))
+            BuddyView(mood = mood, level = level.level, size = 170.dp, description = stringResource(R.string.buddy_description))
             Text(
-                text = stringResource(scoreMessage(score, state.hasUsageAccess)),
+                text = stringResource(message),
                 style = MaterialTheme.typography.bodyLarge,
                 color = FocunoTheme.colors.textSecondary,
                 textAlign = TextAlign.Center,
             )
-            if (!state.hasUsageAccess) {
-                Spacer(Modifier.height(12.dp))
-                OutlinedButton(onClick = onOpenHealth) { Text(stringResource(R.string.focus_allow_usage_access)) }
-            }
-        }
-    }
-}
-
-private fun scoreMessage(score: Int?, hasAccess: Boolean): Int = when {
-    !hasAccess -> R.string.score_msg_no_access
-    score == null -> R.string.score_msg_no_data
-    score >= 80 -> R.string.score_msg_great
-    score >= 60 -> R.string.score_msg_good
-    score >= 40 -> R.string.score_msg_scattered
-    else -> R.string.score_msg_rough
-}
-
-@Composable
-private fun TodayCard(today: DayStats?) {
-    GlassCard(Modifier.fillMaxWidth()) {
-        SectionTitle(stringResource(R.string.focus_today))
-        Spacer(Modifier.height(16.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            StatTile(stringResource(R.string.focus_total), today?.let { durationText(it.totalMs) } ?: stringResource(R.string.gauge_dash), FocunoTheme.colors.textPrimary)
-            StatTile(stringResource(R.string.focus_productive), today?.let { durationText(it.productiveMs) } ?: stringResource(R.string.gauge_dash), FocunoTheme.colors.productive)
-            StatTile(stringResource(R.string.focus_distracting), today?.let { durationText(it.distractingMs) } ?: stringResource(R.string.gauge_dash), FocunoTheme.colors.distracting)
-        }
-        if (today != null) {
             Spacer(Modifier.height(16.dp))
             Text(
-                text = pluralStringResource(R.plurals.focus_pickups, today.pickupCount, today.pickupCount),
+                text = stringResource(R.string.level_line, level.level, titles[level.titleIndex.coerceIn(0, titles.lastIndex)]),
+                style = MaterialTheme.typography.headlineSmall,
+                color = FocunoTheme.colors.textPrimary,
+            )
+            Spacer(Modifier.height(10.dp))
+            LinearProgressIndicator(
+                progress = { level.fraction },
+                modifier = Modifier.fillMaxWidth().height(14.dp).clip(RoundedCornerShape(50)),
+                color = FocunoTheme.colors.productive,
+                trackColor = FocunoTheme.colors.trackInactive,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = stringResource(R.string.xp_progress, level.xpIntoLevel, level.xpForNextLevel),
                 style = MaterialTheme.typography.bodyMedium,
                 color = FocunoTheme.colors.textSecondary,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
             )
+            if (game.todayActionXp > 0) {
+                Text(
+                    text = stringResource(R.string.xp_today, game.todayActionXp),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = FocunoTheme.colors.warning,
+                )
+            }
         }
     }
 }
@@ -168,16 +185,17 @@ private fun TodayCard(today: DayStats?) {
 @Composable
 private fun FocusSessionCard(endsAtMs: Long?, onStart: (Int) -> Unit, onStop: () -> Unit) {
     GlassCard(Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Icon(Icons.Rounded.Timer, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
-            SectionTitle(stringResource(R.string.session_title))
-        }
-        Spacer(Modifier.height(8.dp))
         if (endsAtMs == null) {
-            Text(stringResource(R.string.session_explainer), style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textSecondary)
-            Spacer(Modifier.height(12.dp))
+            Button(onClick = { onStart(25) }, modifier = Modifier.fillMaxWidth().height(64.dp)) {
+                Icon(Icons.Rounded.PlayArrow, contentDescription = null)
+                Spacer(Modifier.size(8.dp))
+                Text(stringResource(R.string.home_start_focus), style = MaterialTheme.typography.titleLarge)
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(stringResource(R.string.home_start_focus_hint), style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textSecondary)
+            Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(25, 45, 60).forEach { minutes ->
+                listOf(10, 45, 60).forEach { minutes ->
                     AssistChip(onClick = { onStart(minutes) }, label = { Text(stringResource(R.string.session_minutes_chip, minutes)) })
                 }
             }
@@ -189,11 +207,9 @@ private fun FocusSessionCard(endsAtMs: Long?, onStart: (Int) -> Unit, onStop: ()
                 }
             }
             val remaining = (endsAtMs - now).coerceAtLeast(0)
-            val minutes = (remaining / 60_000).toInt()
-            val seconds = ((remaining / 1_000) % 60).toInt()
             Text(
-                text = stringResource(R.string.session_remaining, minutes, seconds),
-                style = MaterialTheme.typography.headlineMedium,
+                text = stringResource(R.string.session_remaining, (remaining / 60_000).toInt(), ((remaining / 1_000) % 60).toInt()),
+                style = MaterialTheme.typography.displaySmall,
                 color = FocunoTheme.colors.productive,
             )
             Spacer(Modifier.height(4.dp))
@@ -205,10 +221,69 @@ private fun FocusSessionCard(endsAtMs: Long?, onStart: (Int) -> Unit, onStop: ()
 }
 
 @Composable
+private fun QuestsCard(quests: List<Quest>) {
+    if (quests.isEmpty()) return
+    GlassCard(Modifier.fillMaxWidth()) {
+        SectionTitle(stringResource(R.string.quests_title))
+        Spacer(Modifier.height(12.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            quests.forEach { QuestRow(it) }
+        }
+    }
+}
+
+@Composable
+private fun QuestRow(quest: Quest) {
+    val title = stringResource(
+        when (quest.kind) {
+            QuestKind.FOCUS_SESSION -> R.string.quest_focus_title
+            QuestKind.STAY_UNDER_GOAL -> R.string.quest_goal_title
+            QuestKind.RESIST_URGE -> R.string.quest_urge_title
+        },
+    )
+    val subtitle = when (quest.kind) {
+        QuestKind.FOCUS_SESSION -> stringResource(if (quest.done) R.string.quest_done else R.string.quest_focus_todo)
+        QuestKind.RESIST_URGE -> stringResource(if (quest.done) R.string.quest_done else R.string.quest_urge_todo)
+        QuestKind.STAY_UNDER_GOAL ->
+            if (quest.overGoal) stringResource(R.string.quest_goal_over) else stringResource(R.string.quest_goal_ok, durationText(quest.minutesLeft * 60_000L))
+    }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(if (quest.done) FocunoTheme.colors.productive else Color.Transparent, CircleShape)
+                .border(2.dp, if (quest.done) FocunoTheme.colors.productive else FocunoTheme.colors.textTertiary, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (quest.done) Icon(Icons.Rounded.Check, contentDescription = null, tint = FocunoTheme.colors.trackInactive)
+        }
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textPrimary)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = if (quest.overGoal) FocunoTheme.colors.warning else FocunoTheme.colors.textSecondary)
+            if (quest.kind == QuestKind.STAY_UNDER_GOAL) {
+                Spacer(Modifier.height(6.dp))
+                LinearProgressIndicator(
+                    progress = { quest.progress },
+                    modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(50)),
+                    color = if (quest.overGoal) FocunoTheme.colors.warning else FocunoTheme.colors.productive,
+                    trackColor = FocunoTheme.colors.trackInactive,
+                )
+            }
+        }
+        Text(
+            text = stringResource(R.string.quest_reward, quest.rewardXp),
+            style = MaterialTheme.typography.titleSmall,
+            color = FocunoTheme.colors.warning,
+        )
+    }
+}
+
+
+@Composable
 private fun StreakCard(state: FocusUiState) {
     GlassCard(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Icon(Icons.Rounded.LocalFireDepartment, contentDescription = null, tint = FocunoTheme.colors.warning)
+            Icon(Icons.Rounded.LocalFireDepartment, contentDescription = null, tint = FocunoTheme.colors.warning, modifier = Modifier.size(32.dp))
             Column {
                 SectionTitle(pluralStringResource(R.plurals.streak_days, state.streak, state.streak))
                 Text(
@@ -227,45 +302,13 @@ private fun StreakCard(state: FocusUiState) {
                         DayOutcome.OVER_GOAL -> FocunoTheme.colors.warning
                         DayOutcome.NO_DATA, DayOutcome.TODAY -> FocunoTheme.colors.trackInactive
                     }
-                    Box(
-                        Modifier
-                            .size(28.dp)
-                            .background(color, CircleShape),
-                    )
+                    Box(Modifier.size(30.dp).background(color, CircleShape))
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = day.date.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault()),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (day.outcome == DayOutcome.TODAY) FocunoTheme.colors.textPrimary else FocunoTheme.colors.textTertiary,
                     )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TopDistractionsCard(items: List<TopDistraction>) {
-    GlassCard(Modifier.fillMaxWidth()) {
-        SectionTitle(stringResource(R.string.focus_top_distractions))
-        Spacer(Modifier.height(12.dp))
-        if (items.isEmpty()) {
-            Text(stringResource(R.string.focus_no_distractions), style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textSecondary)
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items.forEach { item ->
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        AppIcon(item.usage.packageName, size = 40.dp)
-                        Column(Modifier.weight(1f)) {
-                            Text(item.label, style = MaterialTheme.typography.titleSmall, color = FocunoTheme.colors.textPrimary)
-                            Text(
-                                text = pluralStringResource(R.plurals.opens_count, item.usage.openCount, item.usage.openCount),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = FocunoTheme.colors.textSecondary,
-                            )
-                        }
-                        Text(durationText(item.usage.foregroundMs), style = MaterialTheme.typography.titleSmall, color = FocunoTheme.colors.distracting)
-                    }
                 }
             }
         }

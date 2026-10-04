@@ -39,16 +39,16 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 @Composable
-fun InsightsScreen(modifier: Modifier = Modifier, viewModel: InsightsViewModel = hiltViewModel()) {
+fun InsightsScreen(modifier: Modifier = Modifier, showTitle: Boolean = true, viewModel: InsightsViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     RefreshWhileResumed(intervalMs = 60_000L, onRefresh = viewModel::refresh)
-    InsightsContent(state = state, onSelectRange = viewModel::selectRange, modifier = modifier)
+    InsightsContent(state = state, onSelectRange = viewModel::selectRange, showTitle = showTitle, modifier = modifier)
 }
 
 @Composable
-fun InsightsContent(state: InsightsUiState, onSelectRange: (InsightsRange) -> Unit, modifier: Modifier = Modifier) {
+fun InsightsContent(state: InsightsUiState, onSelectRange: (InsightsRange) -> Unit, modifier: Modifier = Modifier, showTitle: Boolean = true) {
     Column(modifier.fillMaxSize()) {
-        ScreenTitle(stringResource(R.string.tab_insights))
+        if (showTitle) ScreenTitle(stringResource(R.string.tab_insights))
         if (state.isLoading) {
             LoadingState()
             return@Column

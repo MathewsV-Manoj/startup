@@ -41,6 +41,10 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         val nudgeDay = stringPreferencesKey("nudge_day")
         val nudgeCountToday = intPreferencesKey("nudge_count_today")
         val goalThresholdsHit = stringSetPreferencesKey("goal_thresholds_hit")
+        val xpBanked = intPreferencesKey("xp_banked")
+        val xpBankedThrough = stringPreferencesKey("xp_banked_through")
+        val badgesUnlocked = stringSetPreferencesKey("badges_unlocked")
+        val celebratedLevel = intPreferencesKey("celebrated_level")
     }
 
     val settings: Flow<AppSettings> = context.focunoDataStore.data
@@ -64,6 +68,10 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
                 nudgeDay = prefs[Keys.nudgeDay] ?: defaults.nudgeDay,
                 nudgeCountToday = prefs[Keys.nudgeCountToday] ?: defaults.nudgeCountToday,
                 goalThresholdsHit = prefs[Keys.goalThresholdsHit] ?: defaults.goalThresholdsHit,
+                xpBanked = prefs[Keys.xpBanked] ?: defaults.xpBanked,
+                xpBankedThrough = prefs[Keys.xpBankedThrough],
+                badgesUnlocked = prefs[Keys.badgesUnlocked] ?: defaults.badgesUnlocked,
+                celebratedLevel = prefs[Keys.celebratedLevel] ?: defaults.celebratedLevel,
             )
         }
 
@@ -115,6 +123,21 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         context.focunoDataStore.edit { prefs ->
             val current = prefs[Keys.goalThresholdsHit].orEmpty().filter { it.startsWith("$keepDay:") }.toSet()
             prefs[Keys.goalThresholdsHit] = current + entry
+        }
+    }
+
+    /** Adds a finished day's points once, and remembers which day was the last one counted. */
+    suspend fun bankXp(amount: Int, throughDay: String) {
+        context.focunoDataStore.edit {
+            it[Keys.xpBanked] = (it[Keys.xpBanked] ?: 0) + amount
+            it[Keys.xpBankedThrough] = throughDay
+        }
+    }
+
+    suspend fun setCelebrated(level: Int, badges: Set<String>) {
+        context.focunoDataStore.edit {
+            it[Keys.celebratedLevel] = level
+            it[Keys.badgesUnlocked] = badges
         }
     }
 }

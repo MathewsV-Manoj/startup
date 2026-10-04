@@ -61,6 +61,7 @@ fun AppsScreen(
     onOpenHealth: () -> Unit,
     onScheduleApp: (String) -> Unit,
     modifier: Modifier = Modifier,
+    showTitle: Boolean = true,
     viewModel: AppsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -72,6 +73,7 @@ fun AppsScreen(
         onSchedule = onScheduleApp,
         onRetry = viewModel::refresh,
         onOpenHealth = onOpenHealth,
+        showTitle = showTitle,
         modifier = modifier,
     )
 }
@@ -85,9 +87,10 @@ fun AppsContent(
     onRetry: () -> Unit,
     onOpenHealth: () -> Unit,
     modifier: Modifier = Modifier,
+    showTitle: Boolean = true,
 ) {
     Column(modifier.fillMaxSize()) {
-        ScreenTitle(stringResource(R.string.tab_apps))
+        if (showTitle) ScreenTitle(stringResource(R.string.tab_apps))
         if (state.days.isNotEmpty()) DaySelector(state.days, state.dayOffset, onSelectDay)
         when {
             state.isLoading -> LoadingState()

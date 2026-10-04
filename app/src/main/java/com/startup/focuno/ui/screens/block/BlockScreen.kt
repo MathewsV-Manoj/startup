@@ -19,6 +19,9 @@ import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
+import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
+import com.startup.focuno.data.repository.ProtectionStatus
 import com.startup.focuno.domain.model.BlockSchedule
 import com.startup.focuno.domain.model.BlockScope
 import com.startup.focuno.ui.components.shortVideoName
@@ -41,6 +45,7 @@ import com.startup.focuno.ui.components.AppIcon
 import com.startup.focuno.ui.components.EmptyState
 import com.startup.focuno.ui.components.GlassCard
 import com.startup.focuno.ui.components.LoadingState
+import com.startup.focuno.ui.components.RefreshWhileResumed
 import com.startup.focuno.ui.components.ScreenTitle
 import com.startup.focuno.ui.components.SectionTitle
 import com.startup.focuno.ui.components.durationText
@@ -53,14 +58,17 @@ import java.util.Locale
 
 @Composable
 fun BlockScreen(
+    onOpenHealth: () -> Unit,
     onAddSchedule: () -> Unit,
     onEditSchedule: (BlockSchedule) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: BlockViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    RefreshWhileResumed(intervalMs = 5_000L, onRefresh = viewModel::refreshProtection)
     BlockContent(
         state = state,
+        onOpenHealth = onOpenHealth,
         onAdd = onAddSchedule,
         onEdit = onEditSchedule,
         onToggle = viewModel::setEnabled,
@@ -72,6 +80,7 @@ fun BlockScreen(
 @Composable
 fun BlockContent(
     state: BlockUiState,
+    onOpenHealth: () -> Unit,
     onAdd: () -> Unit,
     onEdit: (BlockSchedule) -> Unit,
     onToggle: (BlockSchedule, Boolean) -> Unit,
@@ -80,7 +89,7 @@ fun BlockContent(
 ) {
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            ScreenTitle(stringResource(R.string.tab_block))
+            ScreenTitle(stringResource(R.string.tab_shield))
             if (state.isLoading) {
                 LoadingState()
             } else {
@@ -89,6 +98,7 @@ fun BlockContent(
                     contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 96.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
+                    item { ShieldStatusCard(state.protection, onOpenHealth) }
                     item { QuickBlockCard(state, onQuickBlock) }
                     if (state.groups.isEmpty()) {
                         item {
@@ -213,5 +223,30 @@ private fun daysSummary(mask: Int): String {
         weekend -> stringResource(R.string.days_weekends)
         else -> DayOfWeek.entries.filterIndexed { index, _ -> mask and (1 shl index) != 0 }
             .joinToString(", ") { it.getDisplayName(TextStyle.SHORT, Locale.getDefault()) }
+    }
+}
+
+/** Big and obvious: is the shield actually working right now? */
+@Composable
+private fun ShieldStatusCard(status: ProtectionStatus?, onOpenHealth: () -> Unit) {
+    if (status == null) return
+    val on = status.blockingActive
+    val tint = if (on) FocunoTheme.colors.productive else FocunoTheme.colors.distracting
+    GlassCard(Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Icon(if (on) Icons.Rounded.CheckCircle else Icons.Rounded.Warning, contentDescription = null, tint = tint, modifier = Modifier.height(40.dp))
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(if (on) R.string.shield_on_title else R.string.shield_off_title), style = MaterialTheme.typography.titleLarge, color = tint)
+                Text(
+                    stringResource(if (on) R.string.shield_on_body else R.string.shield_off_body),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = FocunoTheme.colors.textSecondary,
+                )
+            }
+        }
+        if (!on) {
+            Spacer(Modifier.height(12.dp))
+            Button(onClick = onOpenHealth, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text(stringResource(R.string.banner_fix_now)) }
+        }
     }
 }

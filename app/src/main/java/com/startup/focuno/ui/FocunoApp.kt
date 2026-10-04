@@ -9,10 +9,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.EmojiEvents
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Insights
-import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -28,17 +28,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
-import com.startup.focuno.ui.screens.apps.AppsScreen
+import com.startup.focuno.ui.screens.stats.StatsScreen
+import com.startup.focuno.ui.screens.trophies.GameViewModel
+import com.startup.focuno.ui.screens.trophies.TrophiesScreen
+import com.startup.focuno.ui.screens.trophies.badgeName
+import com.startup.focuno.ui.components.CelebrationDialog
+import com.startup.focuno.ui.components.RefreshWhileResumed
 import com.startup.focuno.ui.screens.block.BlockScreen
 import com.startup.focuno.ui.screens.block.ScheduleEditorSheet
 import com.startup.focuno.ui.screens.block.ScheduleEditorViewModel
-import com.startup.focuno.ui.screens.focus.FocusScreen
+import com.startup.focuno.ui.screens.focus.HomeScreen
 import com.startup.focuno.ui.screens.health.HealthScreen
-import com.startup.focuno.ui.screens.insights.InsightsScreen
 import com.startup.focuno.ui.screens.onboarding.OnboardingScreen
 import com.startup.focuno.ui.screens.settings.PrivacyScreen
 import com.startup.focuno.ui.screens.settings.SettingsScreen
@@ -47,10 +52,10 @@ import com.startup.focuno.ui.theme.DeepVoidPurple
 import com.startup.focuno.ui.theme.FocunoTheme
 
 private enum class Tab(val labelRes: Int, val icon: ImageVector) {
-    FOCUS(R.string.tab_focus, Icons.Rounded.Timer),
-    APPS(R.string.tab_apps, Icons.Rounded.Apps),
-    BLOCK(R.string.tab_block, Icons.Rounded.Lock),
-    INSIGHTS(R.string.tab_insights, Icons.Rounded.Insights),
+    HOME(R.string.tab_home, Icons.Rounded.Home),
+    SHIELD(R.string.tab_shield, Icons.Rounded.Shield),
+    STATS(R.string.tab_stats, Icons.Rounded.Insights),
+    TROPHIES(R.string.tab_trophies, Icons.Rounded.EmojiEvents),
 }
 
 private const val ROUTE_SETTINGS = 0
@@ -84,6 +89,9 @@ private fun MainScaffold(openHealthRequest: Int) {
     BackHandler(enabled = stack.isNotEmpty()) { stack = stack.dropLast(1) }
 
     val editor: ScheduleEditorViewModel = hiltViewModel()
+    val gameViewModel: GameViewModel = hiltViewModel()
+    val game by gameViewModel.state.collectAsStateWithLifecycle()
+    RefreshWhileResumed(intervalMs = 30_000L, onRefresh = gameViewModel::refresh)
     val editorState by editor.state.collectAsStateWithLifecycle()
 
     if (route == null) {
@@ -112,19 +120,20 @@ private fun MainScaffold(openHealthRequest: Int) {
             Box(Modifier.padding(padding)) {
                 Crossfade(targetState = tabIndex, label = "tabs") { index ->
                     when (Tab.entries[index]) {
-                        Tab.FOCUS -> FocusScreen(
+                        Tab.HOME -> HomeScreen(
                             onOpenSettings = { stack = stack + ROUTE_SETTINGS },
                             onOpenHealth = { stack = stack + ROUTE_HEALTH },
                         )
-                        Tab.APPS -> AppsScreen(
+                        Tab.SHIELD -> BlockScreen(
                             onOpenHealth = { stack = stack + ROUTE_HEALTH },
-                            onScheduleApp = editor::openForApp,
-                        )
-                        Tab.BLOCK -> BlockScreen(
                             onAddSchedule = editor::openNew,
                             onEditSchedule = editor::openEdit,
                         )
-                        Tab.INSIGHTS -> InsightsScreen()
+                        Tab.STATS -> StatsScreen(
+                            onOpenHealth = { stack = stack + ROUTE_HEALTH },
+                            onScheduleApp = editor::openForApp,
+                        )
+                        Tab.TROPHIES -> TrophiesScreen()
                     }
                 }
             }
@@ -162,4 +171,26 @@ private fun MainScaffold(openHealthRequest: Int) {
         onSave = editor::save,
         onDelete = editor::delete,
     )
+
+    game.celebration?.let { celebration ->
+        val titles = stringArrayResource(R.array.level_titles)
+        val levelUp = celebration.newLevel
+        val badgeNames = celebration.newBadges.map { stringResource(badgeName(it)) }.joinToString(", ")
+        CelebrationDialog(
+            title = if (levelUp != null) {
+                stringResource(R.string.celebrate_level_title, levelUp.level)
+            } else {
+                stringResource(R.string.celebrate_badge_title)
+            },
+            message = when {
+                levelUp != null && badgeNames.isNotEmpty() ->
+                    stringResource(R.string.celebrate_level_and_badges, titles[levelUp.titleIndex.coerceIn(0, titles.lastIndex)], badgeNames)
+                levelUp != null -> stringResource(R.string.celebrate_level_message, titles[levelUp.titleIndex.coerceIn(0, titles.lastIndex)])
+                else -> stringResource(R.string.celebrate_badge_message, badgeNames)
+            },
+            buttonLabel = stringResource(R.string.celebrate_button),
+            level = game.level.level,
+            onDismiss = gameViewModel::dismissCelebration,
+        )
+    }
 }

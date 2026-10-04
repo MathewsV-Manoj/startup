@@ -6,12 +6,15 @@ import androidx.lifecycle.viewModelScope
 import com.startup.focuno.R
 import com.startup.focuno.data.local.SettingsStore
 import com.startup.focuno.data.repository.InstalledAppsRepository
+import com.startup.focuno.data.repository.ProtectionRepository
+import com.startup.focuno.data.repository.ProtectionStatus
 import com.startup.focuno.data.repository.ScheduleRepository
 import com.startup.focuno.domain.model.BlockSchedule
 import com.startup.focuno.domain.usecase.StrictLock
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -19,6 +22,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlinx.coroutines.flow.map
 
@@ -31,6 +35,7 @@ data class BlockUiState(
     val groups: List<AppScheduleGroup> = emptyList(),
     val quickBlockUntilMs: Long = 0L,
     val quickBlockLabel: String = "",
+    val protection: ProtectionStatus? = null,
 )
 
 @HiltViewModel
@@ -39,9 +44,16 @@ class BlockViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val settingsStore: SettingsStore,
     private val installedApps: InstalledAppsRepository,
+    private val protectionRepository: ProtectionRepository,
 ) : ViewModel() {
 
-    val state: StateFlow<BlockUiState> = combine(scheduleRepository.observeAll(), settingsStore.settings) { schedules, settings ->
+    private val protection = MutableStateFlow<ProtectionStatus?>(null)
+
+    fun refreshProtection() {
+        viewModelScope.launch { protection.value = withContext(Dispatchers.IO) { protectionRepository.status() } }
+    }
+
+    val state: StateFlow<BlockUiState> = combine(scheduleRepository.observeAll(), settingsStore.settings, protection) { schedules, settings, status ->
         val groups = schedules
             .groupBy { it.packageName }
             .map { (pkg, items) ->
@@ -57,6 +69,7 @@ class BlockViewModel @Inject constructor(
             groups = groups,
             quickBlockUntilMs = settings.quickBlockUntilMs,
             quickBlockLabel = settings.quickBlockLabel,
+            protection = status,
         )
     }
         .flowOn(Dispatchers.Default)

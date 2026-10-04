@@ -98,6 +98,9 @@ interface BypassEventDao {
 
     @Query("SELECT COUNT(*) FROM bypass_event WHERE outcome = 'GRANTED' AND timestamp >= :from AND timestamp < :to")
     suspend fun grantedBetween(from: Long, to: Long): Int
+
+    @Query("SELECT COUNT(*) FROM bypass_event WHERE outcome = :outcome AND timestamp >= :from AND timestamp < :to")
+    suspend fun countBetween(outcome: BypassOutcome, from: Long, to: Long): Int
 }
 
 @Dao
@@ -107,6 +110,9 @@ interface BlockHitDao {
 
     @Query("SELECT COUNT(*) FROM block_hit WHERE timestamp >= :since")
     fun observeCountSince(since: Long): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM block_hit")
+    suspend fun total(): Int
 }
 
 @Dao
@@ -122,6 +128,9 @@ interface FocusSessionDao {
 
     @Query("UPDATE focus_session SET completed = 1 WHERE completed = 0 AND endTs <= :nowMs AND endTs - startTs >= plannedMs")
     suspend fun finalizeDue(nowMs: Long)
+
+    @Query("SELECT COUNT(*) FROM focus_session WHERE completed = 1 AND startTs >= :from AND startTs < :to")
+    suspend fun completedBetween(from: Long, to: Long): Int
 
     @Query("SELECT MAX(endTs) FROM focus_session WHERE completed = 1")
     suspend fun lastCompletedEnd(): Long?

@@ -40,5 +40,7 @@ class FocusSessionRepository @Inject constructor(
 
     suspend fun lastCompletedEndMs(): Long? = dao.lastCompletedEnd()
 
+    suspend fun completedBetween(fromMs: Long, toMs: Long): Int = dao.completedBetween(fromMs, toMs)
+
     fun observeCompletedCount(sinceMs: Long): Flow<Int> = dao.observeCompletedCount(sinceMs)
 }

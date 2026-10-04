@@ -32,4 +32,8 @@ class BypassRepository @Inject constructor(
     fun observeBlockHitsSince(sinceMs: Long): Flow<Int> = hitDao.observeCountSince(sinceMs)
 
     suspend fun grantedBetween(fromMs: Long, toMs: Long): Int = bypassDao.grantedBetween(fromMs, toMs)
+
+    suspend fun countBetween(outcome: BypassOutcome, fromMs: Long, toMs: Long): Int = bypassDao.countBetween(outcome, fromMs, toMs)
+
+    suspend fun blockHitsTotal(): Int = hitDao.total()
 }

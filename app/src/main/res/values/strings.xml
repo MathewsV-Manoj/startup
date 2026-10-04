@@ -69,9 +69,9 @@
     <string name="days_every_day">Every day</string>
     <string name="days_weekdays">Weekdays</string>
     <string name="days_weekends">Weekends</string>
-    <string name="category_distracting">Distracting</string>
-    <string name="category_productive">Productive</string>
-    <string name="category_neutral">Neutral</string>
+    <string name="category_distracting">Time eater</string>
+    <string name="category_productive">Helpful</string>
+    <string name="category_neutral">Okay</string>
     <plurals name="opens_count">
         <item quantity="one">%1$d open</item>
         <item quantity="other">%1$d opens</item>
@@ -134,11 +134,11 @@
     <string name="apps_schedule_block">Schedule a block for %1$s</string>
 
     <!-- Block tab -->
-    <string name="block_add_schedule">Add schedule</string>
-    <string name="block_empty_title">Nothing is blocked yet</string>
-    <string name="block_empty_message">Blocking pauses an app during times you choose. When you open it, Focuno shows a calm screen and offers a way back to focus. You can still unlock it with a short wait and a reason, unless you turn on strict mode.</string>
-    <string name="quick_block_title">Block now</string>
-    <string name="quick_block_explainer">Pause every distracting app for a set time, starting right now.</string>
+    <string name="block_add_schedule">Protect an app</string>
+    <string name="block_empty_title">Nothing is protected yet</string>
+    <string name="block_empty_message">Pick an app and Focuno will pause it when you do not want it. You can still open it if you really need to, after a short wait.</string>
+    <string name="quick_block_title">Pause now</string>
+    <string name="quick_block_explainer">Pause all your time-eater apps right now for a little while.</string>
     <string name="quick_block_active">Pausing distracting apps. %1$s left.</string>
     <string name="quick_block_active_note">Apps marked as distracting are paused. You can still unlock one with the short wait and a reason.</string>
     <string name="schedule_strict">Strict mode</string>
@@ -335,4 +335,97 @@
     <string name="health_log_explainer">What the blocker saw and decided, for finding problems. It only holds app names and decisions.</string>
     <string name="health_log_copy">Copy</string>
     <string name="health_log_empty">Nothing yet. Open a blocked app and come back.</string>
+
+    <!-- Tabs (game version) -->
+    <string name="tab_home">Home</string>
+    <string name="tab_shield">Shield</string>
+    <string name="tab_stats">Stats</string>
+    <string name="tab_trophies">Trophies</string>
+    <string name="stats_today_on_phone">Phone time today</string>
+    <string name="stats_apps">Apps</string>
+    <string name="stats_trends">Trends</string>
+
+    <!-- Buddy and levels -->
+    <string name="buddy_description">Your Focuno buddy</string>
+    <string name="buddy_msg_new">Hi! I\'m your buddy. Use your phone as usual and I\'ll start counting.</string>
+    <string name="buddy_msg_happy">I feel great! You are doing really well today.</string>
+    <string name="buddy_msg_okay">Doing okay. A little break would be nice.</string>
+    <string name="buddy_msg_sleepy">I\'m a bit sleepy. Let\'s rest from the phone for a bit.</string>
+    <string name="level_line">Level %1$d: %2$s</string>
+    <string name="xp_progress">%1$d of %2$d points</string>
+    <string name="xp_today">+%1$d points today</string>
+    <string-array name="level_titles">
+        <item>Seedling</item>
+        <item>Sprout</item>
+        <item>Explorer</item>
+        <item>Ranger</item>
+        <item>Guardian</item>
+        <item>Hero</item>
+        <item>Champion</item>
+        <item>Master</item>
+        <item>Legend</item>
+        <item>Mythic</item>
+    </string-array>
+
+    <!-- Home -->
+    <string name="home_start_focus">Start focus time</string>
+    <string name="home_start_focus_hint">25 minutes with your time-eater apps paused. Finish it to earn points.</string>
+
+    <!-- Missions -->
+    <string name="quests_title">Today\'s missions</string>
+    <string name="quest_reward">+%1$d</string>
+    <string name="quest_done">Done! Nice work.</string>
+    <string name="quest_focus_title">Finish a focus time</string>
+    <string name="quest_focus_todo">Let the timer run all the way to the end.</string>
+    <string name="quest_goal_title">Stay under your time goal</string>
+    <string name="quest_goal_ok">On track. %1$s left today.</string>
+    <string name="quest_goal_over">Past the goal today. Tomorrow is a fresh start.</string>
+    <string name="quest_urge_title">Say no to a scroll urge</string>
+    <string name="quest_urge_todo">Tap \"I need this\" on a paused app, then change your mind.</string>
+
+    <!-- Trophies -->
+    <string name="trophies_total_points">%1$d points in total</string>
+    <string name="trophies_next_level">%1$d points to the next level</string>
+    <string name="earn_title">How to earn points</string>
+    <string name="earn_session">Finish a focus time: +30</string>
+    <string name="earn_urge">Say no to a scroll urge: +10</string>
+    <string name="earn_day">When a day ends: your focus score, plus 40 if you stayed under your goal</string>
+    <string name="earn_never_down">Points never go down.</string>
+    <string name="badges_title">Badges</string>
+    <string name="badge_first_steps">First Steps</string>
+    <string name="badge_first_steps_hint">Set up Focuno</string>
+    <string name="badge_focus_starter">Focus Starter</string>
+    <string name="badge_focus_starter_hint">Finish 1 focus time</string>
+    <string name="badge_focus_pro">Focus Pro</string>
+    <string name="badge_focus_pro_hint">Finish 10 focus times</string>
+    <string name="badge_streak_3">3 Days</string>
+    <string name="badge_streak_3_hint">3 days in a row</string>
+    <string name="badge_streak_7">Week Warrior</string>
+    <string name="badge_streak_7_hint">7 days in a row</string>
+    <string name="badge_streak_30">Month Master</string>
+    <string name="badge_streak_30_hint">30 days in a row</string>
+    <string name="badge_urge_fighter">Urge Fighter</string>
+    <string name="badge_urge_fighter_hint">Say no 5 times</string>
+    <string name="badge_urge_master">Urge Master</string>
+    <string name="badge_urge_master_hint">Say no 25 times</string>
+    <string name="badge_shield_up">Shield Up</string>
+    <string name="badge_shield_up_hint">Your shield stops an app</string>
+    <string name="badge_rising_star">Rising Star</string>
+    <string name="badge_rising_star_hint">Reach level 5</string>
+    <string name="badge_legend">Legend</string>
+    <string name="badge_legend_hint">Reach level 10</string>
+
+    <!-- Celebrations -->
+    <string name="celebrate_level_title">Level %1$d!</string>
+    <string name="celebrate_level_message">You are now a %1$s. Keep going!</string>
+    <string name="celebrate_level_and_badges">You are now a %1$s, and you won: %2$s.</string>
+    <string name="celebrate_badge_title">New badge!</string>
+    <string name="celebrate_badge_message">You won: %1$s.</string>
+    <string name="celebrate_button">Yay!</string>
+
+    <!-- Shield -->
+    <string name="shield_on_title">Shield is ON</string>
+    <string name="shield_on_body">Your protected apps will be paused.</string>
+    <string name="shield_off_title">Shield is OFF</string>
+    <string name="shield_off_body">Android switched it off, so apps will open normally. Tap to turn it back on.</string>
 </resources>
