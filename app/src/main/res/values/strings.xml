@@ -217,12 +217,13 @@
     <string name="health_status_needs_fix">Needs fixing</string>
 
     <!-- Restricted setting help (Android 13+) -->
-    <string name="restricted_title">Accessibility switch greyed out?</string>
-    <string name="restricted_body">Android 13 and newer locks accessibility for apps installed outside an app store. You can unlock it yourself:</string>
-    <string name="restricted_step1">Tap the button below to open Focuno\'s app info.</string>
-    <string name="restricted_step2">Tap the three dots in the top right corner.</string>
-    <string name="restricted_step3">Tap Allow restricted settings and confirm.</string>
-    <string name="restricted_step4">Come back and switch Focuno on under Accessibility.</string>
+    <string name="restricted_title">Accessibility is greyed out?</string>
+    <string name="restricted_body">Android locks this switch for apps installed from a file instead of the Play Store. It is a safety rule, and you can unlock it yourself in about a minute:</string>
+    <string name="restricted_step1">Tap the greyed-out Focuno once in the Accessibility list. Android says \"Restricted setting\". Tap OK.</string>
+    <string name="restricted_step2">Come back here and tap the button below to open Focuno\'s app info.</string>
+    <string name="restricted_step3">Tap the three dots in the top right corner, then tap Allow restricted settings and confirm.</string>
+    <string name="restricted_step4">Go back to Accessibility, tap Focuno and switch it on.</string>
+    <string name="restricted_note">No three dots, or no Allow restricted settings? Do step 1 again first. The menu only appears after Android has shown that message.</string>
     <string name="restricted_open_app_info">Open Focuno app info</string>
 
     <!-- Phone-maker keep-alive guidance -->

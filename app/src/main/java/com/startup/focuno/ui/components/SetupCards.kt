@@ -32,6 +32,8 @@ fun RestrictedSettingCard(modifier: Modifier = Modifier) {
         Text(stringResource(R.string.restricted_body), style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textSecondary)
         Spacer(Modifier.height(10.dp))
         NumberedSteps(listOf(R.string.restricted_step1, R.string.restricted_step2, R.string.restricted_step3, R.string.restricted_step4))
+        Spacer(Modifier.height(10.dp))
+        Text(stringResource(R.string.restricted_note), style = MaterialTheme.typography.bodySmall, color = FocunoTheme.colors.textSecondary)
         Spacer(Modifier.height(12.dp))
         OutlinedButton(onClick = { SystemSettingsIntents.launchFirstThatWorks(context, listOf(SystemSettingsIntents.appDetails(context))) }) {
             Text(stringResource(R.string.restricted_open_app_info))
