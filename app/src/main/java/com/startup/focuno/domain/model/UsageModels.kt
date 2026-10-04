@@ -37,6 +37,8 @@ data class DayUsage(
     val apps: List<AppUsageRaw>,
     val sessions: List<UsageSession>,
     val pickupCount: Int,
+    /** Apps seen in the events but not counted (home screen, system UI), shown in the screen time check. */
+    val excludedApps: List<AppUsageRaw> = emptyList(),
 )
 
 data class AppDayUsage(
@@ -58,4 +60,5 @@ data class DayStats(
     val longestFocusStreakMs: Long,
     val apps: List<AppDayUsage>,
     val hourlyDistractingMs: List<Long>,
+    val excludedApps: List<AppUsageRaw> = emptyList(),
 )

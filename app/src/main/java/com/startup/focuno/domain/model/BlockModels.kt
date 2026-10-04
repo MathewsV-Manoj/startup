@@ -1,9 +1,23 @@
 package com.startup.focuno.domain.model
 
+/** What a schedule blocks: the whole app, or only its endless short-video feed (Reels, Shorts). */
+enum class BlockScope { APP, SHORT_VIDEO }
+
+/** Apps whose short-video feed can be blocked on its own. */
+object ShortVideoApps {
+    const val INSTAGRAM = "com.instagram.android"
+    const val YOUTUBE = "com.google.android.youtube"
+
+    val supported: Set<String> = setOf(INSTAGRAM, YOUTUBE)
+
+    fun supports(packageName: String?): Boolean = packageName != null && packageName in supported
+}
+
 /** daysOfWeekMask: bit 0 = Monday ... bit 6 = Sunday. The day is the one the window STARTS on. */
 data class BlockSchedule(
     val id: Long = 0,
     val packageName: String,
+    val scope: BlockScope = BlockScope.APP,
     val startMinuteOfDay: Int,
     val endMinuteOfDay: Int,
     val daysOfWeekMask: Int,

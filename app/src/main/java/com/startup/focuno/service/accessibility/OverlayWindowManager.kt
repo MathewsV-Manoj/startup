@@ -83,7 +83,8 @@ class OverlayWindowManager(private val context: Context) {
 
     val isBlockShowing: Boolean get() = blockRoot != null
 
-    fun showBlock(content: @Composable () -> Unit) {
+    /** Returns false if Android refused to draw the window, so the caller can fall back to another way of blocking. */
+    fun showBlock(content: @Composable () -> Unit): Boolean {
         hideBlock()
         val root = ComposeOverlayRoot(context, consumeBack = true, content = content)
         val params = WindowManager.LayoutParams(
@@ -100,7 +101,13 @@ class OverlayWindowManager(private val context: Context) {
             title = "Focuno block"
             applyCutoutMode()
         }
-        if (addSafely(root, params)) blockRoot = root else root.owner.destroy()
+        return if (addSafely(root, params)) {
+            blockRoot = root
+            true
+        } else {
+            root.owner.destroy()
+            false
+        }
     }
 
     fun hideBlock() {

@@ -11,6 +11,6 @@ object StrictLock {
     /** End of the open strict window in epoch ms, or null if the schedule may be changed now. */
     fun lockedUntilMs(schedule: BlockSchedule, now: ZonedDateTime = ZonedDateTime.now()): Long? {
         if (!schedule.strictMode || !schedule.enabled || schedule.id == 0L) return null
-        return ScheduleEvaluator.activeWindow(listOf(schedule), schedule.packageName, now)?.endsAtMs
+        return ScheduleEvaluator.activeWindow(listOf(schedule), schedule.packageName, now, schedule.scope)?.endsAtMs
     }
 }

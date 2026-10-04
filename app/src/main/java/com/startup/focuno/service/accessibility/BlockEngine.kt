@@ -18,7 +18,9 @@ import com.startup.focuno.domain.model.AppCategory
 import com.startup.focuno.domain.model.BlockKind
 import com.startup.focuno.domain.model.BlockOverlayModel
 import com.startup.focuno.domain.model.BlockSchedule
+import com.startup.focuno.domain.model.BlockScope
 import com.startup.focuno.domain.model.BypassOutcome
+import com.startup.focuno.domain.model.ShortVideoApps
 import com.startup.focuno.domain.usecase.BypassPolicy
 import com.startup.focuno.domain.usecase.ScheduleEvaluator
 import com.startup.focuno.ui.screens.overlay.BlockOverlayHost
@@ -37,20 +39,32 @@ import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** What the accessibility service lends the engine: a way to press Home and a place to draw. */
+/** What the accessibility service lends the engine. */
 interface BlockHost {
     val overlay: OverlayWindowManager
     fun goHome()
+    fun goBack()
+
+    /** Package of the window Android says is in front right now (package name only), or null. */
+    fun activeWindowPackage(): String?
+
+    /** Whether Reels (Instagram) or Shorts (YouTube) is on screen in [packageName]. */
+    fun isShortVideoShowing(packageName: String): Boolean
+
+    /** Tries to leave the short-video feed by tapping the app's Home tab. */
+    fun leaveShortVideoFeed(packageName: String): Boolean
+
+    /** Window-content events are only requested while a Reels/Shorts rule needs them, to save battery. */
+    fun setContentEventsEnabled(enabled: Boolean)
 }
 
 /**
- * Decides, from package names alone, whether the app in front should be blocked right now.
+ * Decides, from package names (and, for Reels/Shorts rules, a few screen-part names), whether the app in
+ * front should be blocked right now.
  *
- * The foreground app is HELD as explicit state ([currentPackage]). It only changes when the service reports
- * a window change to a different app, never because a query came back empty. That is what stops the block
- * dropping while someone sits still in one app.
- *
- * Privacy: the only thing read from the screen is the package name of the window that changed.
+ * The foreground app is HELD as explicit state ([currentPackage]). It changes when a window event names a
+ * different app, or when a periodic check of the active window disagrees (which repairs any missed event).
+ * It never changes because a query came back empty.
  */
 @Singleton
 class BlockEngine @Inject constructor(
@@ -63,6 +77,7 @@ class BlockEngine @Inject constructor(
     private val usageRepository: UsageTrackingRepository,
     private val nudgeCoordinator: NudgeCoordinator,
     private val nudgeText: NudgeTextFormatter,
+    private val log: EngineLog,
 ) {
     // Logging outlives the service scope on purpose, so "abandoned" is still recorded while shutting down.
     private val logScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -83,11 +98,18 @@ class BlockEngine @Inject constructor(
     private var neverBlockPackages: Set<String> = emptySet()
 
     private var currentPackage: String? = null
+    private var inShortVideo = false
+    private var contentEventsOn = false
     private var shownFor: String? = null
+    private var shownScope: BlockScope? = null
     private var screenOn = true
     private var lastEventPackage: String? = null
     private var lastEventAtMs = 0L
     private var lastOverlayShownAtMs = 0L
+    private var lastContentCheckAtMs = 0L
+    private var pollSuppressedUntilMs = 0L
+    private var shortVideoSuppressedUntilMs = 0L
+    private var tickCount = 0
 
     fun start(host: BlockHost) {
         stop()
@@ -98,9 +120,15 @@ class BlockEngine @Inject constructor(
         nudgeCoordinator.reset()
         screenOn = context.getSystemService(PowerManager::class.java).isInteractive
         refreshSystemPackages()
+        log.add("Blocker started (screen ${if (screenOn) "on" else "off"})")
 
         newScope.launch {
-            scheduleRepository.observeAll().collect { schedules = it; loaded[0] = true; reevaluate() }
+            scheduleRepository.observeAll().collect {
+                schedules = it
+                loaded[0] = true
+                updateContentEvents()
+                reevaluate()
+            }
         }
         newScope.launch {
             categoryRepository.observeOverrides().collect { overrides = it; loaded[1] = true; reevaluate() }
@@ -121,17 +149,21 @@ class BlockEngine @Inject constructor(
     }
 
     fun stop() {
+        if (host != null) log.add("Blocker stopped")
         hideBlock(abandonFriction = true)
         host?.overlay?.hideAll()
+        host?.setContentEventsEnabled(false)
         scope?.cancel()
         scope = null
         friction = null
         host = null
         currentPackage = null
+        inShortVideo = false
+        contentEventsOn = false
         loaded.fill(false)
     }
 
-    /** Called for every TYPE_WINDOW_STATE_CHANGED. Only the package name is looked at. */
+    /** Called for every window-state change. Only the package name is looked at. */
     fun onWindowChanged(packageName: String) {
         val nowElapsed = SystemClock.elapsedRealtime()
         if (packageName in ignoredPackages) return
@@ -145,22 +177,30 @@ class BlockEngine @Inject constructor(
         lastEventPackage = packageName
         lastEventAtMs = nowElapsed
 
-        if (packageName != currentPackage) {
-            if (shownFor != null && shownFor != packageName) hideBlock(abandonFriction = true)
-            currentPackage = packageName
-            nudgeCoordinator.onForegroundChanged(packageName, System.currentTimeMillis())
-        }
+        if (packageName != currentPackage) adoptForeground(packageName, "event")
+        reevaluate()
+    }
+
+    /** Called for window-content changes, which only arrive while a Reels/Shorts rule is active. */
+    fun onContentChanged(packageName: String) {
+        if (!contentEventsOn || packageName != currentPackage) return
+        val nowElapsed = SystemClock.elapsedRealtime()
+        if (nowElapsed - lastContentCheckAtMs < CONTENT_THROTTLE_MS) return
+        lastContentCheckAtMs = nowElapsed
+        refreshShortVideoState()
         reevaluate()
     }
 
     fun onScreenOff() {
         screenOn = false
+        log.add("Screen off")
         hideBlock(abandonFriction = true)
         host?.overlay?.hideNudge()
     }
 
     fun onScreenOn() {
         screenOn = true
+        log.add("Screen on")
         refreshSystemPackages()
         scope?.launch {
             if (currentPackage == null) seedForegroundPackage()
@@ -168,10 +208,19 @@ class BlockEngine @Inject constructor(
         }
     }
 
+    private fun adoptForeground(packageName: String, source: String) {
+        log.add("Foreground: $packageName ($source)")
+        if (shownFor != null && shownFor != packageName) hideBlock(abandonFriction = true)
+        currentPackage = packageName
+        inShortVideo = false
+        updateContentEvents()
+        nudgeCoordinator.onForegroundChanged(packageName, System.currentTimeMillis())
+    }
+
     private suspend fun seedForegroundPackage() {
-        val pkg = usageRepository.currentForegroundPackage() ?: return
-        if (currentPackage == null && pkg !in ignoredPackages) {
-            currentPackage = pkg
+        val pkg = host?.activeWindowPackage() ?: usageRepository.currentForegroundPackage() ?: return
+        if (currentPackage == null && pkg !in ignoredPackages && pkg != context.packageName) {
+            adoptForeground(pkg, "startup")
             reevaluate()
         }
     }
@@ -183,10 +232,44 @@ class BlockEngine @Inject constructor(
         neverBlockPackages = ignoredPackages + context.packageName + context.packageManager.homePackages()
     }
 
+    private fun updateContentEvents() {
+        val pkg = currentPackage
+        val wanted = pkg != null && ShortVideoApps.supports(pkg) &&
+            schedules.any { it.enabled && it.scope == BlockScope.SHORT_VIDEO && it.packageName == pkg }
+        if (wanted != contentEventsOn) {
+            contentEventsOn = wanted
+            host?.setContentEventsEnabled(wanted)
+            if (!wanted) inShortVideo = false
+            log.add("Reels/Shorts watching ${if (wanted) "on" else "off"}")
+        }
+    }
+
+    private fun refreshShortVideoState() {
+        val pkg = currentPackage ?: return
+        val showing = SystemClock.elapsedRealtime() >= shortVideoSuppressedUntilMs && host?.isShortVideoShowing(pkg) == true
+        if (showing != inShortVideo) {
+            inShortVideo = showing
+            log.add("Short-video feed ${if (showing) "shown" else "left"} in $pkg")
+        }
+    }
+
+    /** Repairs a missed window event: if Android says a different app is in front, believe Android. */
+    private fun pollActiveWindow() {
+        if (SystemClock.elapsedRealtime() < pollSuppressedUntilMs) return
+        val active = host?.activeWindowPackage() ?: return
+        if (active in ignoredPackages || active == context.packageName) return
+        if (active != currentPackage) adoptForeground(active, "poll")
+    }
+
     private fun onTick() {
         screenOn = context.getSystemService(PowerManager::class.java).isInteractive
+        if (screenOn) {
+            pollActiveWindow()
+            if (contentEventsOn) refreshShortVideoState()
+        }
         reevaluate()
-        maybeNudge()
+        tickCount++
+        if (tickCount % NUDGE_EVERY_TICKS == 0) maybeNudge()
     }
 
     private fun reevaluate() {
@@ -194,10 +277,11 @@ class BlockEngine @Inject constructor(
         val pkg = currentPackage
         val model = if (pkg != null && screenOn) decide(pkg, System.currentTimeMillis()) else null
         if (model == null) {
+            if (shownFor != null) log.add("Unblocked ${shownFor}")
             hideBlock(abandonFriction = true)
             return
         }
-        if (shownFor == pkg) {
+        if (shownFor == pkg && shownScope == model.scope) {
             blockModel.value = model
         } else {
             showBlock(model)
@@ -207,32 +291,17 @@ class BlockEngine @Inject constructor(
     private fun decide(pkg: String, nowMs: Long): BlockOverlayModel? {
         if (pkg in neverBlockPackages) return null
         val zoned = Instant.ofEpochMilli(nowMs).atZone(ZoneId.systemDefault())
-        val window = ScheduleEvaluator.activeWindow(schedules, pkg, zoned)
         val isDistracting = categoryRepository.resolve(pkg, overrides) == AppCategory.DISTRACTING
 
+        val appWindow = ScheduleEvaluator.activeWindow(schedules, pkg, zoned, BlockScope.APP)
         val base = when {
-            window != null -> BlockOverlayModel(
-                packageName = pkg,
-                appName = installedApps.labelBlocking(pkg),
-                kind = BlockKind.SCHEDULE,
-                startMinuteOfDay = window.startMinuteOfDay,
-                endMinuteOfDay = window.endMinuteOfDay,
-                quickLabel = "",
-                endsAtMs = window.endsAtMs,
-                strict = window.strict,
-                bypassAvailableAtMs = null,
-            )
-            settings.quickBlockUntilMs > nowMs && isDistracting -> BlockOverlayModel(
-                packageName = pkg,
-                appName = installedApps.labelBlocking(pkg),
-                kind = BlockKind.QUICK_BLOCK,
-                startMinuteOfDay = 0,
-                endMinuteOfDay = 0,
-                quickLabel = settings.quickBlockLabel,
-                endsAtMs = settings.quickBlockUntilMs,
-                strict = false,
-                bypassAvailableAtMs = null,
-            )
+            appWindow != null -> buildModel(pkg, BlockKind.SCHEDULE, BlockScope.APP, appWindow.startMinuteOfDay, appWindow.endMinuteOfDay, appWindow.endsAtMs, appWindow.strict, "")
+            settings.quickBlockUntilMs > nowMs && isDistracting ->
+                buildModel(pkg, BlockKind.QUICK_BLOCK, BlockScope.APP, 0, 0, settings.quickBlockUntilMs, false, settings.quickBlockLabel)
+            inShortVideo -> {
+                val feedWindow = ScheduleEvaluator.activeWindow(schedules, pkg, zoned, BlockScope.SHORT_VIDEO) ?: return null
+                buildModel(pkg, BlockKind.SCHEDULE, BlockScope.SHORT_VIDEO, feedWindow.startMinuteOfDay, feedWindow.endMinuteOfDay, feedWindow.endsAtMs, feedWindow.strict, "")
+            }
             else -> return null
         }
 
@@ -242,15 +311,37 @@ class BlockEngine @Inject constructor(
         return base.copy(bypassAvailableAtMs = availableAt)
     }
 
+    private fun buildModel(
+        pkg: String,
+        kind: BlockKind,
+        scope: BlockScope,
+        startMinute: Int,
+        endMinute: Int,
+        endsAtMs: Long,
+        strict: Boolean,
+        quickLabel: String,
+    ) = BlockOverlayModel(
+        packageName = pkg,
+        appName = installedApps.labelBlocking(pkg),
+        kind = kind,
+        scope = scope,
+        startMinuteOfDay = startMinute,
+        endMinuteOfDay = endMinute,
+        quickLabel = quickLabel,
+        endsAtMs = endsAtMs,
+        strict = strict,
+        bypassAvailableAtMs = null,
+    )
+
     private fun showBlock(model: BlockOverlayModel) {
         val controller = friction ?: return
         val activeHost = host ?: return
+        if (shownFor != null) hideBlock(abandonFriction = true)
         controller.reset()
-        shownFor = model.packageName
         blockModel.value = model
         lastOverlayShownAtMs = SystemClock.elapsedRealtime()
         activeHost.overlay.hideNudge()
-        activeHost.overlay.showBlock {
+        val drawn = activeHost.overlay.showBlock {
             val current by blockModel.collectAsState()
             val frictionState by controller.state.collectAsState()
             current?.let {
@@ -264,6 +355,17 @@ class BlockEngine @Inject constructor(
                 )
             }
         }
+        if (!drawn) {
+            // Never let a draw failure turn into "no block at all": leave the app instead.
+            log.add("Overlay FAILED for ${model.packageName}, sending to ${if (model.scope == BlockScope.APP) "home" else "back"}")
+            blockModel.value = null
+            pollSuppressedUntilMs = SystemClock.elapsedRealtime() + POLL_SUPPRESS_MS
+            leaveBlocked(model)
+            return
+        }
+        shownFor = model.packageName
+        shownScope = model.scope
+        log.add("Block shown: ${model.packageName} (${model.scope}, ${model.kind})")
         logScope.launch { bypassRepository.logBlockHit(model.packageName) }
     }
 
@@ -273,27 +375,45 @@ class BlockEngine @Inject constructor(
             host?.overlay?.hideBlock()
         }
         shownFor = null
+        shownScope = null
         blockModel.value = null
     }
 
     private fun backToFocus() {
+        val model = blockModel.value
         friction?.abandon()
         hideBlock(abandonFriction = false)
-        // Forget the blocked app so the next tick cannot put the overlay back before the launcher reports in.
-        currentPackage = null
-        host?.goHome()
+        if (model != null) leaveBlocked(model)
+    }
+
+    /** Whole-app blocks go Home. Reels/Shorts blocks only leave the feed and keep the rest of the app. */
+    private fun leaveBlocked(model: BlockOverlayModel) {
+        val activeHost = host ?: return
+        pollSuppressedUntilMs = SystemClock.elapsedRealtime() + POLL_SUPPRESS_MS
+        if (model.scope == BlockScope.SHORT_VIDEO) {
+            inShortVideo = false
+            shortVideoSuppressedUntilMs = SystemClock.elapsedRealtime() + POLL_SUPPRESS_MS
+            if (!activeHost.leaveShortVideoFeed(model.packageName)) activeHost.goBack()
+        } else {
+            // Forget the blocked app so the next tick cannot put the overlay back before the launcher reports in.
+            currentPackage = null
+            updateContentEvents()
+            activeHost.goHome()
+        }
     }
 
     private fun onBypassGranted(reason: String) {
         val pkg = shownFor ?: return
         val now = System.currentTimeMillis()
         lastGranted = lastGranted + (pkg to now)
+        log.add("Unlocked $pkg for 5 minutes")
         logScope.launch { bypassRepository.logEvent(pkg, BypassOutcome.GRANTED, reason, now) }
         hideBlock(abandonFriction = false)
     }
 
     private fun logFrictionEvent(outcome: BypassOutcome, reason: String?) {
         val pkg = shownFor ?: return
+        log.add("Unlock attempt: $outcome")
         logScope.launch { bypassRepository.logEvent(pkg, outcome, reason) }
     }
 
@@ -315,9 +435,12 @@ class BlockEngine @Inject constructor(
     }
 
     private companion object {
-        const val TICK_MS = 10_000L
+        const val TICK_MS = 2_000L
+        const val NUDGE_EVERY_TICKS = 5
         const val DEBOUNCE_MS = 500L
+        const val CONTENT_THROTTLE_MS = 350L
         const val OWN_EVENT_GRACE_MS = 1_500L
+        const val POLL_SUPPRESS_MS = 2_000L
         const val NUDGE_VISIBLE_MS = 7_000L
     }
 }

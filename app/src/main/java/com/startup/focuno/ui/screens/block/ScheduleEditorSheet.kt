@@ -2,14 +2,8 @@ package com.startup.focuno.ui.screens.block
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -19,9 +13,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Lock
@@ -40,13 +36,20 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.startup.focuno.R
+import com.startup.focuno.domain.model.BlockScope
 import com.startup.focuno.ui.components.AppIcon
+import com.startup.focuno.ui.components.GlassCard
 import com.startup.focuno.ui.components.LoadingState
 import com.startup.focuno.ui.components.TimePickerDialog
 import com.startup.focuno.ui.components.formatClock
+import com.startup.focuno.ui.components.shortVideoName
 import com.startup.focuno.ui.theme.FocunoTheme
 import java.text.DateFormat
 import java.time.DayOfWeek
@@ -61,7 +64,10 @@ fun ScheduleEditorSheet(
     onDismiss: () -> Unit,
     onQuery: (String) -> Unit,
     onSelectApp: (String) -> Unit,
-    onChangeApp: () -> Unit,
+    onChooseScope: (BlockScope) -> Unit,
+    onChoosePreset: (WhenPreset) -> Unit,
+    onChooseCustomTime: () -> Unit,
+    onStepBack: () -> Unit,
     onShowTimePicker: (TimeField) -> Unit,
     onHideTimePicker: () -> Unit,
     onSetTime: (TimeField, Int) -> Unit,
@@ -76,10 +82,11 @@ fun ScheduleEditorSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = FocunoTheme.colors.surfaceElevated,
     ) {
-        if (state.packageName == null) {
-            AppPicker(state, onQuery, onSelectApp)
-        } else {
-            Details(state, onChangeApp, onShowTimePicker, onToggleDay, onSetStrict, onSave, onDelete, onDismiss)
+        when (state.step) {
+            EditorStep.PICK_APP -> AppPicker(state, onQuery, onSelectApp)
+            EditorStep.WHAT -> WhatStep(state, onChooseScope, onStepBack)
+            EditorStep.WHEN -> WhenStep(state, onChoosePreset, onChooseCustomTime, onStepBack)
+            EditorStep.DETAILS -> Details(state, onShowTimePicker, onToggleDay, onSetStrict, onSave, onDelete, onStepBack)
         }
     }
     state.timePickerFor?.let { field ->
@@ -93,9 +100,32 @@ fun ScheduleEditorSheet(
 }
 
 @Composable
+private fun StepHeader(title: String, packageName: String?, onBack: (() -> Unit)?) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        if (packageName != null) AppIcon(packageName, size = 48.dp)
+        Text(title, style = MaterialTheme.typography.headlineSmall, color = FocunoTheme.colors.textPrimary, modifier = Modifier.weight(1f))
+        if (onBack != null) TextButton(onClick = onBack) { Text(stringResource(R.string.action_back)) }
+    }
+}
+
+@Composable
+private fun ChoiceTile(title: String, subtitle: String, onClick: () -> Unit) {
+    GlassCard(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 18.dp),
+    ) {
+        Text(title, style = MaterialTheme.typography.titleLarge, color = FocunoTheme.colors.textPrimary)
+        if (subtitle.isNotEmpty()) {
+            Spacer(Modifier.height(2.dp))
+            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.textSecondary)
+        }
+    }
+}
+
+@Composable
 private fun AppPicker(state: ScheduleEditorUiState, onQuery: (String) -> Unit, onSelect: (String) -> Unit) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 20.dp)) {
-        Text(stringResource(R.string.editor_pick_app), style = MaterialTheme.typography.titleLarge, color = FocunoTheme.colors.textPrimary)
+        Text(stringResource(R.string.editor_pick_app), style = MaterialTheme.typography.headlineSmall, color = FocunoTheme.colors.textPrimary)
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(
             value = state.query,
@@ -112,12 +142,12 @@ private fun AppPicker(state: ScheduleEditorUiState, onQuery: (String) -> Unit, o
             LazyColumn(Modifier.heightIn(max = 420.dp), contentPadding = PaddingValues(vertical = 4.dp)) {
                 items(state.apps, key = { it.packageName }) { app ->
                     Row(
-                        Modifier.fillMaxWidth().clickable { onSelect(app.packageName) }.padding(vertical = 10.dp),
+                        Modifier.fillMaxWidth().clickable { onSelect(app.packageName) }.padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        AppIcon(app.packageName, size = 40.dp)
-                        Text(app.label, style = MaterialTheme.typography.bodyLarge, color = FocunoTheme.colors.textPrimary)
+                        AppIcon(app.packageName, size = 44.dp)
+                        Text(app.label, style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textPrimary)
                     }
                 }
             }
@@ -127,15 +157,56 @@ private fun AppPicker(state: ScheduleEditorUiState, onQuery: (String) -> Unit, o
 }
 
 @Composable
+private fun WhatStep(state: ScheduleEditorUiState, onChoose: (BlockScope) -> Unit, onBack: () -> Unit) {
+    val pkg = state.packageName ?: return
+    val feed = shortVideoName(pkg)
+    Column(
+        Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        StepHeader(stringResource(R.string.editor_what_title), pkg, onBack)
+        ChoiceTile(
+            title = stringResource(R.string.editor_what_app, state.appLabel),
+            subtitle = stringResource(R.string.editor_what_app_sub),
+            onClick = { onChoose(BlockScope.APP) },
+        )
+        ChoiceTile(
+            title = stringResource(R.string.editor_what_feed, feed),
+            subtitle = stringResource(R.string.editor_what_feed_sub, state.appLabel, feed),
+            onClick = { onChoose(BlockScope.SHORT_VIDEO) },
+        )
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun WhenStep(state: ScheduleEditorUiState, onPreset: (WhenPreset) -> Unit, onCustom: () -> Unit, onBack: () -> Unit) {
+    val pkg = state.packageName ?: return
+    Column(
+        Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        StepHeader(stringResource(R.string.editor_when_title), pkg, onBack)
+        ChoiceTile(stringResource(R.string.when_all_day), stringResource(R.string.when_all_day_sub)) { onPreset(WhenPreset.ALL_DAY) }
+        ChoiceTile(stringResource(R.string.when_night), stringResource(R.string.when_night_sub)) { onPreset(WhenPreset.NIGHT) }
+        ChoiceTile(stringResource(R.string.when_school), stringResource(R.string.when_school_sub)) { onPreset(WhenPreset.SCHOOL) }
+        ChoiceTile(stringResource(R.string.when_evening), stringResource(R.string.when_evening_sub)) { onPreset(WhenPreset.EVENING) }
+        OutlinedButton(onClick = onCustom, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+            Text(stringResource(R.string.when_custom))
+        }
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
 private fun Details(
     state: ScheduleEditorUiState,
-    onChangeApp: () -> Unit,
     onShowTimePicker: (TimeField) -> Unit,
     onToggleDay: (Int) -> Unit,
     onSetStrict: (Boolean) -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
-    onCancel: () -> Unit,
+    onBack: () -> Unit,
 ) {
     val pkg = state.packageName ?: return
     val locked = state.lockedUntilMs != null
@@ -143,18 +214,20 @@ private fun Details(
         Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            AppIcon(pkg, size = 48.dp)
-            Column(Modifier.weight(1f)) {
-                Text(state.appLabel, style = MaterialTheme.typography.titleLarge, color = FocunoTheme.colors.textPrimary)
-                Text(
-                    stringResource(if (state.isEditing) R.string.editor_edit_title else R.string.editor_new_title),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = FocunoTheme.colors.textSecondary,
-                )
-            }
-            if (!state.isEditing) TextButton(onClick = onChangeApp) { Text(stringResource(R.string.editor_change_app)) }
-        }
+        StepHeader(
+            title = state.appLabel,
+            packageName = pkg,
+            onBack = if (state.isEditing) null else onBack,
+        )
+        Text(
+            text = if (state.scope == BlockScope.SHORT_VIDEO) {
+                stringResource(R.string.schedule_scope_feed, shortVideoName(pkg))
+            } else {
+                stringResource(R.string.schedule_scope_app)
+            },
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.secondary,
+        )
 
         state.lockedUntilMs?.let { until ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -168,16 +241,16 @@ private fun Details(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = { onShowTimePicker(TimeField.START) }, enabled = !locked, modifier = Modifier.weight(1f)) {
+            OutlinedButton(onClick = { onShowTimePicker(TimeField.START) }, enabled = !locked, modifier = Modifier.weight(1f).height(72.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(stringResource(R.string.editor_from), style = MaterialTheme.typography.labelSmall)
-                    Text(formatClock(state.startMinute), style = MaterialTheme.typography.titleLarge)
+                    Text(formatClock(state.startMinute), style = MaterialTheme.typography.headlineSmall)
                 }
             }
-            OutlinedButton(onClick = { onShowTimePicker(TimeField.END) }, enabled = !locked, modifier = Modifier.weight(1f)) {
+            OutlinedButton(onClick = { onShowTimePicker(TimeField.END) }, enabled = !locked, modifier = Modifier.weight(1f).height(72.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(stringResource(R.string.editor_until), style = MaterialTheme.typography.labelSmall)
-                    Text(formatClock(state.endMinute), style = MaterialTheme.typography.titleLarge)
+                    Text(formatClock(state.endMinute), style = MaterialTheme.typography.headlineSmall)
                 }
             }
         }
@@ -215,11 +288,9 @@ private fun Details(
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
             if (state.isEditing) {
-                OutlinedButton(onClick = onDelete, enabled = !locked) { Text(stringResource(R.string.action_delete)) }
-            } else {
-                OutlinedButton(onClick = onCancel) { Text(stringResource(R.string.action_cancel)) }
+                OutlinedButton(onClick = onDelete, enabled = !locked, modifier = Modifier.height(52.dp)) { Text(stringResource(R.string.action_delete)) }
             }
-            Button(onClick = onSave, enabled = state.canSave, modifier = Modifier.weight(1f)) {
+            Button(onClick = onSave, enabled = state.canSave, modifier = Modifier.weight(1f).height(52.dp)) {
                 Text(stringResource(R.string.action_save))
             }
         }
@@ -232,7 +303,7 @@ private fun DayToggle(letter: String, description: String, selected: Boolean, en
     val fill = if (selected) MaterialTheme.colorScheme.primary else FocunoTheme.colors.trackInactive
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .size(42.dp)
             .clip(CircleShape)
             .background(fill.copy(alpha = if (enabled) 1f else 0.5f))
             .clickable(enabled = enabled, role = Role.Checkbox, onClick = onClick)

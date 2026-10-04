@@ -6,6 +6,7 @@ import com.startup.focuno.data.local.OemAutostart
 import com.startup.focuno.data.local.OemFamily
 import com.startup.focuno.data.repository.ProtectionRepository
 import com.startup.focuno.data.repository.ProtectionStatus
+import com.startup.focuno.service.accessibility.EngineLog
 import com.startup.focuno.service.accessibility.FocunoAccessibilityService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +28,10 @@ data class HealthUiState(
 @HiltViewModel
 class HealthViewModel @Inject constructor(
     private val protectionRepository: ProtectionRepository,
+    engineLog: EngineLog,
 ) : ViewModel() {
+
+    val log: StateFlow<List<String>> = engineLog.entries
 
     private val _state = MutableStateFlow(HealthUiState())
     val state: StateFlow<HealthUiState> = _state.asStateFlow()

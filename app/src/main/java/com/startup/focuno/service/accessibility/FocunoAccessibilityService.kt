@@ -12,9 +12,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 /**
- * PRIVACY: this service reads package names only. It does not request window content
- * (canRetrieveWindowContent is false in accessibility_service_config.xml), never touches text, and
- * listens to window-state changes only. The package name of the app in front is the entire input.
+ * PRIVACY: this service looks at the package name of the app in front. When a Reels or Shorts rule is
+ * active it also checks a few technical screen-part names to tell whether that feed is showing. It never
+ * reads text, messages, usernames or any other content on screen.
  */
 @AndroidEntryPoint
 class FocunoAccessibilityService : AccessibilityService(), BlockHost {
@@ -24,6 +24,7 @@ class FocunoAccessibilityService : AccessibilityService(), BlockHost {
 
     private var overlayManager: OverlayWindowManager? = null
     private var receiverRegistered = false
+    private var baseEventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
 
     override val overlay: OverlayWindowManager
         get() = overlayManager ?: OverlayWindowManager(this).also { overlayManager = it }
@@ -40,6 +41,7 @@ class FocunoAccessibilityService : AccessibilityService(), BlockHost {
     override fun onServiceConnected() {
         super.onServiceConnected()
         isConnected = true
+        serviceInfo?.let { baseEventTypes = it.eventTypes and AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED.inv() }
         if (!receiverRegistered) {
             val filter = IntentFilter().apply {
                 addAction(Intent.ACTION_SCREEN_OFF)
@@ -54,15 +56,38 @@ class FocunoAccessibilityService : AccessibilityService(), BlockHost {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
-        val packageName = event.packageName?.toString() ?: return
-        engine.onWindowChanged(packageName)
+        val packageName = event?.packageName?.toString() ?: return
+        when (event.eventType) {
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> engine.onWindowChanged(packageName)
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> engine.onContentChanged(packageName)
+        }
     }
 
     override fun onInterrupt() = Unit
 
     override fun goHome() {
         performGlobalAction(GLOBAL_ACTION_HOME)
+    }
+
+    override fun goBack() {
+        performGlobalAction(GLOBAL_ACTION_BACK)
+    }
+
+    override fun activeWindowPackage(): String? = rootInActiveWindow?.packageName?.toString()
+
+    override fun isShortVideoShowing(packageName: String): Boolean =
+        ShortVideoDetector.isShowing(rootInActiveWindow, packageName)
+
+    override fun leaveShortVideoFeed(packageName: String): Boolean =
+        ShortVideoDetector.leaveToHomeTab(rootInActiveWindow, packageName)
+
+    override fun setContentEventsEnabled(enabled: Boolean) {
+        val info = serviceInfo ?: return
+        val wanted = if (enabled) baseEventTypes or AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED else baseEventTypes
+        if (info.eventTypes != wanted) {
+            info.eventTypes = wanted
+            serviceInfo = info
+        }
     }
 
     override fun onUnbind(intent: Intent?): Boolean {

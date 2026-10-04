@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.startup.focuno.domain.model.AppCategory
+import com.startup.focuno.domain.model.BlockScope
 import com.startup.focuno.domain.model.BypassOutcome
 
 /** Dates are ISO local dates ("2026-10-04") so they sort and range-query as plain text. */
@@ -39,6 +40,7 @@ data class HourlyDistractingEntity(
 data class BlockScheduleEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val packageName: String,
+    val scope: BlockScope,
     val startMinuteOfDay: Int,
     val endMinuteOfDay: Int,
     val daysOfWeekMask: Int,

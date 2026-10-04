@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +45,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenHealth: () -> Unit,
     onOpenPrivacy: () -> Unit,
+    onOpenUsageCheck: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -53,6 +55,7 @@ fun SettingsScreen(
         onBack = onBack,
         onOpenHealth = onOpenHealth,
         onOpenPrivacy = onOpenPrivacy,
+        onOpenUsageCheck = onOpenUsageCheck,
         onGoalChanged = viewModel::setDailyGoalMinutes,
         onNudgesEnabled = viewModel::setNudgesEnabled,
         onSensitivity = viewModel::setNudgeSensitivity,
@@ -66,6 +69,7 @@ fun SettingsContent(
     onBack: () -> Unit,
     onOpenHealth: () -> Unit,
     onOpenPrivacy: () -> Unit,
+    onOpenUsageCheck: () -> Unit,
     onGoalChanged: (Int) -> Unit,
     onNudgesEnabled: (Boolean) -> Unit,
     onSensitivity: (NudgeSensitivity) -> Unit,
@@ -80,6 +84,7 @@ fun SettingsContent(
             GoalCard(settings.dailyGoalMinutes, onGoalChanged)
             NudgeCard(settings, onNudgesEnabled, onSensitivity)
             LinkCard(Icons.Rounded.Shield, stringResource(R.string.health_title), stringResource(R.string.settings_health_subtitle), onOpenHealth)
+            LinkCard(Icons.Rounded.Timer, stringResource(R.string.usage_check_title), stringResource(R.string.settings_usage_check_subtitle), onOpenUsageCheck)
             LinkCard(Icons.Rounded.PrivacyTip, stringResource(R.string.privacy_title), stringResource(R.string.settings_privacy_subtitle), onOpenPrivacy)
             Spacer(Modifier.height(8.dp))
         }

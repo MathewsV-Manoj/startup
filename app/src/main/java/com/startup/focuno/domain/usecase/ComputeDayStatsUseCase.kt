@@ -41,6 +41,7 @@ class ComputeDayStatsUseCase @Inject constructor(
             longestFocusStreakMs = FocusMetrics.longestFocusStreakMs(usage.sessions, isDistracting),
             apps = apps,
             hourlyDistractingMs = FocusMetrics.hourlyMs(usage.sessions.filter { isDistracting(it.packageName) }, zone),
+            excludedApps = usage.excludedApps,
         )
     }
 }

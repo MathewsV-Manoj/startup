@@ -8,6 +8,8 @@ import com.startup.focuno.data.repository.InstalledAppsRepository
 import com.startup.focuno.data.repository.ScheduleRepository
 import com.startup.focuno.domain.model.AppCategory
 import com.startup.focuno.domain.model.BlockSchedule
+import com.startup.focuno.domain.model.BlockScope
+import com.startup.focuno.domain.model.ShortVideoApps
 import com.startup.focuno.domain.usecase.StrictLock
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,14 +21,27 @@ import javax.inject.Inject
 
 enum class TimeField { START, END }
 
+/** The add flow is a few big choices in a row. Editing an existing schedule jumps straight to DETAILS. */
+enum class EditorStep { PICK_APP, WHAT, WHEN, DETAILS }
+
+/** One-tap times for the add flow. start == end means all day. */
+enum class WhenPreset(val startMinute: Int, val endMinute: Int) {
+    ALL_DAY(0, 0),
+    NIGHT(22 * 60, 6 * 60),
+    SCHOOL(9 * 60, 17 * 60),
+    EVENING(18 * 60, 23 * 60),
+}
+
 data class ScheduleEditorUiState(
     val isOpen: Boolean = false,
+    val step: EditorStep = EditorStep.PICK_APP,
     val isLoadingApps: Boolean = false,
     val apps: List<InstalledApp> = emptyList(),
     val query: String = "",
     val id: Long = 0,
     val packageName: String? = null,
     val appLabel: String = "",
+    val scope: BlockScope = BlockScope.APP,
     val startMinute: Int = 22 * 60,
     val endMinute: Int = 6 * 60,
     val daysMask: Int = BlockSchedule.ALL_DAYS,
@@ -39,6 +54,7 @@ data class ScheduleEditorUiState(
     val isEditing: Boolean get() = id != 0L
     val isOvernight: Boolean get() = endMinute <= startMinute
     val canSave: Boolean get() = packageName != null && daysMask != 0 && lockedUntilMs == null
+    val supportsShortVideo: Boolean get() = ShortVideoApps.supports(packageName)
 }
 
 @HiltViewModel
@@ -54,7 +70,7 @@ class ScheduleEditorViewModel @Inject constructor(
 
     /** Add flow from the Block tab: first pick an app. */
     fun openNew() {
-        _state.value = ScheduleEditorUiState(isOpen = true, isLoadingApps = true)
+        _state.value = ScheduleEditorUiState(isOpen = true, step = EditorStep.PICK_APP, isLoadingApps = true)
         loadApps()
     }
 
@@ -69,9 +85,11 @@ class ScheduleEditorViewModel @Inject constructor(
             val label = installedAppsRepository.label(schedule.packageName)
             _state.value = ScheduleEditorUiState(
                 isOpen = true,
+                step = EditorStep.DETAILS,
                 id = schedule.id,
                 packageName = schedule.packageName,
                 appLabel = label,
+                scope = schedule.scope,
                 startMinute = schedule.startMinuteOfDay,
                 endMinute = schedule.endMinuteOfDay,
                 daysMask = schedule.daysOfWeekMask,
@@ -107,12 +125,59 @@ class ScheduleEditorViewModel @Inject constructor(
     fun selectApp(packageName: String) {
         viewModelScope.launch {
             val label = installedAppsRepository.label(packageName)
-            _state.update { it.copy(packageName = packageName, appLabel = label) }
+            _state.update {
+                it.copy(
+                    packageName = packageName,
+                    appLabel = label,
+                    scope = BlockScope.APP,
+                    step = if (ShortVideoApps.supports(packageName)) EditorStep.WHAT else EditorStep.WHEN,
+                )
+            }
+        }
+    }
+
+    fun chooseScope(scope: BlockScope) {
+        _state.update { it.copy(scope = scope, step = EditorStep.WHEN) }
+    }
+
+    /** Saves straight away: every day, not strict. Strict mode and exact days live under "pick my own time". */
+    fun choosePreset(preset: WhenPreset) {
+        val current = _state.value
+        val pkg = current.packageName ?: return
+        viewModelScope.launch {
+            scheduleRepository.save(
+                BlockSchedule(
+                    packageName = pkg,
+                    scope = current.scope,
+                    startMinuteOfDay = preset.startMinute,
+                    endMinuteOfDay = preset.endMinute,
+                    daysOfWeekMask = BlockSchedule.ALL_DAYS,
+                ),
+            )
+            dismiss()
+        }
+    }
+
+    fun chooseCustomTime() {
+        _state.update { it.copy(step = EditorStep.DETAILS) }
+    }
+
+    fun stepBack() {
+        val current = _state.value
+        when (current.step) {
+            EditorStep.PICK_APP -> dismiss()
+            EditorStep.WHAT -> changeApp()
+            EditorStep.WHEN -> if (current.supportsShortVideo) {
+                _state.update { it.copy(step = EditorStep.WHAT) }
+            } else {
+                changeApp()
+            }
+            EditorStep.DETAILS -> if (current.isEditing) dismiss() else _state.update { it.copy(step = EditorStep.WHEN) }
         }
     }
 
     fun changeApp() {
-        _state.update { it.copy(packageName = null, appLabel = "", isLoadingApps = allApps.isEmpty(), apps = filter(it.query)) }
+        _state.update { it.copy(packageName = null, appLabel = "", step = EditorStep.PICK_APP, isLoadingApps = allApps.isEmpty(), apps = filter(it.query)) }
         if (allApps.isEmpty()) loadApps()
     }
 
@@ -149,6 +214,7 @@ class ScheduleEditorViewModel @Inject constructor(
                 BlockSchedule(
                     id = current.id,
                     packageName = pkg,
+                    scope = current.scope,
                     startMinuteOfDay = current.startMinute,
                     endMinuteOfDay = current.endMinute,
                     daysOfWeekMask = current.daysMask,

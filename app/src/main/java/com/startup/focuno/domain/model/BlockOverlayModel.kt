@@ -7,6 +7,8 @@ data class BlockOverlayModel(
     val packageName: String,
     val appName: String,
     val kind: BlockKind,
+    /** APP blocks the whole app. SHORT_VIDEO blocks only Reels or Shorts inside it. */
+    val scope: BlockScope = BlockScope.APP,
     val startMinuteOfDay: Int,
     val endMinuteOfDay: Int,
     /** Name shown for QUICK_BLOCK, e.g. "Focus session" or "Block now". */

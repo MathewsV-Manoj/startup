@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.Process
 import android.util.Log
 import com.startup.focuno.data.local.homePackages
-import com.startup.focuno.data.local.launcherPackages
 import com.startup.focuno.domain.model.AppUsageRaw
 import com.startup.focuno.domain.model.DayUsage
 import com.startup.focuno.domain.model.RawUsageEvent
@@ -68,18 +67,23 @@ class UsageTrackingRepository @Inject constructor(
                 Log.w(TAG, "Usage for $pkg exceeded the elapsed day and was clamped. The event walk has a bug.")
             }
 
-            val countable = countablePackages()
-            val apps = walk.foregroundMsByPackage
-                .filterKeys { it in countable }
-                .map { (pkg, ms) -> AppUsageRaw(pkg, ms, walk.openCountByPackage[pkg] ?: 0) }
+            val excluded = excludedPackages()
+            fun raw(entry: Map.Entry<String, Long>) = AppUsageRaw(entry.key, entry.value, walk.openCountByPackage[entry.key] ?: 0)
+            val apps = walk.foregroundMsByPackage.filterKeys { it !in excluded }.entries
+                .map(::raw)
+                .filter { it.foregroundMs > 0 }
+                .sortedByDescending { it.foregroundMs }
+            val excludedApps = walk.foregroundMsByPackage.filterKeys { it in excluded }.entries
+                .map(::raw)
                 .filter { it.foregroundMs > 0 }
                 .sortedByDescending { it.foregroundMs }
 
             DayUsage(
                 date = date,
                 apps = apps,
-                sessions = walk.sessions.filter { it.packageName in countable },
+                sessions = walk.sessions.filter { it.packageName !in excluded },
                 pickupCount = walk.pickupCount,
+                excludedApps = excludedApps,
             )
         }
 
@@ -89,9 +93,9 @@ class UsageTrackingRepository @Inject constructor(
         val now = System.currentTimeMillis()
         val windowStart = now - RECENT_MS
         val walk = UsageEventWalker.walk(readEvents(windowStart, now), windowStart, now)
-        val countable = context.packageManager.launcherPackages()
+        val excluded = excludedPackages()
         walk.sessions
-            .filter { it.endMs >= now - 1_000L && it.packageName in countable }
+            .filter { it.endMs >= now - 1_000L && it.packageName !in excluded }
             .maxByOrNull { it.startMs }
             ?.packageName
     }
@@ -115,11 +119,11 @@ class UsageTrackingRepository @Inject constructor(
         return result
     }
 
-    /** Apps that count toward screen time: have a launcher icon, and are not Focuno, system UI or a home screen. */
-    private fun countablePackages(): Set<String> {
-        val pm = context.packageManager
-        return pm.launcherPackages() - pm.homePackages() - ALWAYS_EXCLUDED - context.packageName
-    }
+    /**
+     * Only the home screen and system UI are left out. Android's own screen time counts every other
+     * app, including apps with no launcher icon (the in-call screen) and Focuno itself, so Focuno does too.
+     */
+    private fun excludedPackages(): Set<String> = context.packageManager.homePackages() + ALWAYS_EXCLUDED
 
     private companion object {
         const val TAG = "UsageTracking"

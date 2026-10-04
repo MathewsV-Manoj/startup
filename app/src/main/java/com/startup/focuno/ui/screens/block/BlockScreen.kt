@@ -35,6 +35,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
 import com.startup.focuno.domain.model.BlockSchedule
+import com.startup.focuno.domain.model.BlockScope
+import com.startup.focuno.ui.components.shortVideoName
 import com.startup.focuno.ui.components.AppIcon
 import com.startup.focuno.ui.components.EmptyState
 import com.startup.focuno.ui.components.GlassCard
@@ -179,6 +181,13 @@ private fun ScheduleRow(row: ScheduleRowUi, onEdit: (BlockSchedule) -> Unit, onT
                 color = FocunoTheme.colors.textPrimary,
             )
             Text(daysSummary(schedule.daysOfWeekMask), style = MaterialTheme.typography.bodySmall, color = FocunoTheme.colors.textSecondary)
+            if (schedule.scope == BlockScope.SHORT_VIDEO) {
+                Text(
+                    stringResource(R.string.schedule_scope_feed, shortVideoName(schedule.packageName)),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+            }
             if (schedule.strictMode) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Icon(Icons.Rounded.Lock, contentDescription = null, tint = FocunoTheme.colors.warning, modifier = Modifier.height(14.dp))

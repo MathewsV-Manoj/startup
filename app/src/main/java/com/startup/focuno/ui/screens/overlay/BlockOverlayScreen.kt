@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.startup.focuno.R
 import com.startup.focuno.domain.model.BlockKind
+import com.startup.focuno.domain.model.BlockScope
 import com.startup.focuno.domain.model.BlockOverlayModel
 import com.startup.focuno.domain.usecase.BypassPolicy
 import com.startup.focuno.service.accessibility.FrictionState
@@ -44,6 +45,7 @@ import com.startup.focuno.ui.components.AppIcon
 import com.startup.focuno.ui.components.GlassCard
 import com.startup.focuno.ui.components.durationText
 import com.startup.focuno.ui.components.formatClock
+import com.startup.focuno.ui.components.shortVideoName
 import com.startup.focuno.ui.theme.DeepVoidPurple
 import com.startup.focuno.ui.theme.FocunoTheme
 import kotlinx.coroutines.delay
@@ -88,8 +90,13 @@ fun BlockOverlayScreen(
         ) {
             AppIcon(model.packageName, size = 72.dp)
             Spacer(Modifier.height(20.dp))
+            val isFeed = model.scope == BlockScope.SHORT_VIDEO
             Text(
-                text = stringResource(R.string.block_title, model.appName),
+                text = if (isFeed) {
+                    stringResource(R.string.block_title_feed, shortVideoName(model.packageName))
+                } else {
+                    stringResource(R.string.block_title, model.appName)
+                },
                 style = MaterialTheme.typography.headlineSmall,
                 color = FocunoTheme.colors.textPrimary,
                 textAlign = TextAlign.Center,
@@ -127,7 +134,14 @@ fun BlockOverlayScreen(
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             ) {
-                Text(stringResource(R.string.block_back_to_focus), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = if (isFeed) {
+                        stringResource(R.string.block_leave_feed, shortVideoName(model.packageName))
+                    } else {
+                        stringResource(R.string.block_back_to_focus)
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                )
             }
 
             Spacer(Modifier.height(12.dp))
@@ -266,7 +280,17 @@ fun BlockOverlayHost(
 private fun BlockOverlayPreview() {
     FocunoTheme {
         BlockOverlayScreen(
-            model = BlockOverlayModel("com.instagram.android", "Instagram", BlockKind.SCHEDULE, 22 * 60, 6 * 60, "", System.currentTimeMillis() + 3_600_000, false, null),
+            model = BlockOverlayModel(
+                packageName = "com.instagram.android",
+                appName = "Instagram",
+                kind = BlockKind.SCHEDULE,
+                startMinuteOfDay = 22 * 60,
+                endMinuteOfDay = 6 * 60,
+                quickLabel = "",
+                endsAtMs = System.currentTimeMillis() + 3_600_000,
+                strict = false,
+                bypassAvailableAtMs = null,
+            ),
             friction = FrictionState.Reason("need to reply to a friend"),
             nowMs = System.currentTimeMillis(),
             onBackToFocus = {}, onNeedThis = {}, onReasonChange = {}, onUnlock = {},

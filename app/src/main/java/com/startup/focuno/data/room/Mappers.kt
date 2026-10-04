@@ -5,6 +5,7 @@ import com.startup.focuno.domain.model.BlockSchedule
 fun BlockScheduleEntity.toDomain() = BlockSchedule(
     id = id,
     packageName = packageName,
+    scope = scope,
     startMinuteOfDay = startMinuteOfDay,
     endMinuteOfDay = endMinuteOfDay,
     daysOfWeekMask = daysOfWeekMask,
@@ -15,6 +16,7 @@ fun BlockScheduleEntity.toDomain() = BlockSchedule(
 fun BlockSchedule.toEntity() = BlockScheduleEntity(
     id = id,
     packageName = packageName,
+    scope = scope,
     startMinuteOfDay = startMinuteOfDay,
     endMinuteOfDay = endMinuteOfDay,
     daysOfWeekMask = daysOfWeekMask,

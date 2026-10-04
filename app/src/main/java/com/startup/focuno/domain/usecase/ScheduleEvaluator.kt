@@ -2,6 +2,7 @@ package com.startup.focuno.domain.usecase
 
 import com.startup.focuno.domain.model.ActiveBlockWindow
 import com.startup.focuno.domain.model.BlockSchedule
+import com.startup.focuno.domain.model.BlockScope
 import java.time.ZonedDateTime
 
 object ScheduleEvaluator {
@@ -15,13 +16,18 @@ object ScheduleEvaluator {
      * So both today's windows and yesterday's windows are checked. start == end means a full 24 hours.
      * If several windows overlap, the latest end wins and strict mode applies if any of them is strict.
      */
-    fun activeWindow(schedules: List<BlockSchedule>, packageName: String, now: ZonedDateTime): ActiveBlockWindow? {
+    fun activeWindow(
+        schedules: List<BlockSchedule>,
+        packageName: String,
+        now: ZonedDateTime,
+        scope: BlockScope = BlockScope.APP,
+    ): ActiveBlockWindow? {
         var latestEnd: ZonedDateTime? = null
         var best: BlockSchedule? = null
         var anyStrict = false
 
         for (schedule in schedules) {
-            if (!schedule.enabled || schedule.packageName != packageName) continue
+            if (!schedule.enabled || schedule.packageName != packageName || schedule.scope != scope) continue
             val rawDuration = (schedule.endMinuteOfDay - schedule.startMinuteOfDay + MINUTES_PER_DAY) % MINUTES_PER_DAY
             val durationMinutes = if (rawDuration == 0) MINUTES_PER_DAY else rawDuration
 

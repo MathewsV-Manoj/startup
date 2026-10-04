@@ -34,7 +34,21 @@ class InstalledAppsRepository @Inject constructor(@ApplicationContext private va
             val info = context.packageManager.getApplicationInfo(packageName, 0)
             context.packageManager.getApplicationLabel(info).toString()
         } catch (_: PackageManager.NameNotFoundException) {
-            packageName
+            fallbackLabel(packageName)
         }
+    }
+
+    private fun fallbackLabel(packageName: String): String = KNOWN_NAMES[packageName]
+        ?: packageName.substringAfterLast('.').replaceFirstChar { it.uppercase() }
+
+    private companion object {
+        val KNOWN_NAMES = mapOf(
+            "com.android.incallui" to "Phone call",
+            "com.google.android.gms" to "Google Play services",
+            "com.google.android.permissioncontroller" to "Permissions",
+            "com.android.permissioncontroller" to "Permissions",
+            "com.google.android.packageinstaller" to "Package installer",
+            "com.android.vending" to "Play Store",
+        )
     }
 }

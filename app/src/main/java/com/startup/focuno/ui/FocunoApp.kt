@@ -42,6 +42,7 @@ import com.startup.focuno.ui.screens.insights.InsightsScreen
 import com.startup.focuno.ui.screens.onboarding.OnboardingScreen
 import com.startup.focuno.ui.screens.settings.PrivacyScreen
 import com.startup.focuno.ui.screens.settings.SettingsScreen
+import com.startup.focuno.ui.screens.settings.UsageCheckScreen
 import com.startup.focuno.ui.theme.DeepVoidPurple
 import com.startup.focuno.ui.theme.FocunoTheme
 
@@ -55,6 +56,7 @@ private enum class Tab(val labelRes: Int, val icon: ImageVector) {
 private const val ROUTE_SETTINGS = 0
 private const val ROUTE_PRIVACY = 1
 private const val ROUTE_HEALTH = 2
+private const val ROUTE_USAGE_CHECK = 3
 
 /** Root of the UI. [openHealthRequest] goes up each time a notification asks to open the health check. */
 @Composable
@@ -134,9 +136,11 @@ private fun MainScaffold(openHealthRequest: Int) {
                     onBack = { stack = stack.dropLast(1) },
                     onOpenHealth = { stack = stack + ROUTE_HEALTH },
                     onOpenPrivacy = { stack = stack + ROUTE_PRIVACY },
+                    onOpenUsageCheck = { stack = stack + ROUTE_USAGE_CHECK },
                 )
                 ROUTE_PRIVACY -> PrivacyScreen(onBack = { stack = stack.dropLast(1) })
                 ROUTE_HEALTH -> HealthScreen(onBack = { stack = stack.dropLast(1) })
+                ROUTE_USAGE_CHECK -> UsageCheckScreen(onBack = { stack = stack.dropLast(1) })
             }
         }
     }
@@ -146,7 +150,10 @@ private fun MainScaffold(openHealthRequest: Int) {
         onDismiss = editor::dismiss,
         onQuery = editor::setQuery,
         onSelectApp = editor::selectApp,
-        onChangeApp = editor::changeApp,
+        onChooseScope = editor::chooseScope,
+        onChoosePreset = editor::choosePreset,
+        onChooseCustomTime = editor::chooseCustomTime,
+        onStepBack = editor::stepBack,
         onShowTimePicker = editor::showTimePicker,
         onHideTimePicker = editor::hideTimePicker,
         onSetTime = editor::setTime,

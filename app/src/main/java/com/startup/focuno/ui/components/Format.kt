@@ -20,3 +20,8 @@ fun durationText(ms: Long, roundUp: Boolean = false): String {
         else -> stringResource(R.string.duration_under_a_minute)
     }
 }
+
+/** "Reels" for Instagram, "Shorts" for YouTube. */
+@Composable
+fun shortVideoName(packageName: String): String =
+    stringResource(if (packageName == com.startup.focuno.domain.model.ShortVideoApps.YOUTUBE) R.string.feed_shorts else R.string.feed_reels)

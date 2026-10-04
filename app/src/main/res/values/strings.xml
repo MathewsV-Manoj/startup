@@ -3,7 +3,7 @@
 
 
     <!-- Accessibility service -->
-    <string name="accessibility_service_description">Focuno uses this only to notice which app is in front, so it can pause apps you chose to block. It never reads what is on your screen.</string>
+    <string name="accessibility_service_description">Focuno uses this to notice which app is in front, so it can pause apps you chose to block. If you block only Reels or Shorts, it also checks whether that video screen is open. It never reads your messages or anything you type.</string>
 
     <!-- Notifications -->
     <string name="channel_monitor_name">Focuno is running</string>
@@ -198,9 +198,9 @@
     <string name="privacy_title">Privacy</string>
     <string name="privacy_paragraph">Focuno works entirely on your phone. It has no accounts, no analytics and no internet permission, so nothing about you can leave this device. Your usage history lives in a private database on this phone and is deleted when you uninstall.</string>
     <string name="privacy_reads_title">What it reads</string>
-    <string name="privacy_reads_body">Which app is in front of you, and how long each app is used. The accessibility service sees only the name of the app that opened, never what is on your screen.</string>
+    <string name="privacy_reads_body">Which app is in front of you, and how long each app is used. If you choose to block only Reels or Shorts, Focuno also checks a few technical screen-part names inside Instagram or YouTube to see whether the video screen is open. That check only happens while such a rule exists and one of those apps is open.</string>
     <string name="privacy_never_title">What it never touches</string>
-    <string name="privacy_never_body">Messages, photos, passwords, text on screen, your location, contacts, or anything you type in other apps. The only text Focuno keeps is the reason you give when you ask to unlock an app, and that stays on this phone.</string>
+    <string name="privacy_never_body">Messages, photos, passwords, text on screen, usernames, captions, your location, contacts, or anything you type in other apps. The only text Focuno keeps is the reason you give when you ask to unlock an app, and that stays on this phone.</string>
 
     <!-- Health check -->
     <string name="health_title">Health check</string>
@@ -264,7 +264,7 @@
     <string name="onb_usage_title">Count your screen time</string>
     <string name="onb_usage_body">Android calls this Usage access. It lets Focuno see which apps you open and for how long. Focuno never sees what you do inside them.</string>
     <string name="onb_accessibility_title">Notice when a blocked app opens</string>
-    <string name="onb_accessibility_body">This is how Focuno knows a blocked app just came to the front. It reads only the app\'s name, never what is on your screen. Find Focuno in the list and switch it on.</string>
+    <string name="onb_accessibility_body">This is how Focuno knows a blocked app just opened, and how it can block only Reels or Shorts. It never reads your messages or what you type. Find Focuno in the list and switch it on.</string>
     <string name="onb_overlay_title">Show the pause screen</string>
     <string name="onb_overlay_body">Focuno draws a calm pause screen on top of a blocked app. This permission is what lets it appear over other apps.</string>
     <string name="onb_stay_alive_title">Keep Focuno running</string>
@@ -292,4 +292,47 @@
     <string name="onb_skip">Skip for now</string>
     <string name="onb_status_on">On</string>
     <string name="onb_status_off">Not on yet</string>
+
+    <!-- Reels / Shorts blocking -->
+    <string name="feed_reels">Reels</string>
+    <string name="feed_shorts">Shorts</string>
+    <string name="block_title_feed">%1$s are paused for now</string>
+    <string name="block_leave_feed">Leave %1$s</string>
+    <string name="schedule_scope_feed">Only %1$s</string>
+    <string name="schedule_scope_app">Blocks the whole app</string>
+
+    <!-- Easy add flow -->
+    <string name="editor_what_title">What should I block?</string>
+    <string name="editor_what_app">The whole app</string>
+    <string name="editor_what_app_sub">Everything inside it</string>
+    <string name="editor_what_feed">Only %1$s</string>
+    <string name="editor_what_feed_sub">%1$s stays open for messages and posts. Just the endless %2$s are paused.</string>
+    <string name="editor_when_title">When should it be blocked?</string>
+    <string name="when_all_day">All day, every day</string>
+    <string name="when_all_day_sub">Always blocked</string>
+    <string name="when_night">At night</string>
+    <string name="when_night_sub">10 pm to 6 am</string>
+    <string name="when_school">School and study time</string>
+    <string name="when_school_sub">9 am to 5 pm</string>
+    <string name="when_evening">Evenings</string>
+    <string name="when_evening_sub">6 pm to 11 pm</string>
+    <string name="when_custom">Pick my own time</string>
+
+    <!-- Screen time check -->
+    <string name="usage_check_title">Screen time check</string>
+    <string name="settings_usage_check_subtitle">Compare Focuno with Android Settings, app by app</string>
+    <string name="usage_check_counted_total">Counted today</string>
+    <string name="usage_check_updated">Updated %1$s</string>
+    <string name="usage_check_refresh">Refresh now</string>
+    <string name="usage_check_explainer">Android Settings counts every app except your home screen and the system bar. Focuno now does the same, including time spent inside Focuno. If the totals still differ by more than a couple of minutes, take a screenshot of this screen.</string>
+    <string name="usage_check_counted">Counted</string>
+    <string name="usage_check_not_counted">Not counted (home screen and system)</string>
+    <string name="usage_check_none">Nothing yet.</string>
+    <string name="usage_check_none_excluded">Nothing was left out.</string>
+
+    <!-- Blocker log -->
+    <string name="health_log_title">Blocker log</string>
+    <string name="health_log_explainer">What the blocker saw and decided, for finding problems. It only holds app names and decisions.</string>
+    <string name="health_log_copy">Copy</string>
+    <string name="health_log_empty">Nothing yet. Open a blocked app and come back.</string>
 </resources>

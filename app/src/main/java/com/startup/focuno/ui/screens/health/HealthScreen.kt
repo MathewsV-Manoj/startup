@@ -41,6 +41,7 @@ import com.startup.focuno.ui.theme.FocunoTheme
 @Composable
 fun HealthScreen(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: HealthViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val log by viewModel.log.collectAsStateWithLifecycle()
     // Refresh on every return from Android settings, which is when a permission has probably just changed.
     RefreshWhileResumed(intervalMs = 5_000L, onRefresh = viewModel::refresh)
     val fix = rememberPermissionFixer()
@@ -80,6 +81,7 @@ fun HealthScreen(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: H
             }
             if (state.showRestrictedHelp) RestrictedSettingCard()
             OemAutostartCard(family = state.oem)
+            BlockerLogCard(log)
             Spacer(Modifier.height(8.dp))
         }
     }
