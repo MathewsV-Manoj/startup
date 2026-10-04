@@ -81,3 +81,12 @@ data class AppCategoryEntity(
     val category: AppCategory,
     val userOverridden: Boolean,
 )
+
+/** One daily time limit per app, so the package name is the key. */
+@Entity(tableName = "app_limit")
+data class AppLimitEntity(
+    @PrimaryKey val packageName: String,
+    val dailyMinutes: Int,
+    val strict: Boolean,
+    val enabled: Boolean,
+)

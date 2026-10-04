@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.startup.focuno.data.room.FocunoDatabase
 import com.startup.focuno.data.room.MIGRATION_1_2
+import com.startup.focuno.data.room.MIGRATION_2_3
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,7 +20,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): FocunoDatabase =
         Room.databaseBuilder(context, FocunoDatabase::class.java, "focuno.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
     @Provides fun dailyUsageDao(db: FocunoDatabase) = db.dailyUsageDao()
@@ -30,4 +31,5 @@ object DatabaseModule {
     @Provides fun blockHitDao(db: FocunoDatabase) = db.blockHitDao()
     @Provides fun focusSessionDao(db: FocunoDatabase) = db.focusSessionDao()
     @Provides fun appCategoryDao(db: FocunoDatabase) = db.appCategoryDao()
+    @Provides fun appLimitDao(db: FocunoDatabase) = db.appLimitDao()
 }

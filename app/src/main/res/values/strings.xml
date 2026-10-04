@@ -374,4 +374,22 @@
     <string name="level_number">Level %1$d</string>
     <string name="streak_label">streak</string>
     <string name="points_label">points</string>
+
+    <!-- Daily limits -->
+    <string name="when_limit">Daily time limit</string>
+    <string name="when_limit_sub">Per day</string>
+    <string name="limit_title">How long per day?</string>
+    <string name="limit_locked">Time is up today. Locked until midnight.</string>
+    <string name="limit_strict_on">No unlock once the time is used up.</string>
+    <string name="limit_strict_off">You can still unlock it after a wait. Turn on to lock it.</string>
+    <string name="limit_used">%1$s of %2$s today</string>
+    <string name="section_limits">Daily limits</string>
+    <string name="section_schedules">Time slots</string>
+    <string name="block_title_limit">Time\'s up for %1$s today</string>
+    <string name="block_source_limit">Daily limit: %1$s</string>
+    <string name="block_until_midnight">until midnight</string>
+    <plurals name="limit_warning">
+        <item quantity="one">%1$d minute left on %2$s today</item>
+        <item quantity="other">%1$d minutes left on %2$s today</item>
+    </plurals>
 </resources>

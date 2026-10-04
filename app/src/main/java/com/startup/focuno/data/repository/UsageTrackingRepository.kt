@@ -87,6 +87,14 @@ class UsageTrackingRepository @Inject constructor(
             )
         }
 
+    /** Today's foreground time for [packages], counted exactly like the screen-time numbers. */
+    suspend fun foregroundMsToday(packages: Set<String>): Map<String, Long> {
+        if (packages.isEmpty()) return emptyMap()
+        return getUsageForDay(LocalDate.now()).apps
+            .filter { it.packageName in packages }
+            .associate { it.packageName to it.foregroundMs }
+    }
+
     /** The app on screen right now, from recent events, used to seed the blocker after a restart. */
     suspend fun currentForegroundPackage(): String? = withContext(Dispatchers.IO) {
         if (!hasUsageAccess()) return@withContext null

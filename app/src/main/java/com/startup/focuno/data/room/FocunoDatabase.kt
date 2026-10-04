@@ -13,8 +13,9 @@ import androidx.room.RoomDatabase
         BlockHitEntity::class,
         FocusSessionEntity::class,
         AppCategoryEntity::class,
+        AppLimitEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class FocunoDatabase : RoomDatabase() {
@@ -26,4 +27,5 @@ abstract class FocunoDatabase : RoomDatabase() {
     abstract fun blockHitDao(): BlockHitDao
     abstract fun focusSessionDao(): FocusSessionDao
     abstract fun appCategoryDao(): AppCategoryDao
+    abstract fun appLimitDao(): AppLimitDao
 }

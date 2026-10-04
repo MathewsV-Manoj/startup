@@ -1,6 +1,6 @@
 package com.startup.focuno.domain.model
 
-enum class BlockKind { SCHEDULE, QUICK_BLOCK }
+enum class BlockKind { SCHEDULE, QUICK_BLOCK, DAILY_LIMIT }
 
 /** Everything the block screen needs to explain itself calmly. */
 data class BlockOverlayModel(
@@ -17,4 +17,6 @@ data class BlockOverlayModel(
     val strict: Boolean,
     /** When "I need this" works again, or null if it can be used now. */
     val bypassAvailableAtMs: Long?,
+    /** For DAILY_LIMIT: the daily budget in minutes. */
+    val limitMinutes: Int = 0,
 )

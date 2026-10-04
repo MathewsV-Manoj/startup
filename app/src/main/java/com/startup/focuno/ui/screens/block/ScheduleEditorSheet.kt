@@ -52,6 +52,7 @@ import com.startup.focuno.ui.components.Panel
 import com.startup.focuno.ui.components.StrictSwitch
 import com.startup.focuno.ui.components.LoadingState
 import com.startup.focuno.ui.components.TimePickerDialog
+import com.startup.focuno.ui.components.durationText
 import com.startup.focuno.ui.components.formatClock
 import com.startup.focuno.ui.components.shortVideoName
 import com.startup.focuno.ui.theme.FocunoTheme
@@ -79,6 +80,10 @@ fun ScheduleEditorSheet(
     onSetStrict: (Boolean) -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
+    onChooseLimit: () -> Unit,
+    onSetLimitMinutes: (Int) -> Unit,
+    onSaveLimit: () -> Unit,
+    onDeleteLimit: () -> Unit,
 ) {
     if (!state.isOpen) return
     ModalBottomSheet(
@@ -89,8 +94,9 @@ fun ScheduleEditorSheet(
         when (state.step) {
             EditorStep.PICK_APP -> AppPicker(state, onQuery, onSelectApp)
             EditorStep.WHAT -> WhatStep(state, onChooseScope, onStepBack)
-            EditorStep.WHEN -> WhenStep(state, onChoosePreset, onChooseCustomTime, onSetStrict, onStepBack)
+            EditorStep.WHEN -> WhenStep(state, onChoosePreset, onChooseCustomTime, onChooseLimit, onSetStrict, onStepBack)
             EditorStep.DETAILS -> Details(state, onShowTimePicker, onToggleDay, onSetStrict, onSave, onDelete, onStepBack)
+            EditorStep.LIMIT -> LimitStep(state, onSetLimitMinutes, onSetStrict, onSaveLimit, onDeleteLimit, onStepBack)
         }
     }
     state.timePickerFor?.let { field ->
@@ -193,6 +199,7 @@ private fun WhenStep(
     state: ScheduleEditorUiState,
     onPreset: (WhenPreset) -> Unit,
     onCustom: () -> Unit,
+    onLimit: () -> Unit,
     onSetStrict: (Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -219,8 +226,76 @@ private fun WhenStep(
                 enabled = allowed,
             )
         }
+        if (state.scope == BlockScope.APP) {
+            ChoiceTile(stringResource(R.string.when_limit), stringResource(R.string.when_limit_sub), onClick = onLimit)
+        }
         OutlinedButton(onClick = onCustom, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(50)) {
             Text(stringResource(R.string.when_custom))
+        }
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun LimitStep(
+    state: ScheduleEditorUiState,
+    onSetMinutes: (Int) -> Unit,
+    onSetStrict: (Boolean) -> Unit,
+    onSave: () -> Unit,
+    onDelete: () -> Unit,
+    onBack: () -> Unit,
+) {
+    val pkg = state.packageName ?: return
+    val locked = state.lockedUntilMs != null
+    Column(
+        Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        StepHeader(state.appLabel, pkg, onBack = if (state.isEditingLimit) null else onBack)
+        Text(stringResource(R.string.limit_title), style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textSecondary)
+        if (locked) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Icon(Icons.Rounded.Lock, contentDescription = null, tint = FocunoTheme.colors.warning)
+                Text(stringResource(R.string.limit_locked), style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.warning)
+            }
+        }
+        LIMIT_CHOICES.chunked(3).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                row.forEach { minutes ->
+                    val selected = minutes == state.limitMinutes
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(if (selected) MaterialTheme.colorScheme.primary else FocunoTheme.colors.trackInactive)
+                            .clickable(enabled = !locked, role = Role.RadioButton) { onSetMinutes(minutes) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            durationText(minutes * 60_000L),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = if (selected) FocunoTheme.colors.textPrimary else FocunoTheme.colors.textSecondary,
+                        )
+                    }
+                }
+            }
+        }
+        StrictSwitch(
+            strict = state.strict,
+            onChange = onSetStrict,
+            enabled = !locked,
+            note = stringResource(if (state.strict) R.string.limit_strict_on else R.string.limit_strict_off),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+            if (state.isEditingLimit) {
+                OutlinedButton(onClick = onDelete, enabled = !locked, modifier = Modifier.height(52.dp), shape = RoundedCornerShape(50)) {
+                    Text(stringResource(R.string.action_delete))
+                }
+            }
+            Button(onClick = onSave, enabled = !locked, modifier = Modifier.weight(1f).height(52.dp), shape = RoundedCornerShape(50)) {
+                Text(stringResource(R.string.action_save))
+            }
         }
         Spacer(Modifier.height(16.dp))
     }

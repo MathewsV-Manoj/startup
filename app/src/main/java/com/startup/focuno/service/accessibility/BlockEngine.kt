@@ -12,9 +12,11 @@ import com.startup.focuno.data.model.AppSettings
 import com.startup.focuno.data.repository.AppCategoryRepository
 import com.startup.focuno.data.repository.BypassRepository
 import com.startup.focuno.data.repository.InstalledAppsRepository
+import com.startup.focuno.data.repository.LimitRepository
 import com.startup.focuno.data.repository.ScheduleRepository
 import com.startup.focuno.data.repository.UsageTrackingRepository
 import com.startup.focuno.domain.model.AppCategory
+import com.startup.focuno.domain.model.AppLimit
 import com.startup.focuno.domain.model.BlockKind
 import com.startup.focuno.domain.model.BlockOverlayModel
 import com.startup.focuno.domain.model.BlockSchedule
@@ -22,10 +24,13 @@ import com.startup.focuno.domain.model.BlockScope
 import com.startup.focuno.domain.model.BypassOutcome
 import com.startup.focuno.domain.model.ShortVideoApps
 import com.startup.focuno.domain.usecase.BypassPolicy
+import com.startup.focuno.domain.usecase.DailyLimitPolicy
 import com.startup.focuno.domain.usecase.ScheduleEvaluator
 import com.startup.focuno.ui.screens.overlay.BlockOverlayHost
 import com.startup.focuno.ui.screens.overlay.NudgeToast
+import com.startup.focuno.R
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -35,6 +40,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -70,6 +76,7 @@ interface BlockHost {
 class BlockEngine @Inject constructor(
     @ApplicationContext private val context: Context,
     private val scheduleRepository: ScheduleRepository,
+    private val limitRepository: LimitRepository,
     private val categoryRepository: AppCategoryRepository,
     private val bypassRepository: BypassRepository,
     private val settingsStore: SettingsStore,
@@ -92,7 +99,12 @@ class BlockEngine @Inject constructor(
     private var overrides: Map<String, AppCategory> = emptyMap()
     private var lastGranted: Map<String, Long> = emptyMap()
     private var settings: AppSettings = AppSettings()
-    private val loaded = BooleanArray(4)
+    private val loaded = BooleanArray(5)
+
+    private var limits: Map<String, AppLimit> = emptyMap()
+    private val limitUsage = HashMap<String, MeasuredUse>()
+    private val limitWarned = HashSet<String>()
+    private var measuring = false
 
     private var ignoredPackages: Set<String> = emptySet()
     private var neverBlockPackages: Set<String> = emptySet()
@@ -143,6 +155,14 @@ class BlockEngine @Inject constructor(
         newScope.launch {
             settingsStore.settings.collect { settings = it; loaded[3] = true; reevaluate() }
         }
+        newScope.launch {
+            limitRepository.observeAll().collect { rows ->
+                limits = rows.associateBy { it.packageName }
+                loaded[4] = true
+                measureLimits(force = true)
+                reevaluate()
+            }
+        }
         newScope.launch { seedForegroundPackage() }
         newScope.launch {
             while (isActive) {
@@ -165,6 +185,8 @@ class BlockEngine @Inject constructor(
         inShortVideo = false
         contentEventsOn = false
         loaded.fill(false)
+        limitUsage.clear()
+        measuring = false
     }
 
     /** Called for every window-state change. Only the package name is looked at. */
@@ -219,6 +241,7 @@ class BlockEngine @Inject constructor(
         inShortVideo = false
         updateContentEvents()
         nudgeCoordinator.onForegroundChanged(packageName, System.currentTimeMillis())
+        if (packageName in limits) measureLimits(force = true)
     }
 
     private suspend fun seedForegroundPackage() {
@@ -271,9 +294,68 @@ class BlockEngine @Inject constructor(
             pollActiveWindow()
             if (contentEventsOn) refreshShortVideoState()
         }
+        if (screenOn) measureLimits(force = false)
         reevaluate()
+        maybeWarnLimit()
         tickCount++
         if (tickCount % NUDGE_EVERY_TICKS == 0) maybeNudge()
+    }
+
+    /**
+     * Re-reads today's use of every limited app. Without [force] it only runs when the app in front has a
+     * limit and its last reading is a minute old, which keeps the cost tiny.
+     */
+    private fun measureLimits(force: Boolean) {
+        val packages = limits.filterValues { it.enabled }.keys
+        if (packages.isEmpty() || measuring) return
+        if (!force) {
+            val pkg = currentPackage ?: return
+            if (pkg !in packages) return
+            val last = limitUsage[pkg]?.atMs ?: 0L
+            if (System.currentTimeMillis() - last < LIMIT_REMEASURE_MS) return
+        }
+        val activeScope = scope ?: return
+        measuring = true
+        activeScope.launch {
+            try {
+                val now = System.currentTimeMillis()
+                val used = usageRepository.foregroundMsToday(packages)
+                packages.forEach { limitUsage[it] = MeasuredUse(used[it] ?: 0L, now) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                log.add("Could not measure limited apps: ${e.javaClass.simpleName}")
+            } finally {
+                measuring = false
+            }
+            reevaluate()
+        }
+    }
+
+    private fun usedTodayMs(pkg: String, nowMs: Long, dayStartMs: Long): Long? {
+        val measured = limitUsage[pkg] ?: return null
+        return DailyLimitPolicy.usedNowMs(measured.usedMs, measured.atMs, nowMs, inFront = pkg == currentPackage && screenOn, dayStartMs = dayStartMs)
+    }
+
+    /** One heads-up per app per day, a few minutes before its limit runs out. */
+    private fun maybeWarnLimit() {
+        val pkg = currentPackage ?: return
+        val limit = limits[pkg] ?: return
+        val activeHost = host ?: return
+        if (!screenOn || shownFor != null) return
+        val zoned = Instant.ofEpochMilli(System.currentTimeMillis()).atZone(ZoneId.systemDefault())
+        val dayStart = zoned.toLocalDate().atStartOfDay(zoned.zone).toInstant().toEpochMilli()
+        val used = usedTodayMs(pkg, zoned.toInstant().toEpochMilli(), dayStart) ?: return
+        if (!DailyLimitPolicy.shouldWarn(limit, used)) return
+        val key = "${LocalDate.now()}:$pkg"
+        if (!limitWarned.add(key)) return
+        val minutesLeft = ((DailyLimitPolicy.remainingMs(limit, used) + 59_999L) / 60_000L).toInt()
+        val text = context.resources.getQuantityString(R.plurals.limit_warning, minutesLeft, minutesLeft, installedApps.labelBlocking(pkg))
+        log.add("Limit heads-up: $pkg, $minutesLeft min left")
+        lastOverlayShownAtMs = SystemClock.elapsedRealtime()
+        activeHost.overlay.showNudge(NUDGE_VISIBLE_MS) {
+            NudgeToast(text = text, onDismiss = { activeHost.overlay.hideNudge() })
+        }
     }
 
     private fun reevaluate() {
@@ -298,10 +380,18 @@ class BlockEngine @Inject constructor(
         val isDistracting = categoryRepository.resolve(pkg, overrides) == AppCategory.DISTRACTING
 
         val appWindow = ScheduleEvaluator.activeWindow(schedules, pkg, zoned, BlockScope.APP)
+        val dayStart = zoned.toLocalDate().atStartOfDay(zoned.zone).toInstant().toEpochMilli()
+        val usedLimit = limits[pkg]?.takeIf { limit ->
+            val used = usedTodayMs(pkg, nowMs, dayStart)
+            used != null && DailyLimitPolicy.isReached(limit, used)
+        }
         val base = when {
             appWindow != null -> buildModel(pkg, BlockKind.SCHEDULE, BlockScope.APP, appWindow.startMinuteOfDay, appWindow.endMinuteOfDay, appWindow.endsAtMs, appWindow.strict, "")
             settings.quickBlockUntilMs > nowMs && isDistracting ->
                 buildModel(pkg, BlockKind.QUICK_BLOCK, BlockScope.APP, 0, 0, settings.quickBlockUntilMs, settings.quickBlockStrict, settings.quickBlockLabel)
+            usedLimit != null ->
+                buildModel(pkg, BlockKind.DAILY_LIMIT, BlockScope.APP, 0, 0, DailyLimitPolicy.nextMidnightMs(zoned), usedLimit.strict, "")
+                    .copy(limitMinutes = usedLimit.dailyMinutes)
             inShortVideo -> {
                 val feedWindow = ScheduleEvaluator.activeWindow(schedules, pkg, zoned, BlockScope.SHORT_VIDEO) ?: return null
                 buildModel(pkg, BlockKind.SCHEDULE, BlockScope.SHORT_VIDEO, feedWindow.startMinuteOfDay, feedWindow.endMinuteOfDay, feedWindow.endsAtMs, feedWindow.strict, "")
@@ -438,7 +528,10 @@ class BlockEngine @Inject constructor(
         }
     }
 
+    private data class MeasuredUse(val usedMs: Long, val atMs: Long)
+
     private companion object {
+        const val LIMIT_REMEASURE_MS = 60_000L
         const val TICK_MS = 2_000L
         const val NUDGE_EVERY_TICKS = 5
         const val DEBOUNCE_MS = 500L

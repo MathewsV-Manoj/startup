@@ -130,6 +130,7 @@ private fun MainScaffold(openHealthRequest: Int) {
                             onOpenHealth = { stack = stack + ROUTE_HEALTH },
                             onAddSchedule = editor::openNew,
                             onEditSchedule = editor::openEdit,
+                            onEditLimit = editor::openEditLimit,
                         )
                         Tab.STATS -> StatsScreen(
                             onOpenHealth = { stack = stack + ROUTE_HEALTH },
@@ -172,6 +173,10 @@ private fun MainScaffold(openHealthRequest: Int) {
         onSetStrict = editor::setStrict,
         onSave = editor::save,
         onDelete = editor::delete,
+        onChooseLimit = editor::chooseLimit,
+        onSetLimitMinutes = editor::setLimitMinutes,
+        onSaveLimit = editor::saveLimit,
+        onDeleteLimit = editor::deleteLimit,
     )
 
     game.celebration?.let { celebration ->

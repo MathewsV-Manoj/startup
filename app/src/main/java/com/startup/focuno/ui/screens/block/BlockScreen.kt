@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
@@ -42,6 +43,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
 import com.startup.focuno.data.repository.ProtectionStatus
+import com.startup.focuno.domain.model.AppLimit
 import com.startup.focuno.domain.model.BlockSchedule
 import com.startup.focuno.domain.model.BlockScope
 import com.startup.focuno.ui.components.AppIcon
@@ -64,17 +66,22 @@ fun BlockScreen(
     onOpenHealth: () -> Unit,
     onAddSchedule: () -> Unit,
     onEditSchedule: (BlockSchedule) -> Unit,
+    onEditLimit: (AppLimit, Long?) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: BlockViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     RefreshWhileResumed(intervalMs = 5_000L, onRefresh = viewModel::refreshProtection)
+    RefreshWhileResumed(intervalMs = 30_000L, onRefresh = viewModel::refreshUsage)
+    LaunchedEffect(state.limits.size) { viewModel.refreshUsage() }
     BlockContent(
         state = state,
         onOpenHealth = onOpenHealth,
         onAdd = onAddSchedule,
         onEdit = onEditSchedule,
         onToggle = viewModel::setEnabled,
+        onEditLimit = { onEditLimit(it.limit, it.lockedUntilMs) },
+        onToggleLimit = viewModel::setLimitEnabled,
         modifier = modifier,
     )
 }
@@ -86,8 +93,11 @@ fun BlockContent(
     onAdd: () -> Unit,
     onEdit: (BlockSchedule) -> Unit,
     onToggle: (BlockSchedule, Boolean) -> Unit,
+    onEditLimit: (LimitItem) -> Unit,
+    onToggleLimit: (LimitItem, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val isEmpty = state.items.isEmpty() && state.limits.isEmpty()
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             ScreenTitle(stringResource(R.string.tab_block)) { ShieldDot(state.protection, onOpenHealth) }
@@ -100,15 +110,21 @@ fun BlockContent(
                 ) {
                     item { ProtectionBanner(state.protection, onFix = onOpenHealth) }
                     item { FocusRunningRow(state.focusUntilMs) }
-                    if (state.items.isEmpty()) {
+                    if (isEmpty) {
                         item { EmptyBlocks(onAdd) }
-                    } else {
-                        items(state.items, key = { it.row.schedule.id }) { item -> ScheduleRow(item, onEdit, onToggle) }
+                    }
+                    if (state.limits.isNotEmpty()) {
+                        item { SectionLabel(stringResource(R.string.section_limits)) }
+                        items(state.limits, key = { "limit:${it.limit.packageName}" }) { item -> LimitRow(item, onEditLimit, onToggleLimit) }
+                    }
+                    if (state.items.isNotEmpty()) {
+                        item { SectionLabel(stringResource(R.string.section_schedules)) }
+                        items(state.items, key = { "schedule:${it.row.schedule.id}" }) { item -> ScheduleRow(item, onEdit, onToggle) }
                     }
                 }
             }
         }
-        if (!state.isLoading && state.items.isNotEmpty()) {
+        if (!state.isLoading && !isEmpty) {
             FloatingActionButton(
                 onClick = onAdd,
                 modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
@@ -216,6 +232,63 @@ private fun ScheduleRow(item: ScheduleItem, onEdit: (BlockSchedule) -> Unit, onT
                 modifier = Modifier.size(20.dp),
             )
             Switch(checked = schedule.enabled, onCheckedChange = { onToggle(schedule, it) }, enabled = !locked)
+        }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelLarge,
+        color = FocunoTheme.colors.textTertiary,
+        modifier = Modifier.padding(start = 4.dp, top = 8.dp),
+    )
+}
+
+@Composable
+private fun LimitRow(item: LimitItem, onEdit: (LimitItem) -> Unit, onToggle: (LimitItem, Boolean) -> Unit) {
+    val limit = item.limit
+    val fraction = (item.usedMs.toFloat() / limit.dailyMs).coerceIn(0f, 1f)
+    val over = item.usedMs >= limit.dailyMs
+    Panel(
+        modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).clickable { onEdit(item) },
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            AppIcon(limit.packageName, size = 44.dp)
+            Column(Modifier.weight(1f)) {
+                Text(item.label, style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textPrimary, maxLines = 1)
+                Text(
+                    stringResource(R.string.limit_used, durationText(item.usedMs), durationText(limit.dailyMs)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (over) FocunoTheme.colors.distracting else FocunoTheme.colors.textSecondary,
+                    maxLines = 1,
+                )
+                Spacer(Modifier.height(6.dp))
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(FocunoTheme.colors.trackInactive),
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth(fraction.coerceAtLeast(0.02f))
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(if (over) FocunoTheme.colors.distracting else FocunoTheme.colors.productive),
+                    )
+                }
+            }
+            Icon(
+                imageVector = if (limit.strict) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
+                contentDescription = stringResource(if (limit.strict) R.string.cd_strict_on else R.string.cd_strict_off),
+                tint = if (limit.strict) FocunoTheme.colors.productive else FocunoTheme.colors.warning,
+                modifier = Modifier.size(20.dp),
+            )
+            Switch(checked = limit.enabled, onCheckedChange = { onToggle(item, it) }, enabled = item.lockedUntilMs == null)
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.startup.focuno.data.room
 
+import com.startup.focuno.domain.model.AppLimit
 import com.startup.focuno.domain.model.BlockSchedule
 
 fun BlockScheduleEntity.toDomain() = BlockSchedule(
@@ -23,3 +24,7 @@ fun BlockSchedule.toEntity() = BlockScheduleEntity(
     enabled = enabled,
     strictMode = strictMode,
 )
+
+fun AppLimitEntity.toDomain() = AppLimit(packageName = packageName, dailyMinutes = dailyMinutes, strict = strict, enabled = enabled)
+
+fun AppLimit.toEntity() = AppLimitEntity(packageName = packageName, dailyMinutes = dailyMinutes, strict = strict, enabled = enabled)

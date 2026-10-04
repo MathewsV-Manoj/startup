@@ -96,10 +96,10 @@ fun BlockOverlayScreen(
             Spacer(Modifier.height(20.dp))
             val isFeed = model.scope == BlockScope.SHORT_VIDEO
             Text(
-                text = if (isFeed) {
-                    stringResource(R.string.block_title_feed, shortVideoName(model.packageName))
-                } else {
-                    stringResource(R.string.block_title, model.appName)
+                text = when {
+                    isFeed -> stringResource(R.string.block_title_feed, shortVideoName(model.packageName))
+                    model.kind == BlockKind.DAILY_LIMIT -> stringResource(R.string.block_title_limit, model.appName)
+                    else -> stringResource(R.string.block_title, model.appName)
                 },
                 style = MaterialTheme.typography.headlineSmall,
                 color = FocunoTheme.colors.textPrimary,
@@ -114,6 +114,7 @@ fun BlockOverlayScreen(
                         "${formatClock(model.startMinuteOfDay)}–${formatClock(model.endMinuteOfDay)}"
                     }
                     BlockKind.QUICK_BLOCK -> model.quickLabel.ifBlank { stringResource(R.string.block_source_quick) }
+                    BlockKind.DAILY_LIMIT -> stringResource(R.string.block_source_limit, durationText(model.limitMinutes * 60_000L))
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = FocunoTheme.colors.textTertiary,
@@ -124,7 +125,11 @@ fun BlockOverlayScreen(
                 style = MaterialTheme.typography.displayMedium,
                 color = FocunoTheme.colors.productive,
             )
-            Text(stringResource(R.string.block_left), style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textSecondary)
+            Text(
+                stringResource(if (model.kind == BlockKind.DAILY_LIMIT) R.string.block_until_midnight else R.string.block_left),
+                style = MaterialTheme.typography.titleMedium,
+                color = FocunoTheme.colors.textSecondary,
+            )
             Spacer(Modifier.height(40.dp))
             Button(
                 onClick = onBackToFocus,

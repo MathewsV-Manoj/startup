@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.startup.focuno.data.repository.AppCategoryRepository
 import com.startup.focuno.data.repository.InstalledApp
 import com.startup.focuno.data.repository.InstalledAppsRepository
+import com.startup.focuno.data.repository.LimitRepository
 import com.startup.focuno.data.repository.ScheduleRepository
 import com.startup.focuno.domain.model.AppCategory
+import com.startup.focuno.domain.model.AppLimit
 import com.startup.focuno.domain.model.BlockSchedule
 import com.startup.focuno.domain.model.BlockScope
 import com.startup.focuno.domain.model.ShortVideoApps
@@ -21,8 +23,14 @@ import javax.inject.Inject
 
 enum class TimeField { START, END }
 
-/** The add flow is a few big choices in a row. Editing an existing schedule jumps straight to DETAILS. */
-enum class EditorStep { PICK_APP, WHAT, WHEN, DETAILS }
+/**
+ * The add flow is a few big choices in a row. Editing an existing schedule jumps straight to DETAILS,
+ * and editing a daily limit jumps straight to LIMIT.
+ */
+enum class EditorStep { PICK_APP, WHAT, WHEN, DETAILS, LIMIT }
+
+/** Daily budgets offered as one-tap pills, in minutes. */
+val LIMIT_CHOICES = listOf(15, 30, 45, 60, 90, 120)
 
 /** One-tap times for the add flow. start == end means all day. */
 enum class WhenPreset(val startMinute: Int, val endMinute: Int) {
@@ -50,6 +58,9 @@ data class ScheduleEditorUiState(
     val timePickerFor: TimeField? = null,
     /** When non-null the schedule is a strict window that is open right now and cannot be changed. */
     val lockedUntilMs: Long? = null,
+    val limitMinutes: Int = 30,
+    /** True while editing a daily limit that already exists. */
+    val isEditingLimit: Boolean = false,
 ) {
     val isEditing: Boolean get() = id != 0L
     val isOvernight: Boolean get() = endMinute <= startMinute
@@ -61,6 +72,7 @@ data class ScheduleEditorUiState(
 @HiltViewModel
 class ScheduleEditorViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
+    private val limitRepository: LimitRepository,
     private val installedAppsRepository: InstalledAppsRepository,
     private val categoryRepository: AppCategoryRepository,
 ) : ViewModel() {
@@ -98,6 +110,52 @@ class ScheduleEditorViewModel @Inject constructor(
                 enabled = schedule.enabled,
                 lockedUntilMs = StrictLock.lockedUntilMs(schedule),
             )
+        }
+    }
+
+    /** Opens an existing daily limit. [lockedUntilMs] is set while a used-up strict limit cannot change. */
+    fun openEditLimit(limit: AppLimit, lockedUntilMs: Long?) {
+        viewModelScope.launch {
+            val label = installedAppsRepository.label(limit.packageName)
+            _state.value = ScheduleEditorUiState(
+                isOpen = true,
+                step = EditorStep.LIMIT,
+                packageName = limit.packageName,
+                appLabel = label,
+                limitMinutes = limit.dailyMinutes,
+                strict = limit.strict,
+                enabled = limit.enabled,
+                lockedUntilMs = lockedUntilMs,
+                isEditingLimit = true,
+            )
+        }
+    }
+
+    fun chooseLimit() {
+        _state.update { it.copy(step = EditorStep.LIMIT, scope = BlockScope.APP) }
+    }
+
+    fun setLimitMinutes(minutes: Int) {
+        if (_state.value.lockedUntilMs == null) _state.update { it.copy(limitMinutes = minutes) }
+    }
+
+    fun saveLimit() {
+        val current = _state.value
+        val pkg = current.packageName ?: return
+        if (current.lockedUntilMs != null) return
+        viewModelScope.launch {
+            limitRepository.save(AppLimit(pkg, current.limitMinutes, current.strict, current.enabled))
+            dismiss()
+        }
+    }
+
+    fun deleteLimit() {
+        val current = _state.value
+        val pkg = current.packageName ?: return
+        if (!current.isEditingLimit || current.lockedUntilMs != null) return
+        viewModelScope.launch {
+            limitRepository.delete(pkg)
+            dismiss()
         }
     }
 
@@ -176,6 +234,7 @@ class ScheduleEditorViewModel @Inject constructor(
                 changeApp()
             }
             EditorStep.DETAILS -> if (current.isEditing) dismiss() else _state.update { it.copy(step = EditorStep.WHEN) }
+            EditorStep.LIMIT -> if (current.isEditingLimit) dismiss() else _state.update { it.copy(step = EditorStep.WHEN) }
         }
     }
 

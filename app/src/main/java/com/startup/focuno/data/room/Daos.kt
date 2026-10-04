@@ -156,3 +156,15 @@ interface AppCategoryDao {
     @Query("DELETE FROM app_category WHERE packageName = :packageName")
     suspend fun delete(packageName: String)
 }
+
+@Dao
+interface AppLimitDao {
+    @Query("SELECT * FROM app_limit ORDER BY packageName")
+    fun observeAll(): Flow<List<AppLimitEntity>>
+
+    @Upsert
+    suspend fun upsert(row: AppLimitEntity)
+
+    @Query("DELETE FROM app_limit WHERE packageName = :packageName")
+    suspend fun delete(packageName: String)
+}
