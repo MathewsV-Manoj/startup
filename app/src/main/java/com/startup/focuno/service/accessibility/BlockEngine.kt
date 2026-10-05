@@ -114,6 +114,9 @@ class BlockEngine @Inject constructor(
     private var measuring = false
     private var remeasureAfter = false
 
+    /** When the person last chose to open (or was still using) an app with "pause before opening". */
+    private val mindfulPassedAt = HashMap<String, Long>()
+
     private var ignoredPackages: Set<String> = emptySet()
     private var neverBlockPackages: Set<String> = emptySet()
     private var essentialPackages: Set<String> = emptySet()
@@ -476,10 +479,11 @@ class BlockEngine @Inject constructor(
                 buildModel(pkg, BlockKind.TIME_BUDGET, BlockScope.APP, 0, 0, DailyLimitPolicy.nextMidnightMs(zoned), usedBudget.strict, "")
                     .copy(limitMinutes = usedBudget.dailyMinutes)
             inShortVideo -> {
-                val feedWindow = ScheduleEvaluator.activeWindow(schedules, pkg, zoned, BlockScope.SHORT_VIDEO) ?: return null
+                val feedWindow = ScheduleEvaluator.activeWindow(schedules, pkg, zoned, BlockScope.SHORT_VIDEO)
+                    ?: return mindfulPause(pkg, nowMs)
                 buildModel(pkg, BlockKind.SCHEDULE, BlockScope.SHORT_VIDEO, feedWindow.startMinuteOfDay, feedWindow.endMinuteOfDay, feedWindow.endsAtMs, feedWindow.strict, "")
             }
-            else -> return null
+            else -> return mindfulPause(pkg, nowMs)
         }
 
         val granted = lastGranted[pkg]
@@ -491,6 +495,28 @@ class BlockEngine @Inject constructor(
             examDaysLeft = ExamCountdown.daysLeft(ExamCountdown.parse(settings.examDate), zoned.toLocalDate()),
             canFocusInstead = settings.focusPlan?.isRunning(nowMs) != true,
         )
+    }
+
+    /**
+     * The breathing pause for apps the person asked to be paused before opening. Once they choose to open
+     * the app it stays quiet while they use it, and asks again after they have been away a few minutes.
+     */
+    private fun mindfulPause(pkg: String, nowMs: Long): BlockOverlayModel? {
+        if (pkg !in settings.mindfulApps) return null
+        val passed = mindfulPassedAt[pkg]
+        if (passed != null && nowMs - passed < MINDFUL_AWAY_MS) {
+            mindfulPassedAt[pkg] = nowMs
+            return null
+        }
+        return buildModel(pkg, BlockKind.MINDFUL, BlockScope.APP, 0, 0, nowMs, false, "")
+    }
+
+    /** "Open anyway" on the breathing pause. */
+    private fun openAnyway() {
+        val pkg = shownFor ?: return
+        mindfulPassedAt[pkg] = System.currentTimeMillis()
+        log.add("Opened $pkg after the pause")
+        hideBlock(abandonFriction = false)
     }
 
     private fun buildModel(
@@ -535,6 +561,7 @@ class BlockEngine @Inject constructor(
                     onReasonChange = controller::onReasonChange,
                     onUnlock = controller::unlock,
                     onFocusInstead = ::focusInstead,
+                    onOpenAnyway = ::openAnyway,
                 )
             }
         }
@@ -549,7 +576,8 @@ class BlockEngine @Inject constructor(
         shownFor = model.packageName
         shownScope = model.scope
         log.add("Block shown: ${model.packageName} (${model.scope}, ${model.kind})")
-        logScope.launch { bypassRepository.logBlockHit(model.packageName) }
+        // The breathing pause is not a block, so it does not count as one.
+        if (model.kind != BlockKind.MINDFUL) logScope.launch { bypassRepository.logBlockHit(model.packageName) }
     }
 
     private fun hideBlock(abandonFriction: Boolean) {
@@ -572,6 +600,8 @@ class BlockEngine @Inject constructor(
 
     private fun backToFocus() {
         val model = blockModel.value
+        // Turning back at the breathing pause is an urge resisted, the same as giving up an unlock.
+        if (model?.kind == BlockKind.MINDFUL) logScope.launch { bypassRepository.logEvent(model.packageName, BypassOutcome.ABANDONED, "mindful") }
         friction?.abandon()
         hideBlock(abandonFriction = false)
         if (model != null) leaveBlocked(model)
@@ -648,6 +678,7 @@ class BlockEngine @Inject constructor(
             "com.google.android.packageinstaller",
         )
         const val LIMIT_REMEASURE_MS = 60_000L
+        const val MINDFUL_AWAY_MS = 5 * 60_000L
         const val TICK_MS = 2_000L
         const val NUDGE_EVERY_TICKS = 5
         const val DEBOUNCE_MS = 500L

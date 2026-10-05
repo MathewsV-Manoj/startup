@@ -1,6 +1,7 @@
 package com.startup.focuno.domain.model
 
-enum class BlockKind { SCHEDULE, QUICK_BLOCK, DAILY_LIMIT, TIME_BUDGET }
+/** MINDFUL is not a block: a short breathing pause before an app opens, with the choice to go on. */
+enum class BlockKind { SCHEDULE, QUICK_BLOCK, DAILY_LIMIT, TIME_BUDGET, MINDFUL }
 
 /** Everything the block screen needs to explain itself calmly. */
 data class BlockOverlayModel(

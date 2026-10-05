@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.HourglassBottom
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.LockOpen
@@ -28,6 +29,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -91,6 +93,7 @@ fun BlockScreen(
         onEditLimit = { onEditLimit(it.limit, it.lockedUntilMs) },
         onToggleLimit = viewModel::setLimitEnabled,
         onSetBudget = viewModel::setBudget,
+        onRemoveMindful = viewModel::removeMindful,
         modifier = modifier,
     )
 }
@@ -105,9 +108,10 @@ fun BlockContent(
     onEditLimit: (LimitItem) -> Unit,
     onToggleLimit: (LimitItem, Boolean) -> Unit,
     onSetBudget: (minutes: Int, strict: Boolean) -> Unit,
+    onRemoveMindful: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val isEmpty = state.items.isEmpty() && state.limits.isEmpty()
+    val isEmpty = state.items.isEmpty() && state.limits.isEmpty() && state.mindful.isEmpty()
     var editingBudget by rememberSaveable { mutableStateOf(false) }
     if (editingBudget) {
         BudgetDialog(state.budget, onSave = onSetBudget, onDismiss = { editingBudget = false })
@@ -131,6 +135,10 @@ fun BlockContent(
                     if (state.limits.isNotEmpty()) {
                         item { SectionLabel(stringResource(R.string.section_limits)) }
                         items(state.limits, key = { "limit:${it.limit.packageName}" }) { item -> LimitRow(item, onEditLimit, onToggleLimit) }
+                    }
+                    if (state.mindful.isNotEmpty()) {
+                        item { SectionLabel(stringResource(R.string.section_mindful)) }
+                        items(state.mindful, key = { "mindful:${it.packageName}" }) { item -> MindfulRow(item, onRemoveMindful) }
                     }
                     if (state.items.isNotEmpty()) {
                         item { SectionLabel(stringResource(R.string.section_schedules)) }
@@ -372,6 +380,22 @@ private fun BudgetDialog(budget: BudgetUi, onSave: (Int, Boolean) -> Unit, onDis
 }
 
 private val BUDGET_CHOICES = listOf(0, 30, 60, 90, 120, 180)
+
+@Composable
+private fun MindfulRow(item: MindfulItem, onRemove: (String) -> Unit) {
+    Panel(Modifier.fillMaxWidth(), contentPadding = PaddingValues(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            AppIcon(item.packageName, size = 44.dp)
+            Column(Modifier.weight(1f)) {
+                Text(item.label, style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textPrimary, maxLines = 1)
+                Text(stringResource(R.string.when_mindful_sub), style = MaterialTheme.typography.bodySmall, color = FocunoTheme.colors.textSecondary)
+            }
+            IconButton(onClick = { onRemove(item.packageName) }) {
+                Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.mindful_remove, item.label), tint = FocunoTheme.colors.textTertiary)
+            }
+        }
+    }
+}
 
 @Composable
 private fun SectionLabel(text: String) {

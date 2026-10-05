@@ -2,6 +2,7 @@ package com.startup.focuno.ui.screens.block
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.startup.focuno.data.local.SettingsStore
 import com.startup.focuno.data.repository.AppCategoryRepository
 import com.startup.focuno.data.repository.InstalledApp
 import com.startup.focuno.data.repository.InstalledAppsRepository
@@ -84,6 +85,7 @@ class ScheduleEditorViewModel @Inject constructor(
     private val installedAppsRepository: InstalledAppsRepository,
     private val categoryRepository: AppCategoryRepository,
     private val protectionRepository: ProtectionRepository,
+    private val settingsStore: SettingsStore,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ScheduleEditorUiState())
@@ -138,6 +140,15 @@ class ScheduleEditorViewModel @Inject constructor(
                 lockedUntilMs = lockedUntilMs,
                 isEditingLimit = true,
             )
+        }
+    }
+
+    /** "Pause before opening": a breathing pause each time the app opens, instead of a block. */
+    fun chooseMindful() {
+        val pkg = _state.value.packageName ?: return
+        viewModelScope.launch {
+            settingsStore.setMindful(pkg, true)
+            dismiss()
         }
     }
 

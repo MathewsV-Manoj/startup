@@ -26,6 +26,7 @@ Every push to this branch rebuilds the APK at the same link. A new build install
 - Time slots: block an app at night, during study hours, or at your own times. You can block only Instagram Reels or YouTube Shorts and keep the rest of the app.
 - Daily limits per app, by minutes, number of opens, or both.
 - A time-eater budget: one daily limit for all time-eater apps together.
+- Pause before opening: chosen apps show a 5-second breathing pause each time they open, then ask "Open it, or go back?".
 - The pause screen offers "Go back" or "Focus 25 min instead". Unlocking a non-strict block takes a 15-second breathing pause and a written reason, gives 5 minutes, and then has a 30-minute cooldown.
 
 **Stats**

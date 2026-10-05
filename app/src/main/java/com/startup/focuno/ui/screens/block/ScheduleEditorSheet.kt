@@ -81,6 +81,7 @@ fun ScheduleEditorSheet(
     onSave: () -> Unit,
     onDelete: () -> Unit,
     onChooseLimit: () -> Unit,
+    onChooseMindful: () -> Unit,
     onSetLimitMinutes: (Int) -> Unit,
     onSetLimitOpens: (Int) -> Unit,
     onSaveLimit: () -> Unit,
@@ -95,7 +96,7 @@ fun ScheduleEditorSheet(
         when (state.step) {
             EditorStep.PICK_APP -> AppPicker(state, onQuery, onSelectApp)
             EditorStep.WHAT -> WhatStep(state, onChooseScope, onStepBack)
-            EditorStep.WHEN -> WhenStep(state, onChoosePreset, onChooseCustomTime, onChooseLimit, onSetStrict, onStepBack)
+            EditorStep.WHEN -> WhenStep(state, onChoosePreset, onChooseCustomTime, onChooseLimit, onChooseMindful, onSetStrict, onStepBack)
             EditorStep.DETAILS -> Details(state, onShowTimePicker, onToggleDay, onSetStrict, onSave, onDelete, onStepBack)
             EditorStep.LIMIT -> LimitStep(state, onSetLimitMinutes, onSetLimitOpens, onSetStrict, onSaveLimit, onDeleteLimit, onStepBack)
         }
@@ -208,6 +209,7 @@ private fun WhenStep(
     onPreset: (WhenPreset) -> Unit,
     onCustom: () -> Unit,
     onLimit: () -> Unit,
+    onMindful: () -> Unit,
     onSetStrict: (Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -236,6 +238,7 @@ private fun WhenStep(
         }
         if (state.scope == BlockScope.APP) {
             ChoiceTile(stringResource(R.string.when_limit), stringResource(R.string.when_limit_sub), onClick = onLimit)
+            ChoiceTile(stringResource(R.string.when_mindful), stringResource(R.string.when_mindful_sub), onClick = onMindful)
         }
         OutlinedButton(onClick = onCustom, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(50)) {
             Text(stringResource(R.string.when_custom))

@@ -54,6 +54,8 @@ data class AppSettings(
     /** Lock mode: during focus, pause every app except [focusAllowed] (and the always-allowed essentials). */
     val focusLockAll: Boolean = false,
     val focusAllowed: Set<String> = emptySet(),
+    /** Apps that get a short breathing pause each time they are opened. */
+    val mindfulApps: Set<String> = emptySet(),
 ) {
     /** The time-eater budget as a limit, so it follows exactly the same rules as a per-app limit. */
     val timeEaterBudget: AppLimit?

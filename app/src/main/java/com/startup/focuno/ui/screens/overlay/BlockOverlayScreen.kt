@@ -87,7 +87,12 @@ fun BlockOverlayScreen(
     onUnlock: () -> Unit,
     modifier: Modifier = Modifier,
     onFocusInstead: () -> Unit = {},
+    onOpenAnyway: () -> Unit = {},
 ) {
+    if (model.kind == BlockKind.MINDFUL) {
+        MindfulPause(model, onGoBack = onBackToFocus, onOpenAnyway = onOpenAnyway, modifier = modifier)
+        return
+    }
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -325,6 +330,7 @@ fun BlockOverlayHost(
     onReasonChange: (String) -> Unit,
     onUnlock: () -> Unit,
     onFocusInstead: () -> Unit,
+    onOpenAnyway: () -> Unit,
 ) {
     FocunoTheme {
         BlockOverlayScreen(
@@ -336,9 +342,65 @@ fun BlockOverlayHost(
             onReasonChange = onReasonChange,
             onUnlock = onUnlock,
             onFocusInstead = onFocusInstead,
+            onOpenAnyway = onOpenAnyway,
         )
     }
 }
+
+/**
+ * "Pause before opening": a few seconds to breathe, then the choice. Going back is the big button; opening
+ * the app stays possible but only after the pause.
+ */
+@Composable
+private fun MindfulPause(model: BlockOverlayModel, onGoBack: () -> Unit, onOpenAnyway: () -> Unit, modifier: Modifier = Modifier) {
+    val secondsLeft by produceState(initialValue = MINDFUL_SECONDS, model.packageName) {
+        while (value > 0) {
+            delay(1_000)
+            value -= 1
+        }
+    }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(DeepVoidPurple)
+            .systemBarsPadding()
+            .padding(horizontal = 24.dp, vertical = 24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        AppIcon(model.packageName, size = 64.dp)
+        Spacer(Modifier.height(16.dp))
+        Text(
+            stringResource(R.string.mindful_title, model.appName),
+            style = MaterialTheme.typography.headlineSmall,
+            color = FocunoTheme.colors.textPrimary,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            stringResource(R.string.mindful_question),
+            style = MaterialTheme.typography.bodyLarge,
+            color = FocunoTheme.colors.textSecondary,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(28.dp))
+        BreathingCircle(secondsLeft)
+        Spacer(Modifier.height(32.dp))
+        Button(
+            onClick = onGoBack,
+            modifier = Modifier.fillMaxWidth().height(60.dp),
+            shape = RoundedCornerShape(50),
+        ) {
+            Text(stringResource(R.string.block_back_to_focus), style = MaterialTheme.typography.titleMedium)
+        }
+        Spacer(Modifier.height(8.dp))
+        TextButton(onClick = onOpenAnyway, enabled = secondsLeft == 0, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+            Text(stringResource(R.string.mindful_open, model.appName), color = FocunoTheme.colors.textTertiary)
+        }
+    }
+}
+
+private const val MINDFUL_SECONDS = 5
 
 /** Length of the focus timer the pause screen offers instead of the app. */
 const val FOCUS_INSTEAD_MINUTES = 25

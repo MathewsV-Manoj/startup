@@ -63,6 +63,7 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         val budgetStrict = booleanPreferencesKey("budget_strict")
         val focusLockAll = booleanPreferencesKey("focus_lock_all")
         val focusAllowed = stringSetPreferencesKey("focus_allowed")
+        val mindfulApps = stringSetPreferencesKey("mindful_apps")
     }
 
     val settings: Flow<AppSettings> = context.focunoDataStore.data
@@ -108,6 +109,7 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
                 budgetStrict = prefs[Keys.budgetStrict] ?: defaults.budgetStrict,
                 focusLockAll = prefs[Keys.focusLockAll] ?: defaults.focusLockAll,
                 focusAllowed = prefs[Keys.focusAllowed] ?: defaults.focusAllowed,
+                mindfulApps = prefs[Keys.mindfulApps] ?: defaults.mindfulApps,
                 subjects = prefs[Keys.subjects]?.split(SUBJECT_SEPARATOR)?.filter { it.isNotBlank() } ?: defaults.subjects,
             )
         }
@@ -196,6 +198,13 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         context.focunoDataStore.edit {
             it[Keys.xpBanked] = (it[Keys.xpBanked] ?: 0) + amount
             it[Keys.xpBankedThrough] = throughDay
+        }
+    }
+
+    suspend fun setMindful(packageName: String, enabled: Boolean) {
+        context.focunoDataStore.edit {
+            val current = it[Keys.mindfulApps].orEmpty()
+            it[Keys.mindfulApps] = if (enabled) current + packageName else current - packageName
         }
     }
 

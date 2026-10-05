@@ -526,4 +526,13 @@
 
     <string name="feed_needs_accessibility">Blocking only %1$s needs Accessibility, which is off. Until it is on, this rule won\'t work. Whole-app blocking works without it.</string>
     <string name="feed_needs_accessibility_short">Needs Accessibility to work</string>
+
+    <!-- Pause before opening -->
+    <string name="when_mindful">Pause before opening</string>
+    <string name="when_mindful_sub">5 seconds to breathe first</string>
+    <string name="section_mindful">Pause before opening</string>
+    <string name="mindful_remove">Stop pausing %1$s</string>
+    <string name="mindful_title">Opening %1$s</string>
+    <string name="mindful_question">Take a breath. Do you really want to?</string>
+    <string name="mindful_open">Open %1$s</string>
 </resources>

@@ -45,11 +45,15 @@ private data class UsageSnapshot(
     val timeEaterMs: Long = 0L,
 )
 
+/** An app with "pause before opening". */
+data class MindfulItem(val packageName: String, val label: String)
+
 data class BlockUiState(
     val isLoading: Boolean = true,
     val items: List<ScheduleItem> = emptyList(),
     val limits: List<LimitItem> = emptyList(),
     val budget: BudgetUi = BudgetUi(),
+    val mindful: List<MindfulItem> = emptyList(),
     /** Epoch ms until which a focus session is pausing distracting apps, or 0. */
     val focusUntilMs: Long = 0L,
     val protection: ProtectionStatus? = null,
@@ -102,7 +106,7 @@ class BlockViewModel @Inject constructor(
         settingsStore.settings,
         protection,
     ) { schedules, limits, used, settings, status ->
-        val labels = (schedules.map { it.packageName } + limits.map { it.packageName }).distinct()
+        val labels = (schedules.map { it.packageName } + limits.map { it.packageName } + settings.mindfulApps).distinct()
             .associateWith { installedApps.labelBlocking(it) }
         val now = ZonedDateTime.now()
         val limitItems = limits
@@ -120,6 +124,7 @@ class BlockViewModel @Inject constructor(
             isLoading = false,
             items = items,
             limits = limitItems,
+            mindful = settings.mindfulApps.map { MindfulItem(it, labels.getValue(it)) }.sortedBy { it.label.lowercase() },
             budget = BudgetUi(
                 minutes = settings.budgetMinutes,
                 strict = settings.budgetStrict,
@@ -132,6 +137,10 @@ class BlockViewModel @Inject constructor(
     }
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BlockUiState())
+
+    fun removeMindful(packageName: String) {
+        viewModelScope.launch { settingsStore.setMindful(packageName, false) }
+    }
 
     /** 0 minutes turns the budget off. Refused while a used-up strict budget is locked. */
     fun setBudget(minutes: Int, strict: Boolean) {
