@@ -25,6 +25,10 @@ class FocusSessionRepository @Inject constructor(
      */
     suspend fun start(plan: FocusPlan, label: String, strict: Boolean, subject: String = "") {
         finalizeDue(plan.startMs)
+        // A new plan replaces any earlier one (for example a Pomodoro that is on a break): its running round
+        // ends now unfinished, and rounds still to come are removed so they can never count as finished.
+        dao.active(plan.startMs)?.let { dao.update(it.copy(endTs = plan.startMs, completed = false)) }
+        dao.deleteUpcoming(plan.startMs)
         if (plan.mode == FocusMode.POMODORO) {
             repeat(plan.rounds) { index ->
                 val roundStart = plan.startMs + index * (plan.roundMs + plan.breakMs)

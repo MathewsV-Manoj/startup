@@ -24,4 +24,6 @@ data class BlockOverlayModel(
     /** The person's exam and the days left to it, shown as a reminder; null days when none is set. */
     val examName: String = "",
     val examDaysLeft: Long? = null,
+    /** False while any focus plan runs (even on a break), so "Focus instead" never replaces it. */
+    val canFocusInstead: Boolean = true,
 )

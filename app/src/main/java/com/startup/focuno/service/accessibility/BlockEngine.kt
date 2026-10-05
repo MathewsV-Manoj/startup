@@ -489,6 +489,7 @@ class BlockEngine @Inject constructor(
             bypassAvailableAtMs = availableAt,
             examName = settings.examName,
             examDaysLeft = ExamCountdown.daysLeft(ExamCountdown.parse(settings.examDate), zoned.toLocalDate()),
+            canFocusInstead = settings.focusPlan?.isRunning(nowMs) != true,
         )
     }
 
@@ -639,6 +640,7 @@ class BlockEngine @Inject constructor(
             "com.android.dialer",
             "com.google.android.dialer",
             "com.samsung.android.dialer",
+            "com.android.incallui",
             "com.samsung.android.incallui",
             "com.android.permissioncontroller",
             "com.google.android.permissioncontroller",

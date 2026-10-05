@@ -23,7 +23,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-enum class OnboardingStep { PURPOSE, USAGE_ACCESS, ACCESSIBILITY, OVERLAY, STAY_ALIVE, AUTOSTART, PICK_APPS, FIRST_SCHEDULE }
+/** The two permissions blocking needs come first; Accessibility is optional, so it follows them. */
+enum class OnboardingStep { PURPOSE, USAGE_ACCESS, OVERLAY, ACCESSIBILITY, STAY_ALIVE, AUTOSTART, PICK_APPS, FIRST_SCHEDULE }
 
 enum class SchedulePreset(val startMinute: Int, val endMinute: Int) {
     NIGHT(22 * 60, 6 * 60),

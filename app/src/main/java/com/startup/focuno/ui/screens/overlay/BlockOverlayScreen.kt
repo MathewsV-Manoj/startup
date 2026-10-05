@@ -177,7 +177,7 @@ fun BlockOverlayScreen(
             }
 
             // Turn the urge into study time. Not offered when a focus timer is what paused the app.
-            if (model.kind != BlockKind.QUICK_BLOCK && friction == FrictionState.Idle) {
+            if (model.canFocusInstead && model.kind != BlockKind.QUICK_BLOCK && friction == FrictionState.Idle) {
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(
                     onClick = onFocusInstead,

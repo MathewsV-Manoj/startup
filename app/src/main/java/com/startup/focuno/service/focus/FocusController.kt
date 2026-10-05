@@ -26,11 +26,16 @@ class FocusController @Inject constructor(
     private val soundPlayer: FocusSoundPlayer,
     private val alarms: FocusAlarms,
 ) {
-    /** [amount] is minutes for a timer and rounds for a Pomodoro; a stopwatch ignores it. */
-    suspend fun start(mode: FocusMode, amount: Int, strict: Boolean, subject: String) {
+    /**
+     * [amount] is minutes for a timer and rounds for a Pomodoro; a stopwatch ignores it. Returns false, and
+     * starts nothing, while a strict plan is running: a new plan would end it early.
+     */
+    suspend fun start(mode: FocusMode, amount: Int, strict: Boolean, subject: String): Boolean {
+        val now = System.currentTimeMillis()
+        val current = settingsStore.settings.first()
+        if (current.quickBlockStrict && current.focusPlan?.isRunning(now) == true) return false
         // The pause screen shows this, so "Signals" says more than "Focus session".
         val label = subject.ifBlank { context.getString(R.string.quick_block_label_focus) }
-        val now = System.currentTimeMillis()
         val plan = when (mode) {
             FocusMode.TIMER -> FocusPlan(FocusMode.TIMER, now, now + amount * 60_000L)
             FocusMode.POMODORO -> FocusPlan.pomodoro(now, FocusPlan.POMODORO_FOCUS_MIN, FocusPlan.POMODORO_BREAK_MIN, amount)
@@ -41,6 +46,7 @@ class FocusController @Inject constructor(
         soundPlayer.play(settingsStore.settings.first().focusSound, untilMs = plan.endMs)
         alarms.scheduleNext(plan, now)
         FocusWidget.refresh(context)
+        return true
     }
 
     /** Ends the running plan. Returns false, and changes nothing, while a strict plan is running. */
