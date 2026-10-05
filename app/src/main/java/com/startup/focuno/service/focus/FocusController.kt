@@ -6,6 +6,7 @@ import com.startup.focuno.data.local.SettingsStore
 import com.startup.focuno.data.repository.FocusSessionRepository
 import com.startup.focuno.domain.model.FocusMode
 import com.startup.focuno.domain.model.FocusPlan
+import com.startup.focuno.service.monitor.NotificationHelper
 import com.startup.focuno.service.sound.FocusSoundPlayer
 import com.startup.focuno.service.widget.FocusWidget
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -25,6 +26,7 @@ class FocusController @Inject constructor(
     private val settingsStore: SettingsStore,
     private val soundPlayer: FocusSoundPlayer,
     private val alarms: FocusAlarms,
+    private val notifications: NotificationHelper,
 ) {
     /**
      * [amount] is minutes for a timer and rounds for a Pomodoro; a stopwatch ignores it. Returns false, and
@@ -45,6 +47,7 @@ class FocusController @Inject constructor(
         sessions.start(plan, label, strict && mode != FocusMode.STOPWATCH, subject)
         soundPlayer.play(settingsStore.settings.first().focusSound, untilMs = plan.endMs)
         alarms.scheduleNext(plan, now)
+        notifications.showFocusRunning(plan, now)
         FocusWidget.refresh(context)
         return true
     }
@@ -54,6 +57,7 @@ class FocusController @Inject constructor(
         if (!sessions.stopEarly()) return false
         soundPlayer.stop()
         alarms.cancel()
+        notifications.cancelFocusRunning()
         FocusWidget.refresh(context)
         return true
     }

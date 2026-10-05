@@ -48,6 +48,8 @@ class FocusAlarmReceiver : BroadcastReceiver() {
                     }
                 }
                 deps.focusAlarms().scheduleNext(plan, now)
+                // The ongoing countdown follows the phase; it disappears when the plan is over.
+                deps.notificationHelper().showFocusRunning(plan, now)
                 // The widget's countdown runs to the end of a phase, so it needs the next phase now.
                 FocusWidget.refresh(context)
             } catch (e: Exception) {

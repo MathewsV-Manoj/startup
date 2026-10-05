@@ -11,6 +11,8 @@ import androidx.core.app.NotificationManagerCompat
 import com.startup.focuno.R
 import com.startup.focuno.data.repository.ProtectionIssue
 import com.startup.focuno.data.repository.ProtectionStatus
+import com.startup.focuno.domain.model.FocusMode
+import com.startup.focuno.domain.model.FocusPlan
 import com.startup.focuno.domain.usecase.WeeklyReport
 import com.startup.focuno.ui.MainActivity
 import com.startup.focuno.ui.components.formatDuration
@@ -149,6 +151,44 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
         manager.notify(REPORT_ID, notification)
     }
 
+    /**
+     * A quiet, ongoing notification while a focus plan runs, with a live countdown to the end of the
+     * current round or break (or a count-up for a stopwatch), so the time left is one swipe away.
+     */
+    @SuppressLint("MissingPermission")
+    fun showFocusRunning(plan: FocusPlan, nowMs: Long = System.currentTimeMillis()) {
+        val phase = plan.phaseAt(nowMs)
+        if (phase == null) {
+            cancelFocusRunning()
+            return
+        }
+        if (!manager.areNotificationsEnabled()) return
+        val title = when {
+            !phase.focusing -> context.getString(R.string.focus_running_break)
+            plan.mode == FocusMode.POMODORO -> context.getString(R.string.home_round, phase.round, phase.rounds)
+            else -> context.getString(R.string.home_focusing)
+        }
+        val builder = NotificationCompat.Builder(context, CHANNEL_MONITOR)
+            .setSmallIcon(R.drawable.ic_stat_focuno)
+            .setContentTitle(title)
+            .setOngoing(true)
+            .setSilent(true)
+            .setOnlyAlertOnce(true)
+            .setShowWhen(true)
+            .setUsesChronometer(true)
+            .setContentIntent(openAppIntent(openHealth = false))
+        if (plan.mode == FocusMode.STOPWATCH) {
+            builder.setWhen(plan.startMs)
+        } else {
+            builder.setWhen(phase.endsAtMs).setChronometerCountDown(true)
+        }
+        manager.notify(FOCUS_RUNNING_ID, builder.build())
+    }
+
+    fun cancelFocusRunning() {
+        manager.cancel(FOCUS_RUNNING_ID)
+    }
+
     fun notifyFocusDone() {
         notifyFocus(context.getString(R.string.focus_done_title), context.getString(R.string.focus_done_text))
     }
@@ -191,5 +231,6 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
         const val PROTECTION_ID = 1002
         const val FOCUS_ID = 1003
         const val REPORT_ID = 1004
+        const val FOCUS_RUNNING_ID = 1005
     }
 }

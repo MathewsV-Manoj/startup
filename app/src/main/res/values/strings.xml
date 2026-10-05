@@ -535,4 +535,21 @@
     <string name="mindful_title">Opening %1$s</string>
     <string name="mindful_question">Take a breath. Do you really want to?</string>
     <string name="mindful_open">Open %1$s</string>
+
+    <!-- What's new -->
+    <string name="new_title">New in Focuno</string>
+    <string name="new_focus_modes">Pomodoro, stopwatch and focus sounds</string>
+    <string name="new_strict">Strict mode: no ending early</string>
+    <string name="new_limits">Daily limits by minutes or opens</string>
+    <string name="new_lock_mode">Lock mode: pause every app but the ones you allow</string>
+    <string name="new_mindful">Pause before opening an app</string>
+    <string name="new_exam">Exam countdown and study goal (in Settings)</string>
+    <string name="new_widget">A home-screen widget</string>
+    <string name="new_ok">Let\'s go</string>
+
+    <!-- Quick Settings tile and running notification -->
+    <string name="tile_label">Focus</string>
+    <string name="tile_start">Start %1$d min</string>
+    <string name="tile_until">Until %1$s</string>
+    <string name="focus_running_break">Break · apps are free</string>
 </resources>
