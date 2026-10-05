@@ -76,6 +76,7 @@ fun BlockOverlayScreen(
     onReasonChange: (String) -> Unit,
     onUnlock: () -> Unit,
     modifier: Modifier = Modifier,
+    onFocusInstead: () -> Unit = {},
 ) {
     Box(
         modifier = modifier
@@ -151,6 +152,17 @@ fun BlockOverlayScreen(
                 )
             }
 
+            // Turn the urge into study time. Not offered when a focus timer is what paused the app.
+            if (model.kind != BlockKind.QUICK_BLOCK && friction == FrictionState.Idle) {
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = onFocusInstead,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(50),
+                ) {
+                    Text(stringResource(R.string.block_focus_instead, FOCUS_INSTEAD_MINUTES), style = MaterialTheme.typography.titleSmall)
+                }
+            }
             Spacer(Modifier.height(12.dp))
             BypassSection(model, friction, nowMs, onNeedThis, onReasonChange, onUnlock)
         }
@@ -270,6 +282,7 @@ fun BlockOverlayHost(
     onNeedThis: () -> Unit,
     onReasonChange: (String) -> Unit,
     onUnlock: () -> Unit,
+    onFocusInstead: () -> Unit,
 ) {
     FocunoTheme {
         BlockOverlayScreen(
@@ -280,9 +293,13 @@ fun BlockOverlayHost(
             onNeedThis = onNeedThis,
             onReasonChange = onReasonChange,
             onUnlock = onUnlock,
+            onFocusInstead = onFocusInstead,
         )
     }
 }
+
+/** Length of the focus timer the pause screen offers instead of the app. */
+const val FOCUS_INSTEAD_MINUTES = 25
 
 @Preview(showBackground = true, backgroundColor = 0xFF0D0417)
 @Composable

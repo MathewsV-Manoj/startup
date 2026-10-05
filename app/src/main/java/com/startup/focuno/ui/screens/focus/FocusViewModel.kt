@@ -8,15 +8,12 @@ import com.startup.focuno.data.repository.InstalledApp
 import com.startup.focuno.data.repository.InstalledAppsRepository
 import com.startup.focuno.data.repository.ProtectionRepository
 import com.startup.focuno.data.repository.ProtectionStatus
-import com.startup.focuno.data.repository.SummaryRepository
 import com.startup.focuno.data.repository.UsageTrackingRepository
-import com.startup.focuno.domain.model.AppDayUsage
 import com.startup.focuno.domain.model.DayStats
 import com.startup.focuno.domain.model.FocusMode
 import com.startup.focuno.domain.model.FocusPlan
 import com.startup.focuno.domain.model.FocusSound
 import com.startup.focuno.domain.usecase.ComputeDayStatsUseCase
-import com.startup.focuno.domain.usecase.StreakCalculator
 import com.startup.focuno.service.focus.FocusController
 import com.startup.focuno.service.sound.FocusSoundPlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,23 +29,17 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
-
-enum class DayOutcome { MET_GOAL, OVER_GOAL, NO_DATA, TODAY }
-
-data class WeekDay(val date: LocalDate, val outcome: DayOutcome)
-
-data class TopDistraction(val usage: AppDayUsage, val label: String)
 
 data class FocusUiState(
     val isLoading: Boolean = true,
     val hasError: Boolean = false,
     val hasUsageAccess: Boolean = true,
     val today: DayStats? = null,
-    val topDistractions: List<TopDistraction> = emptyList(),
-    val streak: Int = 0,
-    val goalMinutes: Int = 240,
-    val week: List<WeekDay> = emptyList(),
+    /** Time focused today, from every timer, Pomodoro round and stopwatch. */
+    val todayFocusMs: Long = 0L,
+    val studyGoalMinutes: Int = 240,
     val protection: ProtectionStatus? = null,
     /** The focus plan in progress (including a Pomodoro break), or null when idle. */
     val plan: FocusPlan? = null,
@@ -69,7 +60,6 @@ class FocusViewModel @Inject constructor(
     private val computeDayStats: ComputeDayStatsUseCase,
     private val usageRepository: UsageTrackingRepository,
     private val protectionRepository: ProtectionRepository,
-    private val summaryRepository: SummaryRepository,
     private val settingsStore: SettingsStore,
     private val installedApps: InstalledAppsRepository,
     private val focusSessions: FocusSessionRepository,
@@ -99,35 +89,18 @@ class FocusViewModel @Inject constructor(
             val hasAccess = withContext(Dispatchers.IO) { usageRepository.hasUsageAccess() }
             val protection = withContext(Dispatchers.IO) { protectionRepository.status() }
             val stats = if (hasAccess) computeDayStats(today) else null
-            val summaries = summaryRepository.summaries(today.minusDays(6), today.minusDays(1)).associateBy { it.date }
-            val week = (6 downTo 1).map { back ->
-                val date = today.minusDays(back.toLong())
-                val summary = summaries[date.toString()]
-                WeekDay(
-                    date,
-                    when {
-                        summary == null || summary.totalMs <= 0 -> DayOutcome.NO_DATA
-                        StreakCalculator.metGoal(summary, settings.dailyGoalMinutes) -> DayOutcome.MET_GOAL
-                        else -> DayOutcome.OVER_GOAL
-                    },
-                )
-            } + WeekDay(today, DayOutcome.TODAY)
-            val top = stats?.apps
-                ?.filter { it.category == com.startup.focuno.domain.model.AppCategory.DISTRACTING }
-                ?.take(3)
-                ?.map { TopDistraction(it, installedApps.label(it.packageName)) }
-                .orEmpty()
             val session = focusSessions.active()
-            val plan = settings.focusPlan?.takeIf { it.isRunning(System.currentTimeMillis()) }
+            val now = System.currentTimeMillis()
+            val plan = settings.focusPlan?.takeIf { it.isRunning(now) }
+            val dayStart = today.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val focusedToday = focusSessions.focusSpans(dayStart, now).sumOf { (start, end) -> (minOf(end, now) - maxOf(start, dayStart)).coerceAtLeast(0L) }
 
             _state.value = FocusUiState(
                 isLoading = false,
                 hasUsageAccess = hasAccess,
                 today = stats,
-                topDistractions = top,
-                streak = settings.streakCount,
-                goalMinutes = settings.dailyGoalMinutes,
-                week = week,
+                todayFocusMs = focusedToday,
+                studyGoalMinutes = settings.studyGoalMinutes,
                 protection = protection,
                 plan = plan,
                 sessionStrict = plan != null && settings.quickBlockStrict,

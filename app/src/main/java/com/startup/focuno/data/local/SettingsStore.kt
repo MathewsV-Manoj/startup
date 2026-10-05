@@ -36,6 +36,7 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         val nudgeSensitivity = stringPreferencesKey("nudge_sensitivity")
         val theme = stringPreferencesKey("theme")
         val dailyGoalMinutes = intPreferencesKey("daily_goal_minutes")
+        val studyGoalMinutes = intPreferencesKey("study_goal_minutes")
         val streakCount = intPreferencesKey("streak_count")
         val lastActiveDate = stringPreferencesKey("last_active_date")
         val quickBlockUntil = longPreferencesKey("quick_block_until")
@@ -75,6 +76,7 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
                     ?: defaults.nudgeSensitivity,
                 theme = prefs[Keys.theme] ?: defaults.theme,
                 dailyGoalMinutes = prefs[Keys.dailyGoalMinutes] ?: defaults.dailyGoalMinutes,
+                studyGoalMinutes = prefs[Keys.studyGoalMinutes] ?: defaults.studyGoalMinutes,
                 streakCount = prefs[Keys.streakCount] ?: defaults.streakCount,
                 lastActiveDate = prefs[Keys.lastActiveDate],
                 quickBlockUntilMs = prefs[Keys.quickBlockUntil] ?: defaults.quickBlockUntilMs,
@@ -124,6 +126,10 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
 
     suspend fun setDailyGoalMinutes(minutes: Int) {
         context.focunoDataStore.edit { it[Keys.dailyGoalMinutes] = minutes }
+    }
+
+    suspend fun setStudyGoalMinutes(minutes: Int) {
+        context.focunoDataStore.edit { it[Keys.studyGoalMinutes] = minutes }
     }
 
     suspend fun setStreak(count: Int, lastActiveDate: String?) {

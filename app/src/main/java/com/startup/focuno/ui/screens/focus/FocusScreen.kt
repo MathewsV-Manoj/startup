@@ -21,13 +21,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Block
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Headphones
-import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -181,8 +182,6 @@ private fun TopRow(focus: FocusUiState, onOpenSettings: () -> Unit, onOpenHealth
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        val streakText = pluralStringResource(R.plurals.streak_days, focus.streak, focus.streak)
-        Pill(Icons.Rounded.LocalFireDepartment, focus.streak.toString(), FocunoTheme.colors.warning, streakText)
         val screenTime = if (focus.hasUsageAccess) focus.today?.let { durationText(it.totalMs) } else null
         Pill(
             icon = Icons.Rounded.PhoneAndroid,
@@ -190,6 +189,16 @@ private fun TopRow(focus: FocusUiState, onOpenSettings: () -> Unit, onOpenHealth
             tint = FocunoTheme.colors.productive,
             description = stringResource(R.string.cd_screen_time_today, screenTime ?: stringResource(R.string.gauge_dash)),
             onClick = if (focus.hasUsageAccess) null else onOpenHealth,
+        )
+        val goalMs = focus.studyGoalMinutes * 60_000L
+        val focused = durationText(focus.todayFocusMs)
+        val goal = durationText(goalMs)
+        val reached = goalMs > 0 && focus.todayFocusMs >= goalMs
+        Pill(
+            icon = if (reached) Icons.Rounded.CheckCircle else Icons.Rounded.Timer,
+            text = stringResource(R.string.study_progress, focused, goal),
+            tint = if (reached) FocunoTheme.colors.productive else MaterialTheme.colorScheme.secondary,
+            description = stringResource(R.string.cd_focused_today, focused, goal),
         )
         Spacer(Modifier.weight(1f))
         IconButton(onClick = onOpenSound) {
@@ -212,7 +221,7 @@ private fun Pill(icon: ImageVector, text: String, tint: Color, description: Stri
             .clip(RoundedCornerShape(50))
             .background(FocunoTheme.colors.surfaceElevated)
             .let { if (onClick != null) it.clickable(onClick = onClick) else it }
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = 10.dp, vertical = 8.dp)
             .semantics(mergeDescendants = true) { contentDescription = description },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),

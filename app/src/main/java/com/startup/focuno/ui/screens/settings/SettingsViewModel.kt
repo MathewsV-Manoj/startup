@@ -51,6 +51,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { store.setDailyGoalMinutes(minutes) }
     }
 
+    fun setStudyGoalMinutes(minutes: Int) {
+        viewModelScope.launch { store.setStudyGoalMinutes(minutes) }
+    }
+
     fun setNudgesEnabled(enabled: Boolean) {
         viewModelScope.launch { store.setNudgesEnabled(enabled) }
     }

@@ -75,6 +75,7 @@ fun SettingsScreen(
         onOpenPrivacy = onOpenPrivacy,
         onOpenUsageCheck = onOpenUsageCheck,
         onGoalChanged = viewModel::setDailyGoalMinutes,
+        onStudyGoalChanged = viewModel::setStudyGoalMinutes,
         onNudgesEnabled = viewModel::setNudgesEnabled,
         onSensitivity = viewModel::setNudgeSensitivity,
         onExport = { exportLauncher.launch("focuno-${LocalDate.now()}.csv") },
@@ -90,6 +91,7 @@ fun SettingsContent(
     onOpenPrivacy: () -> Unit,
     onOpenUsageCheck: () -> Unit,
     onGoalChanged: (Int) -> Unit,
+    onStudyGoalChanged: (Int) -> Unit,
     onNudgesEnabled: (Boolean) -> Unit,
     onSensitivity: (NudgeSensitivity) -> Unit,
     onExport: () -> Unit,
@@ -101,7 +103,22 @@ fun SettingsContent(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            GoalCard(settings.dailyGoalMinutes, onGoalChanged)
+            GoalCard(
+                title = stringResource(R.string.settings_study_goal_title),
+                explainer = stringResource(R.string.settings_study_goal_explainer),
+                minutes = settings.studyGoalMinutes,
+                range = 30f..600f,
+                steps = 18,
+                onChanged = onStudyGoalChanged,
+            )
+            GoalCard(
+                title = stringResource(R.string.settings_goal_title),
+                explainer = stringResource(R.string.settings_goal_explainer),
+                minutes = settings.dailyGoalMinutes,
+                range = 60f..600f,
+                steps = 17,
+                onChanged = onGoalChanged,
+            )
             NudgeCard(settings, onNudgesEnabled, onSensitivity)
             LinkCard(Icons.Rounded.Shield, stringResource(R.string.health_title), stringResource(R.string.settings_health_subtitle), onOpenHealth)
             LinkCard(Icons.Rounded.Timer, stringResource(R.string.usage_check_title), stringResource(R.string.settings_usage_check_subtitle), onOpenUsageCheck)
@@ -112,18 +129,26 @@ fun SettingsContent(
     }
 }
 
+/** A goal in hours and minutes, set with a slider in half-hour steps. */
 @Composable
-private fun GoalCard(goalMinutes: Int, onChanged: (Int) -> Unit) {
+private fun GoalCard(
+    title: String,
+    explainer: String,
+    minutes: Int,
+    range: ClosedFloatingPointRange<Float>,
+    steps: Int,
+    onChanged: (Int) -> Unit,
+) {
     // The thumb follows the finger locally and the goal is saved once, when the finger lifts.
-    var dragValue by remember(goalMinutes) { mutableFloatStateOf(goalMinutes.toFloat()) }
+    var dragValue by remember(minutes) { mutableFloatStateOf(minutes.toFloat()) }
     Panel(Modifier.fillMaxWidth()) {
-        SectionTitle(stringResource(R.string.settings_goal_title))
+        SectionTitle(title)
         Spacer(Modifier.height(4.dp))
-        Text(stringResource(R.string.settings_goal_explainer), style = MaterialTheme.typography.bodySmall, color = FocunoTheme.colors.textSecondary)
+        Text(explainer, style = MaterialTheme.typography.bodySmall, color = FocunoTheme.colors.textSecondary)
         Spacer(Modifier.height(12.dp))
-        val minutes = dragValue.toInt()
+        val value = dragValue.toInt()
         Text(
-            stringResource(R.string.settings_goal_value, minutes / 60, minutes % 60),
+            stringResource(R.string.settings_goal_value, value / 60, value % 60),
             style = MaterialTheme.typography.titleLarge,
             color = FocunoTheme.colors.productive,
         )
@@ -131,8 +156,8 @@ private fun GoalCard(goalMinutes: Int, onChanged: (Int) -> Unit) {
             value = dragValue,
             onValueChange = { dragValue = it },
             onValueChangeFinished = { onChanged(dragValue.toInt()) },
-            valueRange = 60f..600f,
-            steps = 17,
+            valueRange = range,
+            steps = steps,
         )
     }
 }

@@ -77,10 +77,6 @@
     <string name="gauge_dash">—</string>
     <string name="gauge_label">Focus score</string>
     <string name="focus_allow_usage_access">Allow usage access</string>
-    <plurals name="streak_days">
-        <item quantity="one">%1$d day in a row</item>
-        <item quantity="other">%1$d days in a row</item>
-    </plurals>
     <string name="quick_block_label_focus">Focus session</string>
 
     <!-- Protection banner -->
@@ -334,6 +330,8 @@
     <string name="tab_me">Me</string>
     <string name="cd_screen_time_today">Screen time today: %1$s</string>
     <string name="cd_minutes">%1$d minutes</string>
+    <string name="cd_focused_today">Focused today: %1$s of %2$s</string>
+    <string name="study_progress">%1$s / %2$s</string>
     <string name="home_minutes_unit">min</string>
     <string name="home_start">Start</string>
     <string name="home_focusing">Focusing</string>
@@ -367,6 +365,7 @@
     <string name="banner_blocking_off">Blocking is off</string>
     <string name="banner_usage_off">Screen time can\'t be counted</string>
     <string name="block_left">left</string>
+    <string name="block_focus_instead">Focus %1$d min instead</string>
 
     <!-- Stats and Me -->
     <string name="stats_day">Day</string>
@@ -494,4 +493,8 @@
     <string name="pause_option_eaters">Time-eaters</string>
     <string name="pause_option_all">All apps</string>
     <string name="pause_all_note">Phone, Settings and your keyboard always work. Tick the apps you need for study.</string>
+
+    <!-- Study goal -->
+    <string name="settings_study_goal_title">Daily study goal</string>
+    <string name="settings_study_goal_explainer">How long you want to focus each day.</string>
 </resources>

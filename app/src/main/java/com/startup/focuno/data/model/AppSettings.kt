@@ -14,6 +14,8 @@ data class AppSettings(
     /** Reserved. The app is dark-only by design, so this is stored but never switches the theme. */
     val theme: String = "dark",
     val dailyGoalMinutes: Int = 240,
+    /** How long the person wants to focus each day. */
+    val studyGoalMinutes: Int = 240,
     val streakCount: Int = 0,
     val lastActiveDate: String? = null,
     /** Epoch ms until which every distracting app is blocked ("Block now" or a focus session). 0 = off. */

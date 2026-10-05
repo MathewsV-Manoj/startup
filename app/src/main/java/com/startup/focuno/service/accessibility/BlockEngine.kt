@@ -28,7 +28,10 @@ import com.startup.focuno.domain.usecase.BypassPolicy
 import com.startup.focuno.domain.usecase.DailyLimitPolicy
 import com.startup.focuno.domain.usecase.FocusPauseRule
 import com.startup.focuno.domain.usecase.ScheduleEvaluator
+import com.startup.focuno.domain.model.FocusMode
+import com.startup.focuno.service.focus.FocusController
 import com.startup.focuno.ui.screens.overlay.BlockOverlayHost
+import com.startup.focuno.ui.screens.overlay.FOCUS_INSTEAD_MINUTES
 import com.startup.focuno.ui.screens.overlay.NudgeToast
 import com.startup.focuno.R
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -84,6 +87,7 @@ class BlockEngine @Inject constructor(
     private val installedApps: InstalledAppsRepository,
     private val usageRepository: UsageTrackingRepository,
     private val nudgeCoordinator: NudgeCoordinator,
+    private val focusController: FocusController,
     private val nudgeText: NudgeTextFormatter,
     private val log: EngineLog,
 ) {
@@ -506,6 +510,7 @@ class BlockEngine @Inject constructor(
                     onNeedThis = controller::begin,
                     onReasonChange = controller::onReasonChange,
                     onUnlock = controller::unlock,
+                    onFocusInstead = ::focusInstead,
                 )
             }
         }
@@ -531,6 +536,14 @@ class BlockEngine @Inject constructor(
         shownFor = null
         shownScope = null
         blockModel.value = null
+    }
+
+    /** Starts a focus timer and leaves the blocked app, so the urge becomes study time. */
+    private fun focusInstead() {
+        val activeScope = scope ?: return
+        log.add("Focus instead of ${shownFor ?: "app"}")
+        activeScope.launch { focusController.start(FocusMode.TIMER, FOCUS_INSTEAD_MINUTES, strict = false, subject = "") }
+        backToFocus()
     }
 
     private fun backToFocus() {
