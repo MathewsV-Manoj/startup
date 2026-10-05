@@ -6,6 +6,7 @@ import com.startup.focuno.data.local.SettingsStore
 import com.startup.focuno.data.repository.FocusSessionRepository
 import com.startup.focuno.domain.model.FocusMode
 import com.startup.focuno.domain.model.FocusPlan
+import com.startup.focuno.domain.model.PomodoroLength
 import com.startup.focuno.service.monitor.NotificationHelper
 import com.startup.focuno.service.sound.FocusSoundPlayer
 import com.startup.focuno.service.widget.FocusWidget
@@ -32,7 +33,13 @@ class FocusController @Inject constructor(
      * [amount] is minutes for a timer and rounds for a Pomodoro; a stopwatch ignores it. Returns false, and
      * starts nothing, while a strict plan is running: a new plan would end it early.
      */
-    suspend fun start(mode: FocusMode, amount: Int, strict: Boolean, subject: String): Boolean {
+    suspend fun start(
+        mode: FocusMode,
+        amount: Int,
+        strict: Boolean,
+        subject: String,
+        pomodoro: PomodoroLength = PomodoroLength.CLASSIC,
+    ): Boolean {
         val now = System.currentTimeMillis()
         val current = settingsStore.settings.first()
         if (current.quickBlockStrict && current.focusPlan?.isRunning(now) == true) return false
@@ -40,7 +47,7 @@ class FocusController @Inject constructor(
         val label = subject.ifBlank { context.getString(R.string.quick_block_label_focus) }
         val plan = when (mode) {
             FocusMode.TIMER -> FocusPlan(FocusMode.TIMER, now, now + amount * 60_000L)
-            FocusMode.POMODORO -> FocusPlan.pomodoro(now, FocusPlan.POMODORO_FOCUS_MIN, FocusPlan.POMODORO_BREAK_MIN, amount)
+            FocusMode.POMODORO -> FocusPlan.pomodoro(now, pomodoro.focusMinutes, pomodoro.breakMinutes, amount)
             FocusMode.STOPWATCH -> FocusPlan(FocusMode.STOPWATCH, now, now + FocusSessionRepository.STOPWATCH_MAX_MS)
         }
         // A stopwatch is meant to be stopped by hand, so it is never strict.

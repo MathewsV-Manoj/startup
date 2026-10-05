@@ -2,6 +2,12 @@ package com.startup.focuno.domain.model
 
 enum class FocusMode { TIMER, POMODORO, STOPWATCH }
 
+/** Pomodoro shapes: the classic 25 minutes with a 5-minute break, or a longer 50/10 for deep work. */
+enum class PomodoroLength(val focusMinutes: Int, val breakMinutes: Int) {
+    CLASSIC(25, 5),
+    LONG(50, 10),
+}
+
 /** Where a running plan is right now. [round] is 1-based. */
 data class FocusPhase(
     val focusing: Boolean,
@@ -48,10 +54,6 @@ data class FocusPlan(
     }
 
     companion object {
-        /** The classic Pomodoro: 25 minutes of focus, then a 5-minute break. */
-        const val POMODORO_FOCUS_MIN = 25
-        const val POMODORO_BREAK_MIN = 5
-
         fun pomodoro(startMs: Long, roundMinutes: Int, breakMinutes: Int, rounds: Int): FocusPlan {
             val roundMs = roundMinutes * 60_000L
             val breakMs = breakMinutes * 60_000L

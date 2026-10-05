@@ -134,6 +134,10 @@ interface FocusSessionDao {
     @Query("SELECT * FROM focus_session ORDER BY startTs")
     suspend fun all(): List<FocusSessionEntity>
 
+    /** Sessions that have started, newest first (Pomodoro rounds still to come are left out). */
+    @Query("SELECT * FROM focus_session WHERE startTs < :nowMs ORDER BY startTs DESC LIMIT :limit")
+    fun observeRecent(nowMs: Long, limit: Int): Flow<List<FocusSessionEntity>>
+
     @Query("SELECT * FROM focus_session WHERE startTs >= :since AND startTs < :nowMs")
     suspend fun startedBetween(since: Long, nowMs: Long): List<FocusSessionEntity>
 

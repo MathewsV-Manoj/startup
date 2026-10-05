@@ -83,6 +83,8 @@ class FocusSessionRepository @Inject constructor(
 
     fun observeSubjectTotals(sinceMs: Long, nowMs: Long): Flow<List<SubjectTotal>> = dao.observeSubjectTotals(sinceMs, nowMs)
 
+    fun observeRecent(nowMs: Long, limit: Int): Flow<List<FocusSessionEntity>> = dao.observeRecent(nowMs, limit)
+
     companion object {
         /** A stopwatch has no planned length, so it counts as a finished session once it ran this long. */
         const val STOPWATCH_COUNTS_AFTER_MS = 10 * 60_000L

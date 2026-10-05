@@ -10,12 +10,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Insights
+import androidx.compose.material.icons.rounded.Timelapse
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +43,8 @@ import com.startup.focuno.ui.components.StatTile
 import com.startup.focuno.ui.components.durationText
 import com.startup.focuno.ui.components.formatClock
 import com.startup.focuno.ui.theme.FocunoTheme
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -72,6 +78,7 @@ fun InsightsContent(state: InsightsUiState, onSelectRange: (InsightsRange) -> Un
             EmptyState(icon = Icons.Rounded.Insights, title = stringResource(R.string.insights_empty_title), message = "")
         } else {
             SubjectsCard(state)
+            RecentSessionsCard(state)
             ScoreTrendCard(state)
             DistractingTrendCard(state)
             WorstHourCard(state)
@@ -134,6 +141,51 @@ private fun SubjectsCard(state: InsightsUiState) {
         }
     }
 }
+
+/** The last few focus sessions: when, what, how long, and whether they were finished. */
+@Composable
+private fun RecentSessionsCard(state: InsightsUiState) {
+    val sessions = state.recentSessions
+    if (sessions.isEmpty()) return
+    val now = System.currentTimeMillis()
+    val zone = ZoneId.systemDefault()
+    Panel(Modifier.fillMaxWidth()) {
+        CardHeader(stringResource(R.string.insights_recent_sessions), null)
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            sessions.forEach { session ->
+                val start = Instant.ofEpochMilli(session.startTs).atZone(zone)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Icon(
+                        imageVector = if (session.completed) Icons.Rounded.CheckCircle else Icons.Rounded.Timelapse,
+                        contentDescription = stringResource(if (session.completed) R.string.session_finished else R.string.session_unfinished),
+                        tint = if (session.completed) FocunoTheme.colors.productive else FocunoTheme.colors.textTertiary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            session.subject.ifBlank { stringResource(R.string.subject_none) },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = FocunoTheme.colors.textPrimary,
+                            maxLines = 1,
+                        )
+                        Text(
+                            start.format(sessionTime),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = FocunoTheme.colors.textTertiary,
+                        )
+                    }
+                    Text(
+                        durationText((minOf(session.endTs, now) - session.startTs).coerceAtLeast(0L)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = FocunoTheme.colors.textSecondary,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private val sessionTime: DateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
 
 @Composable
 private fun ScoreTrendCard(state: InsightsUiState) {

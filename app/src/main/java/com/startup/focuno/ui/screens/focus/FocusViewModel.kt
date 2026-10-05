@@ -13,6 +13,7 @@ import com.startup.focuno.domain.model.DayStats
 import com.startup.focuno.domain.model.FocusMode
 import com.startup.focuno.domain.model.FocusPlan
 import com.startup.focuno.domain.model.FocusSound
+import com.startup.focuno.domain.model.PomodoroLength
 import com.startup.focuno.domain.usecase.ComputeDayStatsUseCase
 import com.startup.focuno.domain.usecase.ExamCountdown
 import com.startup.focuno.service.focus.FocusController
@@ -126,9 +127,9 @@ class FocusViewModel @Inject constructor(
     }
 
     /** [amount] is minutes for a timer and rounds for a Pomodoro; a stopwatch ignores it. */
-    fun startFocusSession(mode: FocusMode, amount: Int, strict: Boolean, subject: String) {
+    fun startFocusSession(mode: FocusMode, amount: Int, strict: Boolean, subject: String, pomodoro: PomodoroLength) {
         viewModelScope.launch {
-            focusController.start(mode, amount, strict, subject)
+            focusController.start(mode, amount, strict, subject, pomodoro)
             refresh()
         }
     }

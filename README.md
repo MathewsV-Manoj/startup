@@ -14,7 +14,7 @@ Every push to this branch rebuilds the APK at the same link. A new build install
 ## What it does
 
 **Focus**
-- A timer (15 to 90 min), Pomodoro (25 min focus, 5 min break, 2 to 4 rounds) or a stopwatch.
+- A timer (15 to 90 min), Pomodoro (25/5 or 50/10 minutes of focus and break, 2 to 4 rounds) or a stopwatch.
 - While it runs, time-eater apps are paused. Lock mode pauses every app except the ones you allow; phone, Settings and the keyboard always work.
 - Strict mode: no ending early, no unlock. While Strict is off, the app warns that you can still end early.
 - Tag a timer with a subject (Signals, Networks, Maths). Stats shows study time per subject.
@@ -32,7 +32,7 @@ Every push to this branch rebuilds the APK at the same link. A new build install
 **Stats**
 - Today's screen time, split into helpful, okay and time-eater apps, with the change against yesterday.
 - Every app with its time. Tap one for its last seven days, to change its category, or to limit it.
-- Trends over 7 or 30 days: study time per subject, focus score, time-eater minutes, your worst hour, and urges resisted.
+- Trends over 7 or 30 days: study time per subject, recent focus sessions, focus score, time-eater minutes, your worst hour, and urges resisted.
 - A weekly report every Monday morning.
 - Export everything as a CSV file.
 

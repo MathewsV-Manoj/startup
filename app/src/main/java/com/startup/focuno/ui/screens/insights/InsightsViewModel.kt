@@ -7,6 +7,7 @@ import com.startup.focuno.data.repository.BypassRepository
 import com.startup.focuno.data.repository.FocusSessionRepository
 import com.startup.focuno.data.repository.SummaryRepository
 import com.startup.focuno.data.repository.UsageTrackingRepository
+import com.startup.focuno.data.room.FocusSessionEntity
 import com.startup.focuno.data.room.SubjectTotal
 import com.startup.focuno.domain.model.BypassOutcome
 import com.startup.focuno.domain.model.DayStats
@@ -48,6 +49,8 @@ data class InsightsUiState(
     val focusSessionsCompleted: Int = 0,
     /** Focus time per subject in the range, largest first. An empty subject means "no subject". */
     val subjectTotals: List<SubjectTotal> = emptyList(),
+    /** The latest focus sessions, newest first. */
+    val recentSessions: List<FocusSessionEntity> = emptyList(),
 ) {
     val hasAnyData: Boolean
         get() = points.any { it.score != null || it.distractingMs > 0 } || bypass.blockHits > 0 || bypass.started > 0 ||
@@ -85,10 +88,12 @@ class InsightsViewModel @Inject constructor(
             BypassStats(started = abandoned + granted, abandoned = abandoned, granted = granted, completedFriction = completed, blockHits = hits)
         }
 
+        val now = System.currentTimeMillis()
         val focusFlow = combine(
             focusSessions.observeCompletedCount(sinceMs),
-            focusSessions.observeSubjectTotals(sinceMs, System.currentTimeMillis()),
-        ) { count, subjects -> count to subjects.filter { it.totalMs > 0 } }
+            focusSessions.observeSubjectTotals(sinceMs, now),
+            focusSessions.observeRecent(now, RECENT_SESSIONS),
+        ) { count, subjects, recent -> FocusNumbers(count, subjects.filter { it.totalMs > 0 }, recent) }
 
         combine(
             summaryRepository.observeSummaries(from, today),
@@ -96,7 +101,7 @@ class InsightsViewModel @Inject constructor(
             bypassFlow,
             focusFlow,
             todayLive,
-        ) { summaries, hourlyRows, bypass, (sessions, subjects), live ->
+        ) { summaries, hourlyRows, bypass, focus, live ->
             val byDate = summaries.associateBy { it.date }
             val points = (0 until selected.days).map { i ->
                 val date = from.plusDays(i.toLong())
@@ -121,8 +126,9 @@ class InsightsViewModel @Inject constructor(
                 hourlyDistractingMs = hourly.toList(),
                 worstHour = peak?.takeIf { hourly[it] > 0 },
                 bypass = bypass,
-                focusSessionsCompleted = sessions,
-                subjectTotals = subjects,
+                focusSessionsCompleted = focus.completed,
+                subjectTotals = focus.subjects,
+                recentSessions = focus.recent,
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), InsightsUiState())
@@ -145,7 +151,10 @@ class InsightsViewModel @Inject constructor(
         }
     }
 
+    private data class FocusNumbers(val completed: Int, val subjects: List<SubjectTotal>, val recent: List<FocusSessionEntity>)
+
     private companion object {
         const val KEY_RANGE = "range"
+        const val RECENT_SESSIONS = 8
     }
 }

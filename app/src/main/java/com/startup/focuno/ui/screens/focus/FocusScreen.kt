@@ -67,6 +67,7 @@ import com.startup.focuno.data.repository.InstalledApp
 import com.startup.focuno.domain.model.FocusMode
 import com.startup.focuno.domain.model.FocusPlan
 import com.startup.focuno.domain.model.FocusSound
+import com.startup.focuno.domain.model.PomodoroLength
 import com.startup.focuno.ui.components.AppIcon
 import com.startup.focuno.ui.components.ProtectionBanner
 import com.startup.focuno.ui.components.RefreshWhileResumed
@@ -114,7 +115,7 @@ fun HomeContent(
     focus: FocusUiState,
     onOpenSettings: () -> Unit,
     onOpenHealth: () -> Unit,
-    onStartSession: (mode: FocusMode, amount: Int, strict: Boolean, subject: String) -> Unit,
+    onStartSession: (mode: FocusMode, amount: Int, strict: Boolean, subject: String, pomodoro: PomodoroLength) -> Unit,
     onStopSession: () -> Unit,
     onAddSubject: (String) -> Unit,
     onRemoveSubject: (String) -> Unit,
@@ -245,7 +246,7 @@ private fun IdleTimer(
     subjects: List<String>,
     lockAll: Boolean,
     allowedCount: Int,
-    onStart: (mode: FocusMode, amount: Int, strict: Boolean, subject: String) -> Unit,
+    onStart: (mode: FocusMode, amount: Int, strict: Boolean, subject: String, pomodoro: PomodoroLength) -> Unit,
     onAddSubject: (String) -> Unit,
     onRemoveSubject: (String) -> Unit,
     onChooseTarget: () -> Unit,
@@ -253,6 +254,7 @@ private fun IdleTimer(
     var modeIndex by rememberSaveable { mutableIntStateOf(0) }
     var minutes by rememberSaveable { mutableIntStateOf(25) }
     var rounds by rememberSaveable { mutableIntStateOf(4) }
+    var pomodoro by rememberSaveable { mutableStateOf(PomodoroLength.CLASSIC) }
     var strict by rememberSaveable { mutableStateOf(false) }
     var confirmStrict by rememberSaveable { mutableStateOf(false) }
     var subject by rememberSaveable { mutableStateOf("") }
@@ -263,7 +265,7 @@ private fun IdleTimer(
     val amount = if (mode == FocusMode.POMODORO) rounds else minutes
     val canBeStrict = mode != FocusMode.STOPWATCH
     val lockMinutes = when (mode) {
-        FocusMode.POMODORO -> rounds * FocusPlan.POMODORO_FOCUS_MIN + (rounds - 1) * FocusPlan.POMODORO_BREAK_MIN
+        FocusMode.POMODORO -> rounds * pomodoro.focusMinutes + (rounds - 1) * pomodoro.breakMinutes
         else -> minutes
     }
 
@@ -284,7 +286,7 @@ private fun IdleTimer(
             Text(
                 when (mode) {
                     FocusMode.TIMER -> minutes.toString()
-                    FocusMode.POMODORO -> FocusPlan.POMODORO_FOCUS_MIN.toString()
+                    FocusMode.POMODORO -> pomodoro.focusMinutes.toString()
                     FocusMode.STOPWATCH -> clockText(0L)
                 },
                 style = if (mode == FocusMode.STOPWATCH) MaterialTheme.typography.displayMedium else MaterialTheme.typography.displayLarge,
@@ -305,11 +307,16 @@ private fun IdleTimer(
             }
         }
         FocusMode.POMODORO -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                stringResource(R.string.pomodoro_caption, FocusPlan.POMODORO_FOCUS_MIN, FocusPlan.POMODORO_BREAK_MIN),
-                style = MaterialTheme.typography.bodyMedium,
-                color = FocunoTheme.colors.textSecondary,
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PomodoroLength.entries.forEach { option ->
+                    ChoicePill(
+                        stringResource(R.string.pomodoro_shape, option.focusMinutes, option.breakMinutes),
+                        stringResource(R.string.pomodoro_caption, option.focusMinutes, option.breakMinutes),
+                        selected = option == pomodoro,
+                        onClick = { pomodoro = option },
+                    )
+                }
+            }
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ROUND_CHOICES.forEach { option ->
@@ -338,7 +345,7 @@ private fun IdleTimer(
         Spacer(Modifier.height(20.dp))
     }
     Button(
-        onClick = { if (strict && canBeStrict) confirmStrict = true else onStart(mode, amount, false, chosen) },
+        onClick = { if (strict && canBeStrict) confirmStrict = true else onStart(mode, amount, false, chosen, pomodoro) },
         modifier = Modifier.fillMaxWidth().height(60.dp),
         shape = RoundedCornerShape(50),
     ) {
@@ -354,7 +361,7 @@ private fun IdleTimer(
             confirmButton = {
                 Button(onClick = {
                     confirmStrict = false
-                    onStart(mode, amount, true, chosen)
+                    onStart(mode, amount, true, chosen, pomodoro)
                 }) { Text(stringResource(R.string.strict_confirm_ok)) }
             },
             dismissButton = { TextButton(onClick = { confirmStrict = false }) { Text(stringResource(R.string.action_cancel)) } },

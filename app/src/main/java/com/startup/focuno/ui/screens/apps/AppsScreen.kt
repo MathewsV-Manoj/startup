@@ -74,7 +74,6 @@ fun AppsScreen(
     AppsContent(
         state = state,
         onSelectDay = viewModel::selectDay,
-        onSetCategory = viewModel::setCategory,
         onSchedule = onScheduleApp,
         onRetry = viewModel::refresh,
         onOpenHealth = onOpenHealth,
@@ -99,7 +98,6 @@ fun AppsScreen(
 fun AppsContent(
     state: AppsUiState,
     onSelectDay: (Int) -> Unit,
-    onSetCategory: (String, AppCategory) -> Unit,
     onSchedule: (String) -> Unit,
     onRetry: () -> Unit,
     onOpenHealth: () -> Unit,

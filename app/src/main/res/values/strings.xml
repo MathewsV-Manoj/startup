@@ -409,6 +409,9 @@
     <string name="subject_add_button">Add</string>
     <string name="subject_none">No subject</string>
     <string name="insights_study_time">Study time</string>
+    <string name="insights_recent_sessions">Recent sessions</string>
+    <string name="session_finished">Finished</string>
+    <string name="session_unfinished">Ended early or running</string>
 
     <!-- Focus sounds -->
     <string name="sound_title">Focus sound</string>
@@ -424,6 +427,7 @@
     <string name="mode_stopwatch">Stopwatch</string>
     <string name="pomodoro_caption">%1$d min focus · %2$d min break</string>
     <string name="pomodoro_rounds">%1$d×</string>
+    <string name="pomodoro_shape">%1$d / %2$d</string>
     <string name="cd_rounds">%1$d rounds</string>
     <string name="stopwatch_caption">Count up. Stop when you\'re done.</string>
     <string name="timer_clock_hours">%1$d:%2$02d:%3$02d</string>
