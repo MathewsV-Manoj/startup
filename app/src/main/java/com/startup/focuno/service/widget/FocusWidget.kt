@@ -14,6 +14,7 @@ import com.startup.focuno.R
 import com.startup.focuno.data.local.SettingsStore
 import com.startup.focuno.data.repository.UsageTrackingRepository
 import com.startup.focuno.domain.model.FocusMode
+import com.startup.focuno.domain.usecase.ExamCountdown
 import com.startup.focuno.service.focus.FocusController
 import com.startup.focuno.ui.MainActivity
 import com.startup.focuno.ui.components.formatDuration
@@ -112,6 +113,19 @@ object FocusWidget {
         views.setTextViewText(R.id.widget_time, totalMs?.let { formatDuration(context.resources, it) } ?: context.getString(R.string.gauge_dash))
         views.setTextViewText(R.id.widget_streak, context.resources.getQuantityString(R.plurals.widget_streak, settings.streakCount, settings.streakCount))
         views.setOnClickPendingIntent(R.id.widget_root, openApp(context))
+        val examDays = ExamCountdown.daysLeft(ExamCountdown.parse(settings.examDate), LocalDate.now())
+        if (examDays == null) {
+            views.setViewVisibility(R.id.widget_exam, View.GONE)
+        } else {
+            val days = examDays.toInt()
+            val text = when {
+                days == 0 -> context.getString(R.string.exam_today_unnamed)
+                settings.examName.isBlank() -> context.resources.getQuantityString(R.plurals.exam_days_left, days, days)
+                else -> context.resources.getQuantityString(R.plurals.exam_countdown, days, settings.examName, days)
+            }
+            views.setTextViewText(R.id.widget_exam, text)
+            views.setViewVisibility(R.id.widget_exam, View.VISIBLE)
+        }
 
         if (plan == null) {
             views.setViewVisibility(R.id.widget_countdown, View.GONE)

@@ -21,4 +21,7 @@ data class BlockOverlayModel(
     val limitMinutes: Int = 0,
     /** For DAILY_LIMIT reached by opens rather than time: the number of opens allowed. */
     val limitOpens: Int = 0,
+    /** The person's exam and the days left to it, shown as a reminder; null days when none is set. */
+    val examName: String = "",
+    val examDaysLeft: Long? = null,
 )

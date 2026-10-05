@@ -26,6 +26,7 @@ import com.startup.focuno.domain.model.BypassOutcome
 import com.startup.focuno.domain.model.ShortVideoApps
 import com.startup.focuno.domain.usecase.BypassPolicy
 import com.startup.focuno.domain.usecase.DailyLimitPolicy
+import com.startup.focuno.domain.usecase.ExamCountdown
 import com.startup.focuno.domain.usecase.FocusPauseRule
 import com.startup.focuno.domain.usecase.ScheduleEvaluator
 import com.startup.focuno.domain.model.FocusMode
@@ -484,7 +485,11 @@ class BlockEngine @Inject constructor(
         val granted = lastGranted[pkg]
         if (!base.strict && BypassPolicy.isUnlocked(granted, nowMs)) return null
         val availableAt = BypassPolicy.availableAgainAtMs(granted)?.takeIf { it > nowMs }
-        return base.copy(bypassAvailableAtMs = availableAt)
+        return base.copy(
+            bypassAvailableAtMs = availableAt,
+            examName = settings.examName,
+            examDaysLeft = ExamCountdown.daysLeft(ExamCountdown.parse(settings.examDate), zoned.toLocalDate()),
+        )
     }
 
     private fun buildModel(

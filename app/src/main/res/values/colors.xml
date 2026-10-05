@@ -8,5 +8,5 @@
     <color name="widget_text_secondary">#FFB3A6C9</color>
     <color name="widget_accent">#FF9D4EDD</color>
     <color name="widget_streak">#FFFFB84D</color>
-    <color name="widget_focus">#FF64FFDA</color>
+    <color name="widget_exam">#FFC77DFF</color>
 </resources>

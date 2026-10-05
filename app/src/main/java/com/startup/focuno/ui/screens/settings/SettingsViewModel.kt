@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -51,6 +52,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { store.setDailyGoalMinutes(minutes) }
     }
 
+    fun setExam(name: String, date: LocalDate?) {
+        viewModelScope.launch { store.setExam(name.trim().take(MAX_EXAM_NAME), date?.toString()) }
+    }
+
     fun setStudyGoalMinutes(minutes: Int) {
         viewModelScope.launch { store.setStudyGoalMinutes(minutes) }
     }
@@ -61,5 +66,9 @@ class SettingsViewModel @Inject constructor(
 
     fun setNudgeSensitivity(sensitivity: NudgeSensitivity) {
         viewModelScope.launch { store.setNudgeSensitivity(sensitivity) }
+    }
+
+    private companion object {
+        const val MAX_EXAM_NAME = 30
     }
 }

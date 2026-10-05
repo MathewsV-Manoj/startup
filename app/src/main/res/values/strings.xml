@@ -507,4 +507,20 @@
         <item quantity="one">Daily limit: %1$d open</item>
         <item quantity="other">Daily limit: %1$d opens</item>
     </plurals>
+
+    <!-- Exam countdown -->
+    <string name="exam_title">Your exam</string>
+    <string name="exam_name_hint">e.g. GATE 2027</string>
+    <string name="exam_pick_date">Pick the date</string>
+    <string name="exam_clear">Clear</string>
+    <string name="exam_today">%1$s is today. You\'ve got this!</string>
+    <string name="exam_today_unnamed">Exam day. You\'ve got this!</string>
+    <plurals name="exam_days_left">
+        <item quantity="one">%1$d day left</item>
+        <item quantity="other">%1$d days left</item>
+    </plurals>
+    <plurals name="exam_countdown">
+        <item quantity="one">%1$s · %2$d day left</item>
+        <item quantity="other">%1$s · %2$d days left</item>
+    </plurals>
 </resources>

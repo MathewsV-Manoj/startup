@@ -150,7 +150,15 @@ fun HomeContent(
     ) {
         TopRow(focus, onOpenSettings, onOpenHealth, onOpenSound = { choosingSound = true })
         ProtectionBanner(focus.protection, onFix = onOpenHealth)
-        Spacer(Modifier.height(28.dp))
+        focus.examDaysLeft?.let { days ->
+            Text(
+                examLine(focus.examName, days),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+        Spacer(Modifier.height(20.dp))
         val plan = focus.plan
         if (plan == null) {
             IdleTimer(
@@ -436,6 +444,18 @@ private fun PauseTargetDialog(
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_done)) } },
     )
+}
+
+/** "GATE 2027 · 123 days", or "GATE 2027 is today". Without a name, just the days. */
+@Composable
+fun examLine(name: String, daysLeft: Long): String {
+    val days = daysLeft.toInt()
+    return when {
+        days == 0 && name.isNotBlank() -> stringResource(R.string.exam_today, name)
+        days == 0 -> stringResource(R.string.exam_today_unnamed)
+        name.isBlank() -> pluralStringResource(R.plurals.exam_days_left, days, days)
+        else -> pluralStringResource(R.plurals.exam_countdown, days, name, days)
+    }
 }
 
 /** "12:34", or "1:02:03" once past an hour. */

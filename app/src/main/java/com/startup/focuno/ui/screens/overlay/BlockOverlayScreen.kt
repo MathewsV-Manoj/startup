@@ -57,6 +57,7 @@ import com.startup.focuno.domain.usecase.BypassPolicy
 import com.startup.focuno.service.accessibility.FrictionState
 import com.startup.focuno.ui.components.AppIcon
 import com.startup.focuno.ui.components.durationText
+import com.startup.focuno.ui.screens.focus.examLine
 import com.startup.focuno.ui.components.formatClock
 import com.startup.focuno.ui.components.shortVideoName
 import com.startup.focuno.ui.theme.DeepVoidPurple
@@ -136,6 +137,15 @@ fun BlockOverlayScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = FocunoTheme.colors.textTertiary,
             )
+            model.examDaysLeft?.let { days ->
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    examLine(model.examName, days),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    textAlign = TextAlign.Center,
+                )
+            }
             Spacer(Modifier.height(32.dp))
             Text(
                 text = durationText((model.endsAtMs - nowMs).coerceAtLeast(0), roundUp = true),

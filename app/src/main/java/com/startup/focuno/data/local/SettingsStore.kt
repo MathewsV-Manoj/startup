@@ -37,6 +37,8 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         val theme = stringPreferencesKey("theme")
         val dailyGoalMinutes = intPreferencesKey("daily_goal_minutes")
         val studyGoalMinutes = intPreferencesKey("study_goal_minutes")
+        val examName = stringPreferencesKey("exam_name")
+        val examDate = stringPreferencesKey("exam_date")
         val streakCount = intPreferencesKey("streak_count")
         val lastActiveDate = stringPreferencesKey("last_active_date")
         val quickBlockUntil = longPreferencesKey("quick_block_until")
@@ -77,6 +79,8 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
                 theme = prefs[Keys.theme] ?: defaults.theme,
                 dailyGoalMinutes = prefs[Keys.dailyGoalMinutes] ?: defaults.dailyGoalMinutes,
                 studyGoalMinutes = prefs[Keys.studyGoalMinutes] ?: defaults.studyGoalMinutes,
+                examName = prefs[Keys.examName] ?: defaults.examName,
+                examDate = prefs[Keys.examDate],
                 streakCount = prefs[Keys.streakCount] ?: defaults.streakCount,
                 lastActiveDate = prefs[Keys.lastActiveDate],
                 quickBlockUntilMs = prefs[Keys.quickBlockUntil] ?: defaults.quickBlockUntilMs,
@@ -126,6 +130,14 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
 
     suspend fun setDailyGoalMinutes(minutes: Int) {
         context.focunoDataStore.edit { it[Keys.dailyGoalMinutes] = minutes }
+    }
+
+    /** A null [date] clears the countdown. */
+    suspend fun setExam(name: String, date: String?) {
+        context.focunoDataStore.edit {
+            it[Keys.examName] = name
+            if (date != null) it[Keys.examDate] = date else it.remove(Keys.examDate)
+        }
     }
 
     suspend fun setStudyGoalMinutes(minutes: Int) {

@@ -16,6 +16,9 @@ data class AppSettings(
     val dailyGoalMinutes: Int = 240,
     /** How long the person wants to focus each day. */
     val studyGoalMinutes: Int = 240,
+    /** The exam the person is preparing for, e.g. "GATE 2027", and its date as "2027-02-06". */
+    val examName: String = "",
+    val examDate: String? = null,
     val streakCount: Int = 0,
     val lastActiveDate: String? = null,
     /** Epoch ms until which every distracting app is blocked ("Block now" or a focus session). 0 = off. */

@@ -14,6 +14,7 @@ import com.startup.focuno.domain.model.FocusMode
 import com.startup.focuno.domain.model.FocusPlan
 import com.startup.focuno.domain.model.FocusSound
 import com.startup.focuno.domain.usecase.ComputeDayStatsUseCase
+import com.startup.focuno.domain.usecase.ExamCountdown
 import com.startup.focuno.service.focus.FocusController
 import com.startup.focuno.service.sound.FocusSoundPlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,6 +41,9 @@ data class FocusUiState(
     /** Time focused today, from every timer, Pomodoro round and stopwatch. */
     val todayFocusMs: Long = 0L,
     val studyGoalMinutes: Int = 240,
+    val examName: String = "",
+    /** Days left until the exam, or null when no exam is set or it has passed. */
+    val examDaysLeft: Long? = null,
     val protection: ProtectionStatus? = null,
     /** The focus plan in progress (including a Pomodoro break), or null when idle. */
     val plan: FocusPlan? = null,
@@ -101,6 +105,8 @@ class FocusViewModel @Inject constructor(
                 today = stats,
                 todayFocusMs = focusedToday,
                 studyGoalMinutes = settings.studyGoalMinutes,
+                examName = settings.examName,
+                examDaysLeft = ExamCountdown.daysLeft(ExamCountdown.parse(settings.examDate), today),
                 protection = protection,
                 plan = plan,
                 sessionStrict = plan != null && settings.quickBlockStrict,
