@@ -188,6 +188,17 @@ class FocusViewModel @Inject constructor(
         }
     }
 
+    /** Adds a ready-made set (for example GATE ECE), skipping any subject already there. */
+    fun addSubjects(names: List<String>) {
+        viewModelScope.launch {
+            val current = settingsStore.settings.first().subjects
+            val missing = names.map { it.trim().take(MAX_SUBJECT_LENGTH) }
+                .filter { name -> name.isNotEmpty() && current.none { it.equals(name, ignoreCase = true) } }
+            if (missing.isNotEmpty()) settingsStore.setSubjects(current + missing)
+            refresh()
+        }
+    }
+
     fun removeSubject(name: String) {
         viewModelScope.launch {
             settingsStore.setSubjects(settingsStore.settings.first().subjects - name)

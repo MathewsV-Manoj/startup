@@ -55,9 +55,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -101,6 +103,7 @@ fun HomeScreen(
         onStopSession = focusViewModel::stopFocusSession,
         onAddSubject = focusViewModel::addSubject,
         onRemoveSubject = focusViewModel::removeSubject,
+        onAddSubjectSet = focusViewModel::addSubjects,
         onSetSound = focusViewModel::setFocusSound,
         modifier = modifier,
         onPlanOver = focusViewModel::refresh,
@@ -121,6 +124,7 @@ fun HomeContent(
     onRemoveSubject: (String) -> Unit,
     onSetSound: (FocusSound) -> Unit,
     modifier: Modifier = Modifier,
+    onAddSubjectSet: (List<String>) -> Unit = {},
     onPlanOver: () -> Unit = {},
     onSetLockAll: (Boolean) -> Unit = {},
     onToggleAllowed: (String) -> Unit = {},
@@ -169,6 +173,7 @@ fun HomeContent(
                 onStart = onStartSession,
                 onAddSubject = onAddSubject,
                 onRemoveSubject = onRemoveSubject,
+                onAddSubjectSet = onAddSubjectSet,
                 onChooseTarget = { choosingTarget = true },
             )
         } else {
@@ -249,6 +254,7 @@ private fun IdleTimer(
     onStart: (mode: FocusMode, amount: Int, strict: Boolean, subject: String, pomodoro: PomodoroLength) -> Unit,
     onAddSubject: (String) -> Unit,
     onRemoveSubject: (String) -> Unit,
+    onAddSubjectSet: (List<String>) -> Unit,
     onChooseTarget: () -> Unit,
 ) {
     var modeIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -368,7 +374,7 @@ private fun IdleTimer(
         )
     }
     if (managing) {
-        SubjectsDialog(subjects, onAdd = onAddSubject, onRemove = onRemoveSubject, onDismiss = { managing = false })
+        SubjectsDialog(subjects, onAdd = onAddSubject, onAddSet = onAddSubjectSet, onRemove = onRemoveSubject, onDismiss = { managing = false })
     }
 }
 
@@ -551,7 +557,19 @@ private fun soundName(sound: FocusSound): Int = when (sound) {
 
 /** Add a subject, or remove one. Kept in a dialog so the Focus tab stays clean. */
 @Composable
-private fun SubjectsDialog(subjects: List<String>, onAdd: (String) -> Unit, onRemove: (String) -> Unit, onDismiss: () -> Unit) {
+private fun SubjectsDialog(
+    subjects: List<String>,
+    onAdd: (String) -> Unit,
+    onAddSet: (List<String>) -> Unit,
+    onRemove: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sets = listOf(
+        stringResource(R.string.subject_set_gate_ece) to stringArrayResource(R.array.subjects_gate_ece).toList(),
+        stringResource(R.string.subject_set_jee) to stringArrayResource(R.array.subjects_jee).toList(),
+        stringResource(R.string.subject_set_neet) to stringArrayResource(R.array.subjects_neet).toList(),
+        stringResource(R.string.subject_set_upsc) to stringArrayResource(R.array.subjects_upsc).toList(),
+    )
     var name by rememberSaveable { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -573,6 +591,29 @@ private fun SubjectsDialog(subjects: List<String>, onAdd: (String) -> Unit, onRe
                     placeholder = { Text(stringResource(R.string.subject_hint)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
+                if (subjects.isEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(stringResource(R.string.subject_quick_add), style = MaterialTheme.typography.labelMedium, color = FocunoTheme.colors.textTertiary)
+                    Spacer(Modifier.height(4.dp))
+                    sets.chunked(2).forEach { row ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { (label, names) ->
+                                Text(
+                                    label,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = FocunoTheme.colors.textPrimary,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(50))
+                                        .background(FocunoTheme.colors.trackInactive)
+                                        .clickable { onAddSet(names) }
+                                        .padding(vertical = 10.dp),
+                                )
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {

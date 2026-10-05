@@ -193,6 +193,8 @@
     <string name="onb_purpose_point2">Everything stays on this phone</string>
     <string name="onb_purpose_point3">Setup takes about 2 minutes</string>
     <string name="onb_purpose_cta">Let\'s start</string>
+    <string name="onb_exam_title">What are you preparing for?</string>
+    <string name="onb_exam_body">Add your exam and its date, and Focuno will count down the days.</string>
     <string name="onb_usage_title">Count screen time</string>
     <string name="onb_usage_body">Turn on Usage access for Focuno. It only sees app names and times.</string>
     <string name="onb_accessibility_title">Faster blocking (optional)</string>
@@ -409,6 +411,43 @@
     <string name="subject_add_button">Add</string>
     <string name="subject_none">No subject</string>
     <string name="insights_study_time">Study time</string>
+    <string name="subject_quick_add">Or add a whole set</string>
+    <string name="subject_set_gate_ece">GATE ECE</string>
+    <string name="subject_set_jee">JEE</string>
+    <string name="subject_set_neet">NEET</string>
+    <string name="subject_set_upsc">UPSC</string>
+    <string-array name="subjects_gate_ece">
+        <item>Maths</item>
+        <item>Networks</item>
+        <item>Signals and Systems</item>
+        <item>Electronic Devices</item>
+        <item>Analog Circuits</item>
+        <item>Digital Circuits</item>
+        <item>Control Systems</item>
+        <item>Communications</item>
+        <item>Electromagnetics</item>
+        <item>Aptitude</item>
+    </string-array>
+    <string-array name="subjects_jee">
+        <item>Physics</item>
+        <item>Chemistry</item>
+        <item>Maths</item>
+    </string-array>
+    <string-array name="subjects_neet">
+        <item>Physics</item>
+        <item>Chemistry</item>
+        <item>Botany</item>
+        <item>Zoology</item>
+    </string-array>
+    <string-array name="subjects_upsc">
+        <item>GS 1</item>
+        <item>GS 2</item>
+        <item>GS 3</item>
+        <item>GS 4</item>
+        <item>CSAT</item>
+        <item>Optional</item>
+        <item>Essay</item>
+    </string-array>
     <string name="insights_recent_sessions">Recent sessions</string>
     <string name="session_finished">Finished</string>
     <string name="session_unfinished">Ended early or running</string>

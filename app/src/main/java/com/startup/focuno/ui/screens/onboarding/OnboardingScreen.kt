@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
 import com.startup.focuno.data.repository.ProtectionIssue
 import com.startup.focuno.ui.components.AppIcon
+import com.startup.focuno.ui.components.ExamEditor
 import com.startup.focuno.ui.components.Panel
 import com.startup.focuno.ui.components.LoadingState
 import com.startup.focuno.ui.components.OemAutostartCard
@@ -114,6 +115,18 @@ private fun StepContent(
             Bullet(stringResource(R.string.onb_purpose_point1))
             Bullet(stringResource(R.string.onb_purpose_point2))
             Bullet(stringResource(R.string.onb_purpose_point3))
+        }
+
+        OnboardingStep.EXAM -> StepFrame(
+            title = stringResource(R.string.onb_exam_title),
+            body = stringResource(R.string.onb_exam_body),
+            primaryLabel = stringResource(R.string.action_continue),
+            onPrimary = vm::next,
+            secondaryLabel = stringResource(R.string.onb_skip),
+            onSecondary = vm::next,
+            onBack = vm::back,
+        ) {
+            ExamEditor(state.examName, state.examDate, vm::saveExam)
         }
 
         OnboardingStep.USAGE_ACCESS -> PermissionStep(

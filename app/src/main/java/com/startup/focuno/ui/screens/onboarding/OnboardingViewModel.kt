@@ -12,6 +12,7 @@ import com.startup.focuno.data.repository.ProtectionStatus
 import com.startup.focuno.data.repository.ScheduleRepository
 import com.startup.focuno.domain.model.AppCategory
 import com.startup.focuno.domain.model.BlockSchedule
+import com.startup.focuno.domain.usecase.ExamCountdown
 import com.startup.focuno.service.accessibility.FocunoAccessibilityService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -22,10 +23,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import javax.inject.Inject
 
 /** The two permissions blocking needs come first; Accessibility is optional, so it follows them. */
-enum class OnboardingStep { PURPOSE, USAGE_ACCESS, OVERLAY, ACCESSIBILITY, STAY_ALIVE, AUTOSTART, PICK_APPS, FIRST_SCHEDULE }
+enum class OnboardingStep { PURPOSE, EXAM, USAGE_ACCESS, OVERLAY, ACCESSIBILITY, STAY_ALIVE, AUTOSTART, PICK_APPS, FIRST_SCHEDULE }
 
 enum class SchedulePreset(val startMinute: Int, val endMinute: Int) {
     NIGHT(22 * 60, 6 * 60),
@@ -45,6 +47,8 @@ data class OnboardingUiState(
     val selected: Set<String> = emptySet(),
     val preset: SchedulePreset = SchedulePreset.NIGHT,
     val isFinishing: Boolean = false,
+    val examName: String = "",
+    val examDate: LocalDate? = null,
 ) {
     val stepNumber: Int get() = step.ordinal + 1
     val stepCount: Int get() = OnboardingStep.entries.size
@@ -70,9 +74,11 @@ class OnboardingViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             // Resume where the person left off if the app was closed or killed mid-setup.
-            val saved = settingsStore.settings.first().onboardingStep
-            val step = OnboardingStep.entries.getOrElse(saved) { OnboardingStep.PURPOSE }
-            _state.update { it.copy(isLoading = false, step = step) }
+            val settings = settingsStore.settings.first()
+            val step = OnboardingStep.entries.getOrElse(settings.onboardingStep) { OnboardingStep.PURPOSE }
+            _state.update {
+                it.copy(isLoading = false, step = step, examName = settings.examName, examDate = ExamCountdown.parse(settings.examDate))
+            }
             if (step == OnboardingStep.PICK_APPS || step == OnboardingStep.FIRST_SCHEDULE) loadApps()
             refreshStatus()
         }
@@ -89,6 +95,11 @@ class OnboardingViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    fun saveExam(name: String, date: LocalDate?) {
+        _state.update { it.copy(examName = name.trim(), examDate = date) }
+        viewModelScope.launch { settingsStore.setExam(name.trim().take(MAX_EXAM_NAME), date?.toString()) }
     }
 
     fun next() {
@@ -176,5 +187,9 @@ class OnboardingViewModel @Inject constructor(
             settingsStore.setWhatsNewSeen(AppSettings.WHATS_NEW_VERSION)
             settingsStore.setOnboardingCompleted(true)
         }
+    }
+
+    private companion object {
+        const val MAX_EXAM_NAME = 30
     }
 }
