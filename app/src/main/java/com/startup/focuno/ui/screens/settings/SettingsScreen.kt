@@ -1,5 +1,8 @@
 package com.startup.focuno.ui.screens.settings
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.PrivacyTip
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Timer
@@ -22,12 +26,15 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -39,6 +46,7 @@ import com.startup.focuno.ui.components.Panel
 import com.startup.focuno.ui.components.SectionTitle
 import com.startup.focuno.ui.components.SubScreenTopBar
 import com.startup.focuno.ui.theme.FocunoTheme
+import java.time.LocalDate
 
 @Composable
 fun SettingsScreen(
@@ -50,6 +58,16 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.state.collectAsStateWithLifecycle()
+    val exportResult by viewModel.exportResult.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(exportResult) {
+        val result = exportResult ?: return@LaunchedEffect
+        Toast.makeText(context, if (result) R.string.export_done else R.string.export_failed, Toast.LENGTH_SHORT).show()
+        viewModel.clearExportResult()
+    }
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+        if (uri != null) viewModel.export(uri)
+    }
     SettingsContent(
         settings = settings,
         onBack = onBack,
@@ -59,6 +77,7 @@ fun SettingsScreen(
         onGoalChanged = viewModel::setDailyGoalMinutes,
         onNudgesEnabled = viewModel::setNudgesEnabled,
         onSensitivity = viewModel::setNudgeSensitivity,
+        onExport = { exportLauncher.launch("focuno-${LocalDate.now()}.csv") },
         modifier = modifier,
     )
 }
@@ -73,6 +92,7 @@ fun SettingsContent(
     onGoalChanged: (Int) -> Unit,
     onNudgesEnabled: (Boolean) -> Unit,
     onSensitivity: (NudgeSensitivity) -> Unit,
+    onExport: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxSize()) {
@@ -86,6 +106,7 @@ fun SettingsContent(
             LinkCard(Icons.Rounded.Shield, stringResource(R.string.health_title), stringResource(R.string.settings_health_subtitle), onOpenHealth)
             LinkCard(Icons.Rounded.Timer, stringResource(R.string.usage_check_title), stringResource(R.string.settings_usage_check_subtitle), onOpenUsageCheck)
             LinkCard(Icons.Rounded.PrivacyTip, stringResource(R.string.privacy_title), stringResource(R.string.settings_privacy_subtitle), onOpenPrivacy)
+            LinkCard(Icons.Rounded.Download, stringResource(R.string.export_title), stringResource(R.string.export_subtitle), onExport)
             Spacer(Modifier.height(8.dp))
         }
     }
@@ -154,7 +175,7 @@ private fun NudgeCard(settings: AppSettings, onEnabled: (Boolean) -> Unit, onSen
 
 @Composable
 private fun LinkCard(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
-    Panel(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+    Panel(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).clickable(onClick = onClick)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
             Column {

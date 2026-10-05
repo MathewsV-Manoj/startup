@@ -119,16 +119,16 @@
     <!-- Settings and privacy -->
     <string name="settings_title">Settings</string>
     <string name="settings_goal_title">Daily screen-time goal</string>
-    <string name="settings_goal_explainer">The most total screen time you would like in a day. Days within it grow your streak.</string>
+    <string name="settings_goal_explainer">Days under it grow your streak.</string>
     <string name="settings_goal_value">%1$dh %2$02dm</string>
     <string name="settings_nudges_title">Nudges</string>
-    <string name="settings_nudges_explainer">Short, friendly messages. At most one every 20 minutes and six a day.</string>
+    <string name="settings_nudges_explainer">Gentle reminders, at most one every 20 minutes.</string>
     <string name="settings_sensitivity">How often</string>
     <string name="sensitivity_low">Low</string>
     <string name="sensitivity_medium">Medium</string>
     <string name="sensitivity_high">High</string>
-    <string name="settings_health_subtitle">See whether every permission is working</string>
-    <string name="settings_privacy_subtitle">What Focuno reads, and what it never does</string>
+    <string name="settings_health_subtitle">Check that blocking works</string>
+    <string name="settings_privacy_subtitle">What Focuno reads, and never does</string>
     <string name="privacy_title">Privacy</string>
     <string name="privacy_paragraph">Focuno works entirely on your phone. It has no accounts, no analytics and no internet permission, so nothing about you can leave this device. Your usage history lives in a private database on this phone and is deleted when you uninstall.</string>
     <string name="privacy_reads_title">What it reads</string>
@@ -247,7 +247,7 @@
 
     <!-- Screen time check -->
     <string name="usage_check_title">Screen time check</string>
-    <string name="settings_usage_check_subtitle">Compare Focuno with Android Settings, app by app</string>
+    <string name="settings_usage_check_subtitle">Compare with Android Settings</string>
     <string name="usage_check_counted_total">Counted today</string>
     <string name="usage_check_updated">Updated %1$s</string>
     <string name="usage_check_refresh">Refresh now</string>
@@ -476,4 +476,10 @@
         <item quantity="one">%1$d minute of time-eater time left today</item>
         <item quantity="other">%1$d minutes of time-eater time left today</item>
     </plurals>
+
+    <!-- Export -->
+    <string name="export_title">Export my data</string>
+    <string name="export_subtitle">Save your history as a CSV file</string>
+    <string name="export_done">Saved</string>
+    <string name="export_failed">Could not save the file</string>
 </resources>
