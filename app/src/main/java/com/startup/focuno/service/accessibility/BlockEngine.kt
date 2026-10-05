@@ -3,6 +3,7 @@ package com.startup.focuno.service.accessibility
 import android.content.Context
 import android.os.PowerManager
 import android.os.SystemClock
+import android.telecom.TelecomManager
 import android.view.inputmethod.InputMethodManager
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,6 +26,7 @@ import com.startup.focuno.domain.model.BypassOutcome
 import com.startup.focuno.domain.model.ShortVideoApps
 import com.startup.focuno.domain.usecase.BypassPolicy
 import com.startup.focuno.domain.usecase.DailyLimitPolicy
+import com.startup.focuno.domain.usecase.FocusPauseRule
 import com.startup.focuno.domain.usecase.ScheduleEvaluator
 import com.startup.focuno.ui.screens.overlay.BlockOverlayHost
 import com.startup.focuno.ui.screens.overlay.NudgeToast
@@ -108,6 +110,7 @@ class BlockEngine @Inject constructor(
 
     private var ignoredPackages: Set<String> = emptySet()
     private var neverBlockPackages: Set<String> = emptySet()
+    private var essentialPackages: Set<String> = emptySet()
 
     private var currentPackage: String? = null
     private var inShortVideo = false
@@ -264,6 +267,12 @@ class BlockEngine @Inject constructor(
             .enabledInputMethodList.map { it.packageName }
         ignoredPackages = setOf("com.android.systemui", "android") + imePackages
         neverBlockPackages = ignoredPackages + context.packageName + context.packageManager.homePackages()
+        val dialer = try {
+            context.getSystemService(TelecomManager::class.java)?.defaultDialerPackage
+        } catch (_: SecurityException) {
+            null
+        }
+        essentialPackages = ESSENTIAL_PACKAGES + setOfNotNull(dialer)
     }
 
     private fun updateContentEvents() {
@@ -423,7 +432,8 @@ class BlockEngine @Inject constructor(
         val appWindow = ScheduleEvaluator.activeWindow(schedules, pkg, zoned, BlockScope.APP)
         val dayStart = zoned.toLocalDate().atStartOfDay(zoned.zone).toInstant().toEpochMilli()
         // During a Pomodoro break apps are free; the pause screen counts down to the end of the round.
-        val focusPhase = settings.focusPlan?.phaseAt(nowMs)
+        val focusEndsAt = settings.focusPlan?.phaseAt(nowMs)?.takeIf { it.focusing }?.endsAtMs
+        val pausedByFocus = FocusPauseRule.pauses(pkg, isDistracting, settings.focusLockAll, settings.focusAllowed, essentialPackages)
         val usedLimit = limits[pkg]?.takeIf { limit ->
             val used = usedTodayMs(pkg, nowMs, dayStart)
             used != null && DailyLimitPolicy.isReached(limit, used)
@@ -434,8 +444,8 @@ class BlockEngine @Inject constructor(
         }
         val base = when {
             appWindow != null -> buildModel(pkg, BlockKind.SCHEDULE, BlockScope.APP, appWindow.startMinuteOfDay, appWindow.endMinuteOfDay, appWindow.endsAtMs, appWindow.strict, "")
-            focusPhase != null && focusPhase.focusing && isDistracting ->
-                buildModel(pkg, BlockKind.QUICK_BLOCK, BlockScope.APP, 0, 0, focusPhase.endsAtMs, settings.quickBlockStrict, settings.quickBlockLabel)
+            focusEndsAt != null && pausedByFocus ->
+                buildModel(pkg, BlockKind.QUICK_BLOCK, BlockScope.APP, 0, 0, focusEndsAt, settings.quickBlockStrict, settings.quickBlockLabel)
             usedLimit != null ->
                 buildModel(pkg, BlockKind.DAILY_LIMIT, BlockScope.APP, 0, 0, DailyLimitPolicy.nextMidnightMs(zoned), usedLimit.strict, "")
                     .copy(limitMinutes = usedLimit.dailyMinutes)
@@ -581,6 +591,24 @@ class BlockEngine @Inject constructor(
     private data class MeasuredUse(val usedMs: Long, val atMs: Long)
 
     private companion object {
+        /**
+         * Never paused by Lock mode, so calls (including emergency calls), Settings and permission or install
+         * screens always work. The default phone app is added at runtime.
+         */
+        val ESSENTIAL_PACKAGES = setOf(
+            "com.android.settings",
+            "com.android.phone",
+            "com.android.server.telecom",
+            "com.android.emergency",
+            "com.android.dialer",
+            "com.google.android.dialer",
+            "com.samsung.android.dialer",
+            "com.samsung.android.incallui",
+            "com.android.permissioncontroller",
+            "com.google.android.permissioncontroller",
+            "com.android.packageinstaller",
+            "com.google.android.packageinstaller",
+        )
         const val LIMIT_REMEASURE_MS = 60_000L
         const val TICK_MS = 2_000L
         const val NUDGE_EVERY_TICKS = 5

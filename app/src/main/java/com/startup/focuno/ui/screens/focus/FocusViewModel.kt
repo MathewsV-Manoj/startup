@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.startup.focuno.data.local.SettingsStore
 import com.startup.focuno.data.repository.FocusSessionRepository
+import com.startup.focuno.data.repository.InstalledApp
 import com.startup.focuno.data.repository.InstalledAppsRepository
 import com.startup.focuno.data.repository.ProtectionRepository
 import com.startup.focuno.data.repository.ProtectionStatus
@@ -55,6 +56,11 @@ data class FocusUiState(
     val sessionSubject: String = "",
     val subjects: List<String> = emptyList(),
     val focusSound: FocusSound = FocusSound.OFF,
+    /** Lock mode: pause all apps except [allowedApps] during focus, instead of only time-eaters. */
+    val lockAll: Boolean = false,
+    val allowedApps: Set<String> = emptySet(),
+    /** Apps to choose from in the allow list; loaded only when that dialog opens. */
+    val installedApps: List<InstalledApp> = emptyList(),
     val updatedAtMs: Long = 0L,
 )
 
@@ -128,6 +134,9 @@ class FocusViewModel @Inject constructor(
                 sessionSubject = session?.subject.orEmpty(),
                 subjects = settings.subjects,
                 focusSound = settings.focusSound,
+                lockAll = settings.focusLockAll,
+                allowedApps = settings.focusAllowed,
+                installedApps = _state.value.installedApps,
                 updatedAtMs = System.currentTimeMillis(),
             )
         } catch (e: CancellationException) {
@@ -164,6 +173,28 @@ class FocusViewModel @Inject constructor(
             val endsAt = settingsStore.settings.first().focusPlan?.takeIf { it.isRunning(now) }?.endMs
             soundPlayer.play(sound, untilMs = endsAt ?: (now + PREVIEW_MS))
             refresh()
+        }
+    }
+
+    // These two update the screen at once and save in the background, so ticking boxes feels instant
+    // and never waits for a full refresh of today's numbers.
+    fun setLockAll(enabled: Boolean) {
+        _state.update { it.copy(lockAll = enabled) }
+        viewModelScope.launch { settingsStore.setFocusLockAll(enabled) }
+    }
+
+    fun toggleAllowed(packageName: String) {
+        val current = _state.value.allowedApps
+        val updated = if (packageName in current) current - packageName else current + packageName
+        _state.update { it.copy(allowedApps = updated) }
+        viewModelScope.launch { settingsStore.setFocusAllowed(updated) }
+    }
+
+    fun loadInstalledApps() {
+        if (_state.value.installedApps.isNotEmpty()) return
+        viewModelScope.launch {
+            val apps = installedApps.installedApps()
+            _state.update { it.copy(installedApps = apps) }
         }
     }
 

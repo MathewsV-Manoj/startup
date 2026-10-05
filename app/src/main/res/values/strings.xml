@@ -482,4 +482,16 @@
     <string name="export_subtitle">Save your history as a CSV file</string>
     <string name="export_done">Saved</string>
     <string name="export_failed">Could not save the file</string>
+
+    <!-- Lock mode -->
+    <string name="pause_time_eaters">Pauses time-eater apps</string>
+    <string name="pause_all">Pauses all apps (Lock mode)</string>
+    <plurals name="pause_allowed_count">
+        <item quantity="one">%1$d app allowed</item>
+        <item quantity="other">%1$d apps allowed</item>
+    </plurals>
+    <string name="pause_dialog_title">What should focus pause?</string>
+    <string name="pause_option_eaters">Time-eaters</string>
+    <string name="pause_option_all">All apps</string>
+    <string name="pause_all_note">Phone, Settings and your keyboard always work. Tick the apps you need for study.</string>
 </resources>

@@ -58,6 +58,8 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         val weeklyReportWeek = stringPreferencesKey("weekly_report_week")
         val budgetMinutes = intPreferencesKey("budget_minutes")
         val budgetStrict = booleanPreferencesKey("budget_strict")
+        val focusLockAll = booleanPreferencesKey("focus_lock_all")
+        val focusAllowed = stringSetPreferencesKey("focus_allowed")
     }
 
     val settings: Flow<AppSettings> = context.focunoDataStore.data
@@ -98,6 +100,8 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
                 weeklyReportWeek = prefs[Keys.weeklyReportWeek],
                 budgetMinutes = prefs[Keys.budgetMinutes] ?: defaults.budgetMinutes,
                 budgetStrict = prefs[Keys.budgetStrict] ?: defaults.budgetStrict,
+                focusLockAll = prefs[Keys.focusLockAll] ?: defaults.focusLockAll,
+                focusAllowed = prefs[Keys.focusAllowed] ?: defaults.focusAllowed,
                 subjects = prefs[Keys.subjects]?.split(SUBJECT_SEPARATOR)?.filter { it.isNotBlank() } ?: defaults.subjects,
             )
         }
@@ -175,6 +179,14 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
             it[Keys.xpBanked] = (it[Keys.xpBanked] ?: 0) + amount
             it[Keys.xpBankedThrough] = throughDay
         }
+    }
+
+    suspend fun setFocusLockAll(enabled: Boolean) {
+        context.focunoDataStore.edit { it[Keys.focusLockAll] = enabled }
+    }
+
+    suspend fun setFocusAllowed(packages: Set<String>) {
+        context.focunoDataStore.edit { it[Keys.focusAllowed] = packages }
     }
 
     suspend fun setTimeEaterBudget(minutes: Int, strict: Boolean) {

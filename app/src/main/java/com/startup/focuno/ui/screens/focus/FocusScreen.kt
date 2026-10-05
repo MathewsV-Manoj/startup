@@ -3,20 +3,25 @@ package com.startup.focuno.ui.screens.focus
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Block
+import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.LocalFireDepartment
@@ -25,6 +30,8 @@ import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,9 +62,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
 import com.startup.focuno.data.repository.FocusSessionRepository
+import com.startup.focuno.data.repository.InstalledApp
 import com.startup.focuno.domain.model.FocusMode
 import com.startup.focuno.domain.model.FocusPlan
 import com.startup.focuno.domain.model.FocusSound
+import com.startup.focuno.ui.components.AppIcon
 import com.startup.focuno.ui.components.ProtectionBanner
 import com.startup.focuno.ui.components.RefreshWhileResumed
 import com.startup.focuno.ui.components.Segmented
@@ -93,6 +102,9 @@ fun HomeScreen(
         onSetSound = focusViewModel::setFocusSound,
         modifier = modifier,
         onPlanOver = focusViewModel::refresh,
+        onSetLockAll = focusViewModel::setLockAll,
+        onToggleAllowed = focusViewModel::toggleAllowed,
+        onLoadApps = focusViewModel::loadInstalledApps,
     )
 }
 
@@ -108,7 +120,22 @@ fun HomeContent(
     onSetSound: (FocusSound) -> Unit,
     modifier: Modifier = Modifier,
     onPlanOver: () -> Unit = {},
+    onSetLockAll: (Boolean) -> Unit = {},
+    onToggleAllowed: (String) -> Unit = {},
+    onLoadApps: () -> Unit = {},
 ) {
+    var choosingTarget by rememberSaveable { mutableStateOf(false) }
+    if (choosingTarget) {
+        LaunchedEffect(Unit) { onLoadApps() }
+        PauseTargetDialog(
+            lockAll = focus.lockAll,
+            allowed = focus.allowedApps,
+            apps = focus.installedApps,
+            onSetLockAll = onSetLockAll,
+            onToggleAllowed = onToggleAllowed,
+            onDismiss = { choosingTarget = false },
+        )
+    }
     var choosingSound by rememberSaveable { mutableStateOf(false) }
     if (choosingSound) {
         SoundDialog(current = focus.focusSound, onSelect = onSetSound, onDismiss = { choosingSound = false })
@@ -125,7 +152,15 @@ fun HomeContent(
         Spacer(Modifier.height(28.dp))
         val plan = focus.plan
         if (plan == null) {
-            IdleTimer(focus.subjects, onStartSession, onAddSubject, onRemoveSubject)
+            IdleTimer(
+                subjects = focus.subjects,
+                lockAll = focus.lockAll,
+                allowedCount = focus.allowedApps.size,
+                onStart = onStartSession,
+                onAddSubject = onAddSubject,
+                onRemoveSubject = onRemoveSubject,
+                onChooseTarget = { choosingTarget = true },
+            )
         } else {
             RunningTimer(
                 plan = plan,
@@ -190,9 +225,12 @@ private fun Pill(icon: ImageVector, text: String, tint: Color, description: Stri
 @Composable
 private fun IdleTimer(
     subjects: List<String>,
+    lockAll: Boolean,
+    allowedCount: Int,
     onStart: (mode: FocusMode, amount: Int, strict: Boolean, subject: String) -> Unit,
     onAddSubject: (String) -> Unit,
     onRemoveSubject: (String) -> Unit,
+    onChooseTarget: () -> Unit,
 ) {
     var modeIndex by rememberSaveable { mutableIntStateOf(0) }
     var minutes by rememberSaveable { mutableIntStateOf(25) }
@@ -274,7 +312,9 @@ private fun IdleTimer(
     }
     Spacer(Modifier.height(16.dp))
     SubjectRow(subjects, chosen, onSelect = { subject = if (it == chosen) "" else it }, onManage = { managing = true })
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(12.dp))
+    PauseTargetRow(lockAll, allowedCount, onClick = onChooseTarget)
+    Spacer(Modifier.height(12.dp))
     if (canBeStrict) {
         StrictSwitch(strict = strict, onChange = { strict = it })
         Spacer(Modifier.height(20.dp))
@@ -305,6 +345,87 @@ private fun IdleTimer(
     if (managing) {
         SubjectsDialog(subjects, onAdd = onAddSubject, onRemove = onRemoveSubject, onDismiss = { managing = false })
     }
+}
+
+/** What a focus timer pauses: time-eaters only, or (Lock mode) every app but the allowed ones. */
+@Composable
+private fun PauseTargetRow(lockAll: Boolean, allowedCount: Int, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(FocunoTheme.colors.surfaceElevated)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(Icons.Rounded.Block, contentDescription = null, tint = FocunoTheme.colors.distracting)
+        Column(Modifier.weight(1f)) {
+            Text(
+                stringResource(if (lockAll) R.string.pause_all else R.string.pause_time_eaters),
+                style = MaterialTheme.typography.titleMedium,
+                color = FocunoTheme.colors.textPrimary,
+            )
+            if (lockAll) {
+                Text(
+                    pluralStringResource(R.plurals.pause_allowed_count, allowedCount, allowedCount),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = FocunoTheme.colors.textSecondary,
+                )
+            }
+        }
+        Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = FocunoTheme.colors.textTertiary)
+    }
+}
+
+@Composable
+private fun PauseTargetDialog(
+    lockAll: Boolean,
+    allowed: Set<String>,
+    apps: List<InstalledApp>,
+    onSetLockAll: (Boolean) -> Unit,
+    onToggleAllowed: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.pause_dialog_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Segmented(
+                    options = listOf(stringResource(R.string.pause_option_eaters), stringResource(R.string.pause_option_all)),
+                    selected = if (lockAll) 1 else 0,
+                    onSelect = { onSetLockAll(it == 1) },
+                )
+                if (lockAll) {
+                    Text(stringResource(R.string.pause_all_note), style = MaterialTheme.typography.bodySmall, color = FocunoTheme.colors.textSecondary)
+                    if (apps.isEmpty()) {
+                        Box(Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                    } else {
+                        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 320.dp)) {
+                            items(apps, key = { it.packageName }) { app ->
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable { onToggleAllowed(app.packageName) }
+                                        .padding(vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    AppIcon(app.packageName, size = 32.dp)
+                                    Text(app.label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f), maxLines = 1)
+                                    Checkbox(checked = app.packageName in allowed, onCheckedChange = { onToggleAllowed(app.packageName) })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_done)) } },
+    )
 }
 
 /** "12:34", or "1:02:03" once past an hour. */
