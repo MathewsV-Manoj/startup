@@ -313,6 +313,12 @@
     <string name="badge_rising_star_hint">Reach level 5</string>
     <string name="badge_legend">Legend</string>
     <string name="badge_legend_hint">Reach level 10</string>
+    <string name="badge_deep_work">Deep Work</string>
+    <string name="badge_deep_work_hint">Focus for 2 hours in one day</string>
+    <string name="badge_goal_getter">Goal Getter</string>
+    <string name="badge_goal_getter_hint">Reach your daily study goal</string>
+    <string name="badge_focus_master">Focus Master</string>
+    <string name="badge_focus_master_hint">Finish 50 focus times</string>
 
     <!-- Celebrations -->
     <string name="celebrate_level_title">Level %1$d!</string>

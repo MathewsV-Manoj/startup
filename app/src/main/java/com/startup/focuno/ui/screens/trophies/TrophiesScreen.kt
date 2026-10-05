@@ -29,7 +29,10 @@ import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.SelfImprovement
+import androidx.compose.material.icons.rounded.TaskAlt
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material.icons.rounded.WorkspacePremium
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -303,13 +306,17 @@ private fun badgeIcon(id: BadgeId): ImageVector = when (id) {
     BadgeId.SHIELD_UP -> Icons.Rounded.Shield
     BadgeId.RISING_STAR -> Icons.Rounded.Star
     BadgeId.LEGEND -> Icons.Rounded.EmojiEvents
+    BadgeId.DEEP_WORK -> Icons.Rounded.SelfImprovement
+    BadgeId.GOAL_GETTER -> Icons.Rounded.TaskAlt
+    BadgeId.FOCUS_MASTER -> Icons.Rounded.WorkspacePremium
 }
 
 @Composable
 private fun badgeColor(id: BadgeId) = when (id) {
     BadgeId.STREAK_3, BadgeId.STREAK_7, BadgeId.STREAK_30 -> FocunoTheme.colors.warning
     BadgeId.URGE_FIGHTER, BadgeId.URGE_MASTER -> FocunoTheme.colors.distracting
-    BadgeId.FOCUS_STARTER, BadgeId.FOCUS_PRO, BadgeId.SHIELD_UP -> FocunoTheme.colors.productive
+    BadgeId.FOCUS_STARTER, BadgeId.FOCUS_PRO, BadgeId.SHIELD_UP, BadgeId.DEEP_WORK, BadgeId.GOAL_GETTER -> FocunoTheme.colors.productive
+    BadgeId.FOCUS_MASTER -> FocunoTheme.colors.warning
     BadgeId.FIRST_STEPS, BadgeId.RISING_STAR, BadgeId.LEGEND -> MaterialTheme.colorScheme.secondary
 }
 
@@ -325,6 +332,9 @@ fun badgeName(id: BadgeId): Int = when (id) {
     BadgeId.SHIELD_UP -> R.string.badge_shield_up
     BadgeId.RISING_STAR -> R.string.badge_rising_star
     BadgeId.LEGEND -> R.string.badge_legend
+    BadgeId.DEEP_WORK -> R.string.badge_deep_work
+    BadgeId.GOAL_GETTER -> R.string.badge_goal_getter
+    BadgeId.FOCUS_MASTER -> R.string.badge_focus_master
 }
 
 fun badgeHint(id: BadgeId): Int = when (id) {
@@ -339,4 +349,7 @@ fun badgeHint(id: BadgeId): Int = when (id) {
     BadgeId.SHIELD_UP -> R.string.badge_shield_up_hint
     BadgeId.RISING_STAR -> R.string.badge_rising_star_hint
     BadgeId.LEGEND -> R.string.badge_legend_hint
+    BadgeId.DEEP_WORK -> R.string.badge_deep_work_hint
+    BadgeId.GOAL_GETTER -> R.string.badge_goal_getter_hint
+    BadgeId.FOCUS_MASTER -> R.string.badge_focus_master_hint
 }

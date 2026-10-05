@@ -96,7 +96,17 @@ class GameViewModel @Inject constructor(
         val actionXp = GameRules.actionXp(sessionsToday, urgesToday)
         val totalXp = settings.xpBanked + actionXp
         val level = GameRules.levelFor(totalXp)
-        val earned = Badges.earned(GameStats(level.level, settings.streakCount, sessionsTotal, urgesTotal, hitsTotal))
+        val earned = Badges.earned(
+            GameStats(
+                level = level.level,
+                streak = settings.streakCount,
+                sessionsTotal = sessionsTotal,
+                urgesTotal = urgesTotal,
+                blockHitsTotal = hitsTotal,
+                bestDayFocusMs = focusByDay.values.maxOrNull() ?: 0L,
+                studyGoalMs = settings.studyGoalMinutes * 60_000L,
+            ),
+        )
         val unlocked = settings.badgesUnlocked
         val newBadges = BadgeId.entries.filter { it in earned && it.name !in unlocked }
 

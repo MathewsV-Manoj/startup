@@ -30,7 +30,8 @@ Every push to this branch rebuilds the APK at the same link. A new build install
 - The pause screen offers "Go back" or "Focus 25 min instead". Unlocking a non-strict block takes a 15-second breathing pause and a written reason, gives 5 minutes, and then has a 30-minute cooldown.
 
 **Stats**
-- Today's screen time, split into helpful, okay and time-eater apps, plus every app with its time.
+- Today's screen time, split into helpful, okay and time-eater apps, with the change against yesterday.
+- Every app with its time. Tap one for its last seven days, to change its category, or to limit it.
 - Trends over 7 or 30 days: study time per subject, focus score, time-eater minutes, your worst hour, and urges resisted.
 - A weekly report every Monday morning.
 - Export everything as a CSV file.

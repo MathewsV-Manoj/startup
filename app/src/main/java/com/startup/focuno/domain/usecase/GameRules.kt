@@ -80,5 +80,11 @@ object Badges {
         if (stats.blockHitsTotal >= 1) add(BadgeId.SHIELD_UP)
         if (stats.level >= 5) add(BadgeId.RISING_STAR)
         if (stats.level >= 10) add(BadgeId.LEGEND)
+        if (stats.bestDayFocusMs >= DEEP_WORK_MS) add(BadgeId.DEEP_WORK)
+        if (stats.studyGoalMs > 0 && stats.bestDayFocusMs >= stats.studyGoalMs) add(BadgeId.GOAL_GETTER)
+        if (stats.sessionsTotal >= 50) add(BadgeId.FOCUS_MASTER)
     }
+
+    /** Two hours of focus in one day. */
+    const val DEEP_WORK_MS = 2 * 60 * 60_000L
 }

@@ -12,6 +12,9 @@ enum class BadgeId {
     SHIELD_UP,
     RISING_STAR,
     LEGEND,
+    DEEP_WORK,
+    GOAL_GETTER,
+    FOCUS_MASTER,
 }
 
 enum class QuestKind { FOCUS_SESSION, STAY_UNDER_GOAL, RESIST_URGE }
@@ -46,4 +49,8 @@ data class GameStats(
     val sessionsTotal: Int,
     val urgesTotal: Int,
     val blockHitsTotal: Int,
+    /** Most focus time in any one day of the last weeks. */
+    val bestDayFocusMs: Long = 0L,
+    /** The daily study goal; 0 when none is set. */
+    val studyGoalMs: Long = 0L,
 )

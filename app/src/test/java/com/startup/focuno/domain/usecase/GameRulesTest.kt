@@ -91,4 +91,15 @@ class GameRulesTest {
         assertFalse(strong.contains(BadgeId.STREAK_30))
         assertFalse(strong.contains(BadgeId.LEGEND))
     }
+
+    @Test
+    fun focusBadgesComeFromTheBestDayAndTheTotal() {
+        val hour = 3_600_000L
+        val base = GameStats(level = 1, streak = 0, sessionsTotal = 0, urgesTotal = 0, blockHitsTotal = 0)
+        assertFalse(BadgeId.DEEP_WORK in Badges.earned(base.copy(bestDayFocusMs = 2 * hour - 1)))
+        assertTrue(BadgeId.DEEP_WORK in Badges.earned(base.copy(bestDayFocusMs = 2 * hour)))
+        assertTrue(BadgeId.GOAL_GETTER in Badges.earned(base.copy(bestDayFocusMs = hour, studyGoalMs = hour)))
+        assertFalse(BadgeId.GOAL_GETTER in Badges.earned(base.copy(bestDayFocusMs = 0, studyGoalMs = 0)))
+        assertTrue(BadgeId.FOCUS_MASTER in Badges.earned(base.copy(sessionsTotal = 50)))
+    }
 }
