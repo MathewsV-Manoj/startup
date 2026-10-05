@@ -31,6 +31,12 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
                 .build(),
         )
         manager.createNotificationChannel(
+            NotificationChannelCompat.Builder(CHANNEL_FOCUS, NotificationManagerCompat.IMPORTANCE_HIGH)
+                .setName(context.getString(R.string.channel_focus_name))
+                .setDescription(context.getString(R.string.channel_focus_description))
+                .build(),
+        )
+        manager.createNotificationChannel(
             NotificationChannelCompat.Builder(CHANNEL_PROTECTION, NotificationManagerCompat.IMPORTANCE_HIGH)
                 .setName(context.getString(R.string.channel_protection_name))
                 .setDescription(context.getString(R.string.channel_protection_description))
@@ -93,6 +99,38 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
         manager.notify(PROTECTION_ID, notification)
     }
 
+    fun notifyBreak(round: Int, rounds: Int, breakMs: Long) {
+        val minutes = ((breakMs + 59_999L) / 60_000L).toInt()
+        notifyFocus(
+            context.resources.getQuantityString(R.plurals.focus_break_title, minutes, minutes),
+            context.getString(R.string.focus_break_text, round, rounds),
+        )
+    }
+
+    fun notifyBackToFocus(round: Int, rounds: Int) {
+        notifyFocus(context.getString(R.string.focus_back_title), context.getString(R.string.focus_back_text, round, rounds))
+    }
+
+    fun notifyFocusDone() {
+        notifyFocus(context.getString(R.string.focus_done_title), context.getString(R.string.focus_done_text))
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun notifyFocus(title: String, text: String) {
+        ensureChannels()
+        if (!manager.areNotificationsEnabled()) return
+        val notification = NotificationCompat.Builder(context, CHANNEL_FOCUS)
+            .setSmallIcon(R.drawable.ic_stat_focuno)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setAutoCancel(true)
+            .setContentIntent(openAppIntent(openHealth = false))
+            .build()
+        manager.notify(FOCUS_ID, notification)
+    }
+
     private fun openAppIntent(openHealth: Boolean): PendingIntent {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -109,7 +147,9 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
     companion object {
         const val CHANNEL_MONITOR = "focuno_monitor"
         const val CHANNEL_PROTECTION = "focuno_protection"
+        const val CHANNEL_FOCUS = "focuno_focus"
         const val MONITOR_ID = 1001
         const val PROTECTION_ID = 1002
+        const val FOCUS_ID = 1003
     }
 }

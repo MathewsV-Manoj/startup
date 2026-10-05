@@ -125,8 +125,12 @@ interface FocusSessionDao {
     @Update
     suspend fun update(row: FocusSessionEntity)
 
-    @Query("SELECT * FROM focus_session WHERE completed = 0 AND endTs > :nowMs ORDER BY startTs DESC LIMIT 1")
+    @Query("SELECT * FROM focus_session WHERE completed = 0 AND startTs <= :nowMs AND endTs > :nowMs ORDER BY startTs DESC LIMIT 1")
     suspend fun active(nowMs: Long): FocusSessionEntity?
+
+    /** Pomodoro rounds that have not started yet. */
+    @Query("DELETE FROM focus_session WHERE completed = 0 AND startTs > :nowMs")
+    suspend fun deleteUpcoming(nowMs: Long)
 
     @Query("UPDATE focus_session SET completed = 1 WHERE completed = 0 AND endTs <= :nowMs AND endTs - startTs >= plannedMs")
     suspend fun finalizeDue(nowMs: Long)

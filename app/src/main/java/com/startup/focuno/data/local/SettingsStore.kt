@@ -12,6 +12,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.startup.focuno.data.model.AppSettings
+import com.startup.focuno.domain.model.FocusMode
+import com.startup.focuno.domain.model.FocusPlan
 import com.startup.focuno.domain.model.FocusSound
 import com.startup.focuno.domain.model.NudgeSensitivity
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -39,6 +41,10 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         val quickBlockUntil = longPreferencesKey("quick_block_until")
         val quickBlockLabel = stringPreferencesKey("quick_block_label")
         val quickBlockStrict = booleanPreferencesKey("quick_block_strict")
+        val quickBlockStart = longPreferencesKey("quick_block_start")
+        val focusMode = stringPreferencesKey("focus_mode")
+        val focusRoundMs = longPreferencesKey("focus_round_ms")
+        val focusBreakMs = longPreferencesKey("focus_break_ms")
         val lastNudgeAt = longPreferencesKey("last_nudge_at")
         val nudgeDay = stringPreferencesKey("nudge_day")
         val nudgeCountToday = intPreferencesKey("nudge_count_today")
@@ -69,6 +75,12 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
                 quickBlockUntilMs = prefs[Keys.quickBlockUntil] ?: defaults.quickBlockUntilMs,
                 quickBlockLabel = prefs[Keys.quickBlockLabel] ?: defaults.quickBlockLabel,
                 quickBlockStrict = prefs[Keys.quickBlockStrict] ?: defaults.quickBlockStrict,
+                quickBlockStartMs = prefs[Keys.quickBlockStart] ?: defaults.quickBlockStartMs,
+                focusMode = prefs[Keys.focusMode]
+                    ?.let { name -> FocusMode.entries.firstOrNull { it.name == name } }
+                    ?: defaults.focusMode,
+                focusRoundMs = prefs[Keys.focusRoundMs] ?: defaults.focusRoundMs,
+                focusBreakMs = prefs[Keys.focusBreakMs] ?: defaults.focusBreakMs,
                 lastNudgeAtMs = prefs[Keys.lastNudgeAt] ?: defaults.lastNudgeAtMs,
                 nudgeDay = prefs[Keys.nudgeDay] ?: defaults.nudgeDay,
                 nudgeCountToday = prefs[Keys.nudgeCountToday] ?: defaults.nudgeCountToday,
@@ -111,15 +123,30 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         }
     }
 
-    suspend fun setQuickBlock(untilMs: Long, label: String, strict: Boolean = false) {
+    /** Saves the focus plan that is starting. The blocker pauses time-eater apps during its focus rounds. */
+    suspend fun setFocusPlan(plan: FocusPlan, label: String, strict: Boolean) {
         context.focunoDataStore.edit {
-            it[Keys.quickBlockUntil] = untilMs
+            it[Keys.quickBlockStart] = plan.startMs
+            it[Keys.quickBlockUntil] = plan.endMs
+            it[Keys.focusMode] = plan.mode.name
+            it[Keys.focusRoundMs] = plan.roundMs
+            it[Keys.focusBreakMs] = plan.breakMs
             it[Keys.quickBlockLabel] = label
             it[Keys.quickBlockStrict] = strict
         }
     }
 
-    suspend fun clearQuickBlock() = setQuickBlock(0L, "", strict = false)
+    suspend fun clearQuickBlock() {
+        context.focunoDataStore.edit {
+            it[Keys.quickBlockStart] = 0L
+            it[Keys.quickBlockUntil] = 0L
+            it[Keys.focusMode] = FocusMode.TIMER.name
+            it[Keys.focusRoundMs] = 0L
+            it[Keys.focusBreakMs] = 0L
+            it[Keys.quickBlockLabel] = ""
+            it[Keys.quickBlockStrict] = false
+        }
+    }
 
     suspend fun recordNudge(nowMs: Long, day: String, countToday: Int) {
         context.focunoDataStore.edit {

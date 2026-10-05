@@ -34,6 +34,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -53,9 +54,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
+import com.startup.focuno.data.repository.FocusSessionRepository
+import com.startup.focuno.domain.model.FocusMode
+import com.startup.focuno.domain.model.FocusPlan
 import com.startup.focuno.domain.model.FocusSound
 import com.startup.focuno.ui.components.ProtectionBanner
 import com.startup.focuno.ui.components.RefreshWhileResumed
+import com.startup.focuno.ui.components.Segmented
 import com.startup.focuno.ui.components.StrictSwitch
 import com.startup.focuno.ui.components.TimerDial
 import com.startup.focuno.ui.components.durationText
@@ -65,6 +70,8 @@ import java.text.DateFormat
 import java.util.Date
 
 private val DURATIONS = listOf(15, 25, 45, 60, 90)
+private val ROUND_CHOICES = listOf(2, 3, 4)
+private const val HOUR_MS = 3_600_000L
 
 @Composable
 fun HomeScreen(
@@ -85,6 +92,7 @@ fun HomeScreen(
         onRemoveSubject = focusViewModel::removeSubject,
         onSetSound = focusViewModel::setFocusSound,
         modifier = modifier,
+        onPlanOver = focusViewModel::refresh,
     )
 }
 
@@ -93,12 +101,13 @@ fun HomeContent(
     focus: FocusUiState,
     onOpenSettings: () -> Unit,
     onOpenHealth: () -> Unit,
-    onStartSession: (minutes: Int, strict: Boolean, subject: String) -> Unit,
+    onStartSession: (mode: FocusMode, amount: Int, strict: Boolean, subject: String) -> Unit,
     onStopSession: () -> Unit,
     onAddSubject: (String) -> Unit,
     onRemoveSubject: (String) -> Unit,
     onSetSound: (FocusSound) -> Unit,
     modifier: Modifier = Modifier,
+    onPlanOver: () -> Unit = {},
 ) {
     var choosingSound by rememberSaveable { mutableStateOf(false) }
     if (choosingSound) {
@@ -114,16 +123,16 @@ fun HomeContent(
         TopRow(focus, onOpenSettings, onOpenHealth, onOpenSound = { choosingSound = true })
         ProtectionBanner(focus.protection, onFix = onOpenHealth)
         Spacer(Modifier.height(28.dp))
-        val endsAt = focus.sessionEndsAtMs
-        if (endsAt == null) {
+        val plan = focus.plan
+        if (plan == null) {
             IdleTimer(focus.subjects, onStartSession, onAddSubject, onRemoveSubject)
         } else {
             RunningTimer(
-                startedAtMs = focus.sessionStartedAtMs ?: endsAt,
-                endsAtMs = endsAt,
+                plan = plan,
                 strict = focus.sessionStrict,
                 subject = focus.sessionSubject,
                 onStop = onStopSession,
+                onPlanOver = onPlanOver,
             )
         }
         Spacer(Modifier.height(24.dp))
@@ -181,37 +190,97 @@ private fun Pill(icon: ImageVector, text: String, tint: Color, description: Stri
 @Composable
 private fun IdleTimer(
     subjects: List<String>,
-    onStart: (minutes: Int, strict: Boolean, subject: String) -> Unit,
+    onStart: (mode: FocusMode, amount: Int, strict: Boolean, subject: String) -> Unit,
     onAddSubject: (String) -> Unit,
     onRemoveSubject: (String) -> Unit,
 ) {
+    var modeIndex by rememberSaveable { mutableIntStateOf(0) }
     var minutes by rememberSaveable { mutableIntStateOf(25) }
+    var rounds by rememberSaveable { mutableIntStateOf(4) }
     var strict by rememberSaveable { mutableStateOf(false) }
     var confirmStrict by rememberSaveable { mutableStateOf(false) }
     var subject by rememberSaveable { mutableStateOf("") }
     var managing by rememberSaveable { mutableStateOf(false) }
+    val mode = FocusMode.entries[modeIndex]
     // A subject removed elsewhere must not stay selected.
     val chosen = subject.takeIf { it in subjects }.orEmpty()
+    val amount = if (mode == FocusMode.POMODORO) rounds else minutes
+    val canBeStrict = mode != FocusMode.STOPWATCH
+    val lockMinutes = when (mode) {
+        FocusMode.POMODORO -> rounds * FocusPlan.POMODORO_FOCUS_MIN + (rounds - 1) * FocusPlan.POMODORO_BREAK_MIN
+        else -> minutes
+    }
 
-    TimerDial(progress = minutes / 90f) {
+    Segmented(
+        options = listOf(stringResource(R.string.mode_timer), stringResource(R.string.mode_pomodoro), stringResource(R.string.mode_stopwatch)),
+        selected = modeIndex,
+        onSelect = { modeIndex = it },
+    )
+    Spacer(Modifier.height(24.dp))
+    TimerDial(
+        progress = when (mode) {
+            FocusMode.TIMER -> minutes / 90f
+            FocusMode.POMODORO -> rounds / 4f
+            FocusMode.STOPWATCH -> 0f
+        },
+    ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(minutes.toString(), style = MaterialTheme.typography.displayLarge, color = FocunoTheme.colors.textPrimary)
-            Text(stringResource(R.string.home_minutes_unit), style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textSecondary)
+            Text(
+                when (mode) {
+                    FocusMode.TIMER -> minutes.toString()
+                    FocusMode.POMODORO -> FocusPlan.POMODORO_FOCUS_MIN.toString()
+                    FocusMode.STOPWATCH -> clockText(0L)
+                },
+                style = if (mode == FocusMode.STOPWATCH) MaterialTheme.typography.displayMedium else MaterialTheme.typography.displayLarge,
+                color = FocunoTheme.colors.textPrimary,
+            )
+            Text(
+                if (mode == FocusMode.STOPWATCH) stringResource(R.string.mode_stopwatch) else stringResource(R.string.home_minutes_unit),
+                style = MaterialTheme.typography.titleMedium,
+                color = FocunoTheme.colors.textSecondary,
+            )
         }
     }
-    Spacer(Modifier.height(28.dp))
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
-        DURATIONS.forEach { option ->
-            DurationPill(option, selected = option == minutes, onClick = { minutes = option })
+    Spacer(Modifier.height(24.dp))
+    when (mode) {
+        FocusMode.TIMER -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
+            DURATIONS.forEach { option ->
+                ChoicePill(option.toString(), stringResource(R.string.cd_minutes, option), selected = option == minutes, onClick = { minutes = option })
+            }
         }
+        FocusMode.POMODORO -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                stringResource(R.string.pomodoro_caption, FocusPlan.POMODORO_FOCUS_MIN, FocusPlan.POMODORO_BREAK_MIN),
+                style = MaterialTheme.typography.bodyMedium,
+                color = FocunoTheme.colors.textSecondary,
+            )
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ROUND_CHOICES.forEach { option ->
+                    ChoicePill(
+                        stringResource(R.string.pomodoro_rounds, option),
+                        stringResource(R.string.cd_rounds, option),
+                        selected = option == rounds,
+                        onClick = { rounds = option },
+                    )
+                }
+            }
+        }
+        FocusMode.STOPWATCH -> Text(
+            stringResource(R.string.stopwatch_caption),
+            style = MaterialTheme.typography.bodyMedium,
+            color = FocunoTheme.colors.textSecondary,
+        )
     }
     Spacer(Modifier.height(16.dp))
     SubjectRow(subjects, chosen, onSelect = { subject = if (it == chosen) "" else it }, onManage = { managing = true })
     Spacer(Modifier.height(16.dp))
-    StrictSwitch(strict = strict, onChange = { strict = it })
-    Spacer(Modifier.height(20.dp))
+    if (canBeStrict) {
+        StrictSwitch(strict = strict, onChange = { strict = it })
+        Spacer(Modifier.height(20.dp))
+    }
     Button(
-        onClick = { if (strict) confirmStrict = true else onStart(minutes, false, chosen) },
+        onClick = { if (strict && canBeStrict) confirmStrict = true else onStart(mode, amount, false, chosen) },
         modifier = Modifier.fillMaxWidth().height(60.dp),
         shape = RoundedCornerShape(50),
     ) {
@@ -222,12 +291,12 @@ private fun IdleTimer(
         AlertDialog(
             onDismissRequest = { confirmStrict = false },
             icon = { Icon(Icons.Rounded.Lock, contentDescription = null) },
-            title = { Text(stringResource(R.string.strict_confirm_title, minutes)) },
+            title = { Text(stringResource(R.string.strict_confirm_title, lockMinutes)) },
             text = { Text(stringResource(R.string.strict_confirm_body)) },
             confirmButton = {
                 Button(onClick = {
                     confirmStrict = false
-                    onStart(minutes, true, chosen)
+                    onStart(mode, amount, true, chosen)
                 }) { Text(stringResource(R.string.strict_confirm_ok)) }
             },
             dismissButton = { TextButton(onClick = { confirmStrict = false }) { Text(stringResource(R.string.action_cancel)) } },
@@ -235,6 +304,20 @@ private fun IdleTimer(
     }
     if (managing) {
         SubjectsDialog(subjects, onAdd = onAddSubject, onRemove = onRemoveSubject, onDismiss = { managing = false })
+    }
+}
+
+/** "12:34", or "1:02:03" once past an hour. */
+@Composable
+private fun clockText(ms: Long): String {
+    val totalSeconds = (ms / 1_000).toInt()
+    val hours = totalSeconds / 3_600
+    val minutes = (totalSeconds % 3_600) / 60
+    val seconds = totalSeconds % 60
+    return if (hours > 0) {
+        stringResource(R.string.timer_clock_hours, hours, minutes, seconds)
+    } else {
+        stringResource(R.string.timer_clock, minutes, seconds)
     }
 }
 
@@ -348,10 +431,9 @@ private fun SubjectsDialog(subjects: List<String>, onAdd: (String) -> Unit, onRe
 }
 
 @Composable
-private fun DurationPill(minutes: Int, selected: Boolean, onClick: () -> Unit) {
-    val description = stringResource(R.string.cd_minutes, minutes)
+private fun ChoicePill(text: String, description: String, selected: Boolean, onClick: () -> Unit) {
     Text(
-        text = minutes.toString(),
+        text = text,
         style = MaterialTheme.typography.titleMedium,
         color = if (selected) FocunoTheme.colors.textPrimary else FocunoTheme.colors.textSecondary,
         modifier = Modifier
@@ -364,29 +446,76 @@ private fun DurationPill(minutes: Int, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun RunningTimer(startedAtMs: Long, endsAtMs: Long, strict: Boolean, subject: String, onStop: () -> Unit) {
-    val now by produceState(initialValue = System.currentTimeMillis(), endsAtMs) {
+private fun RunningTimer(plan: FocusPlan, strict: Boolean, subject: String, onStop: () -> Unit, onPlanOver: () -> Unit) {
+    val now by produceState(initialValue = System.currentTimeMillis(), plan) {
         while (true) {
             value = System.currentTimeMillis()
             delay(1_000)
         }
     }
+    val over = now >= plan.endMs
+    LaunchedEffect(over) { if (over) onPlanOver() }
     var confirmEnd by rememberSaveable { mutableStateOf(false) }
-    val total = (endsAtMs - startedAtMs).coerceAtLeast(1L)
-    val remaining = (endsAtMs - now).coerceAtLeast(0L)
 
-    TimerDial(progress = remaining.toFloat() / total) {
+    if (plan.mode == FocusMode.STOPWATCH) {
+        val elapsed = (now - plan.startMs).coerceAtLeast(0L)
+        TimerDial(progress = (elapsed % HOUR_MS).toFloat() / HOUR_MS) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(clockText(elapsed), style = MaterialTheme.typography.displayMedium, color = FocunoTheme.colors.textPrimary)
+                Text(
+                    subject.ifBlank { stringResource(R.string.mode_stopwatch) },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = FocunoTheme.colors.textSecondary,
+                )
+            }
+        }
+        Spacer(Modifier.height(32.dp))
+        Button(
+            onClick = { if (elapsed < FocusSessionRepository.STOPWATCH_COUNTS_AFTER_MS) confirmEnd = true else onStop() },
+            modifier = Modifier.fillMaxWidth().height(60.dp),
+            shape = RoundedCornerShape(50),
+        ) {
+            Text(stringResource(R.string.home_finish), style = MaterialTheme.typography.titleLarge)
+        }
+        if (confirmEnd) {
+            AlertDialog(
+                onDismissRequest = { confirmEnd = false },
+                title = { Text(stringResource(R.string.finish_short_title)) },
+                text = { Text(stringResource(R.string.finish_short_body)) },
+                confirmButton = { Button(onClick = { confirmEnd = false }) { Text(stringResource(R.string.end_early_keep_going)) } },
+                dismissButton = {
+                    TextButton(onClick = {
+                        confirmEnd = false
+                        onStop()
+                    }) { Text(stringResource(R.string.home_finish)) }
+                },
+            )
+        }
+        return
+    }
+
+    val phase = plan.phaseAt(now)
+    val focusing = phase?.focusing ?: true
+    val phaseStart = phase?.startsAtMs ?: plan.startMs
+    val phaseEnd = phase?.endsAtMs ?: plan.endMs
+    val remaining = (phaseEnd - now).coerceAtLeast(0L)
+    val label = when {
+        !focusing -> stringResource(R.string.home_break)
+        plan.mode == FocusMode.POMODORO && phase != null -> {
+            val round = stringResource(R.string.home_round, phase.round, phase.rounds)
+            if (subject.isBlank()) round else "$subject · $round"
+        }
+        else -> subject.ifBlank { stringResource(R.string.home_focusing) }
+    }
+
+    TimerDial(progress = remaining.toFloat() / (phaseEnd - phaseStart).coerceAtLeast(1L)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                stringResource(R.string.timer_clock, (remaining / 60_000).toInt(), ((remaining / 1_000) % 60).toInt()),
+                clockText(remaining),
                 style = MaterialTheme.typography.displayMedium,
-                color = FocunoTheme.colors.textPrimary,
+                color = if (focusing) FocunoTheme.colors.textPrimary else FocunoTheme.colors.productive,
             )
-            Text(
-                subject.ifBlank { stringResource(R.string.home_focusing) },
-                style = MaterialTheme.typography.titleMedium,
-                color = FocunoTheme.colors.textSecondary,
-            )
+            Text(label, style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textSecondary)
         }
     }
     Spacer(Modifier.height(32.dp))
@@ -394,7 +523,7 @@ private fun RunningTimer(startedAtMs: Long, endsAtMs: Long, strict: Boolean, sub
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Icon(Icons.Rounded.Lock, contentDescription = null, tint = FocunoTheme.colors.productive)
             Text(
-                stringResource(R.string.home_locked_until, DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(endsAtMs))),
+                stringResource(R.string.home_locked_until, DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(plan.endMs))),
                 style = MaterialTheme.typography.titleMedium,
                 color = FocunoTheme.colors.productive,
             )

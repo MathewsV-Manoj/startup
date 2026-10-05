@@ -381,14 +381,16 @@ class BlockEngine @Inject constructor(
 
         val appWindow = ScheduleEvaluator.activeWindow(schedules, pkg, zoned, BlockScope.APP)
         val dayStart = zoned.toLocalDate().atStartOfDay(zoned.zone).toInstant().toEpochMilli()
+        // During a Pomodoro break apps are free; the pause screen counts down to the end of the round.
+        val focusPhase = settings.focusPlan?.phaseAt(nowMs)
         val usedLimit = limits[pkg]?.takeIf { limit ->
             val used = usedTodayMs(pkg, nowMs, dayStart)
             used != null && DailyLimitPolicy.isReached(limit, used)
         }
         val base = when {
             appWindow != null -> buildModel(pkg, BlockKind.SCHEDULE, BlockScope.APP, appWindow.startMinuteOfDay, appWindow.endMinuteOfDay, appWindow.endsAtMs, appWindow.strict, "")
-            settings.quickBlockUntilMs > nowMs && isDistracting ->
-                buildModel(pkg, BlockKind.QUICK_BLOCK, BlockScope.APP, 0, 0, settings.quickBlockUntilMs, settings.quickBlockStrict, settings.quickBlockLabel)
+            focusPhase != null && focusPhase.focusing && isDistracting ->
+                buildModel(pkg, BlockKind.QUICK_BLOCK, BlockScope.APP, 0, 0, focusPhase.endsAtMs, settings.quickBlockStrict, settings.quickBlockLabel)
             usedLimit != null ->
                 buildModel(pkg, BlockKind.DAILY_LIMIT, BlockScope.APP, 0, 0, DailyLimitPolicy.nextMidnightMs(zoned), usedLimit.strict, "")
                     .copy(limitMinutes = usedLimit.dailyMinutes)

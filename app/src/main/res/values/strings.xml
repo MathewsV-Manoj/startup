@@ -411,4 +411,30 @@
     <string name="sound_pink">Soft rain</string>
     <string name="sound_brown">Deep waterfall</string>
     <string name="sound_waves">Ocean waves</string>
+
+    <!-- Focus modes -->
+    <string name="mode_timer">Timer</string>
+    <string name="mode_pomodoro">Pomodoro</string>
+    <string name="mode_stopwatch">Stopwatch</string>
+    <string name="pomodoro_caption">%1$d min focus · %2$d min break</string>
+    <string name="pomodoro_rounds">%1$d×</string>
+    <string name="cd_rounds">%1$d rounds</string>
+    <string name="stopwatch_caption">Count up. Stop when you\'re done.</string>
+    <string name="timer_clock_hours">%1$d:%2$02d:%3$02d</string>
+    <string name="home_round">Round %1$d of %2$d</string>
+    <string name="home_break">Break · apps are free</string>
+    <string name="home_finish">Finish</string>
+    <string name="finish_short_title">Finish now?</string>
+    <string name="finish_short_body">Under 10 minutes doesn\'t count as a finished session.</string>
+    <string name="channel_focus_name">Focus timer</string>
+    <string name="channel_focus_description">Break time, back to focus, and done.</string>
+    <plurals name="focus_break_title">
+        <item quantity="one">Break time · %1$d min</item>
+        <item quantity="other">Break time · %1$d min</item>
+    </plurals>
+    <string name="focus_break_text">Round %1$d of %2$d done. Stand up and stretch.</string>
+    <string name="focus_back_title">Back to focus</string>
+    <string name="focus_back_text">Round %1$d of %2$d has started.</string>
+    <string name="focus_done_title">Focus done!</string>
+    <string name="focus_done_text">Nice work. Open Focuno to see your points.</string>
 </resources>

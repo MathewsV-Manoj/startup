@@ -81,6 +81,11 @@
             </intent-filter>
         </receiver>
 
+        <!-- Announces Pomodoro breaks and the end of a focus timer. Only Focuno's own alarm sends to it. -->
+        <receiver
+            android:name=".service.focus.FocusAlarmReceiver"
+            android:exported="false" />
+
         <!-- WorkManager is initialised on demand with Hilt's worker factory (see FocunoApplication). -->
         <provider
             android:name="androidx.startup.InitializationProvider"

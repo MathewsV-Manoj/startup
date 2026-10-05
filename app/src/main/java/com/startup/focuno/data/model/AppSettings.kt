@@ -1,5 +1,7 @@
 package com.startup.focuno.data.model
 
+import com.startup.focuno.domain.model.FocusMode
+import com.startup.focuno.domain.model.FocusPlan
 import com.startup.focuno.domain.model.FocusSound
 import com.startup.focuno.domain.model.NudgeSensitivity
 
@@ -18,6 +20,11 @@ data class AppSettings(
     val quickBlockLabel: String = "",
     /** A strict focus session cannot be ended early and its pause screen has no unlock. */
     val quickBlockStrict: Boolean = false,
+    /** Start of the running focus plan, and its shape. 0 start means a plan saved by an older version. */
+    val quickBlockStartMs: Long = 0L,
+    val focusMode: FocusMode = FocusMode.TIMER,
+    val focusRoundMs: Long = 0L,
+    val focusBreakMs: Long = 0L,
     val lastNudgeAtMs: Long = 0L,
     val nudgeDay: String = "",
     val nudgeCountToday: Int = 0,
@@ -33,4 +40,14 @@ data class AppSettings(
     val subjects: List<String> = emptyList(),
     /** Background sound that plays during a focus timer. */
     val focusSound: FocusSound = FocusSound.OFF,
-)
+) {
+    /** The focus timer in progress, or null. Pomodoro breaks are part of the plan. */
+    val focusPlan: FocusPlan?
+        get() {
+            if (quickBlockUntilMs <= 0L) return null
+            return when (focusMode) {
+                FocusMode.POMODORO -> FocusPlan(FocusMode.POMODORO, quickBlockStartMs, quickBlockUntilMs, focusRoundMs, focusBreakMs)
+                else -> FocusPlan(focusMode, quickBlockStartMs, quickBlockUntilMs)
+            }
+        }
+}
