@@ -134,7 +134,8 @@ fun BlockContent(
                     }
                     if (state.items.isNotEmpty()) {
                         item { SectionLabel(stringResource(R.string.section_schedules)) }
-                        items(state.items, key = { "schedule:${it.row.schedule.id}" }) { item -> ScheduleRow(item, onEdit, onToggle) }
+                        val accessibilityOn = state.protection?.accessibilityEnabled != false
+                    items(state.items, key = { "schedule:${it.row.schedule.id}" }) { item -> ScheduleRow(item, accessibilityOn, onEdit, onToggle) }
                     }
                 }
             }
@@ -217,7 +218,7 @@ private fun EmptyBlocks(onAdd: () -> Unit) {
 }
 
 @Composable
-private fun ScheduleRow(item: ScheduleItem, onEdit: (BlockSchedule) -> Unit, onToggle: (BlockSchedule, Boolean) -> Unit) {
+private fun ScheduleRow(item: ScheduleItem, accessibilityOn: Boolean, onEdit: (BlockSchedule) -> Unit, onToggle: (BlockSchedule, Boolean) -> Unit) {
     val schedule = item.row.schedule
     val locked = item.row.lockedUntilMs != null
     Panel(
@@ -239,6 +240,14 @@ private fun ScheduleRow(item: ScheduleItem, onEdit: (BlockSchedule) -> Unit, onT
                     color = FocunoTheme.colors.textSecondary,
                     maxLines = 1,
                 )
+                // Reels/Shorts-only rules cannot work in basic mode, so say so instead of failing quietly.
+                if (schedule.scope == BlockScope.SHORT_VIDEO && !accessibilityOn) {
+                    Text(
+                        stringResource(R.string.feed_needs_accessibility_short),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = FocunoTheme.colors.warning,
+                    )
+                }
             }
             Icon(
                 imageVector = if (schedule.strictMode) Icons.Rounded.Lock else Icons.Rounded.LockOpen,

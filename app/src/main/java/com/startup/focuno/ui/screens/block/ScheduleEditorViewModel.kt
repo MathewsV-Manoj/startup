@@ -6,6 +6,7 @@ import com.startup.focuno.data.repository.AppCategoryRepository
 import com.startup.focuno.data.repository.InstalledApp
 import com.startup.focuno.data.repository.InstalledAppsRepository
 import com.startup.focuno.data.repository.LimitRepository
+import com.startup.focuno.data.repository.ProtectionRepository
 import com.startup.focuno.data.repository.ScheduleRepository
 import com.startup.focuno.domain.model.AppCategory
 import com.startup.focuno.domain.model.AppLimit
@@ -65,6 +66,8 @@ data class ScheduleEditorUiState(
     val limitOpens: Int = 0,
     /** True while editing a daily limit that already exists. */
     val isEditingLimit: Boolean = false,
+    /** Reels/Shorts-only blocking needs Accessibility; basic mode cannot see inside an app. */
+    val accessibilityOn: Boolean = true,
 ) {
     val isEditing: Boolean get() = id != 0L
     val isOvernight: Boolean get() = endMinute <= startMinute
@@ -80,6 +83,7 @@ class ScheduleEditorViewModel @Inject constructor(
     private val limitRepository: LimitRepository,
     private val installedAppsRepository: InstalledAppsRepository,
     private val categoryRepository: AppCategoryRepository,
+    private val protectionRepository: ProtectionRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ScheduleEditorUiState())
@@ -194,8 +198,10 @@ class ScheduleEditorViewModel @Inject constructor(
     fun selectApp(packageName: String) {
         viewModelScope.launch {
             val label = installedAppsRepository.label(packageName)
+            val accessibilityOn = protectionRepository.isAccessibilityServiceEnabled()
             _state.update {
                 it.copy(
+                    accessibilityOn = accessibilityOn,
                     packageName = packageName,
                     appLabel = label,
                     scope = BlockScope.APP,

@@ -191,6 +191,13 @@ private fun WhatStep(state: ScheduleEditorUiState, onChoose: (BlockScope) -> Uni
             subtitle = "",
             onClick = { onChoose(BlockScope.SHORT_VIDEO) },
         )
+        if (!state.accessibilityOn) {
+            Text(
+                stringResource(R.string.feed_needs_accessibility, feed),
+                style = MaterialTheme.typography.bodySmall,
+                color = FocunoTheme.colors.warning,
+            )
+        }
         Spacer(Modifier.height(16.dp))
     }
 }
