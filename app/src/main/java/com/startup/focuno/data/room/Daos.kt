@@ -28,6 +28,9 @@ interface DailyUsageDao {
 
     @Query("DELETE FROM daily_usage WHERE date < :date")
     suspend fun deleteOlderThan(date: String)
+
+    @Query("SELECT * FROM daily_usage WHERE packageName = :packageName AND date BETWEEN :from AND :to ORDER BY date")
+    suspend fun forPackage(packageName: String, from: String, to: String): List<DailyUsageEntity>
 }
 
 @Dao

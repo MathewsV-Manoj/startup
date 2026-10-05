@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,29 +23,32 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Lock
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.startup.focuno.R
 import com.startup.focuno.domain.model.AppCategory
 import com.startup.focuno.ui.components.AppIcon
+import com.startup.focuno.ui.components.BarChart
 import com.startup.focuno.ui.components.EmptyState
 import com.startup.focuno.ui.components.ErrorState
 import com.startup.focuno.ui.components.LoadingState
@@ -74,8 +78,21 @@ fun AppsScreen(
         onSchedule = onScheduleApp,
         onRetry = viewModel::refresh,
         onOpenHealth = onOpenHealth,
+        onOpenDetail = viewModel::openDetail,
         modifier = modifier,
     )
+    state.detail?.let { detail ->
+        AppDetailSheet(
+            detail = detail,
+            onDismiss = viewModel::closeDetail,
+            onSetCategory = viewModel::setCategory,
+            onSetMindful = viewModel::setMindful,
+            onLimitOrBlock = {
+                viewModel.closeDetail()
+                onScheduleApp(detail.packageName)
+            },
+        )
+    }
 }
 
 @Composable
@@ -87,6 +104,7 @@ fun AppsContent(
     onRetry: () -> Unit,
     onOpenHealth: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenDetail: (AppRow) -> Unit = {},
 ) {
     Column(modifier.fillMaxSize()) {
         if (state.days.isNotEmpty()) DaySelector(state.days, state.dayOffset, onSelectDay)
@@ -109,7 +127,7 @@ fun AppsContent(
                 if (state.rows.isEmpty()) {
                     item { EmptyState(icon = Icons.Rounded.Apps, title = stringResource(R.string.apps_empty_title), message = "") }
                 }
-                items(state.rows, key = { it.packageName }) { row -> AppRowItem(row, onSetCategory, onSchedule) }
+                items(state.rows, key = { it.packageName }) { row -> AppRowItem(row, onOpenDetail, onSchedule) }
             }
         }
     }
@@ -139,12 +157,14 @@ private fun DaySelector(days: List<LocalDate>, selectedOffset: Int, onSelect: (I
 private fun DaySummary(state: AppsUiState) {
     Panel(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(
-                text = durationText(state.totalMs),
-                style = MaterialTheme.typography.displaySmall,
-                color = FocunoTheme.colors.textPrimary,
-                modifier = Modifier.weight(1f),
-            )
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = durationText(state.totalMs),
+                    style = MaterialTheme.typography.displaySmall,
+                    color = FocunoTheme.colors.textPrimary,
+                )
+                state.previousTotalMs?.let { previous -> ChangeLine(state.totalMs, previous, today = state.dayOffset == 0) }
+            }
             state.focusScore?.let { score ->
                 Column(horizontalAlignment = Alignment.End) {
                     Text(score.toString(), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.secondary)
@@ -190,63 +210,147 @@ private fun Legend(color: Color, label: String, value: String) {
     }
 }
 
-/** Tap the row to change the app's category; the lock adds a block for it. */
+/** Tap the row for the app's week and options; the lock goes straight to limiting or blocking it. */
 @Composable
-private fun AppRowItem(row: AppRow, onSetCategory: (String, AppCategory) -> Unit, onSchedule: (String) -> Unit) {
-    var menuOpen by remember { mutableStateOf(false) }
-    Box {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(MaterialTheme.shapes.medium)
-                .clickable { menuOpen = true }
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            AppIcon(row.packageName, size = 40.dp)
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        row.label,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = FocunoTheme.colors.textPrimary,
-                        maxLines = 1,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Text(durationText(row.foregroundMs), style = MaterialTheme.typography.titleSmall, color = FocunoTheme.colors.textSecondary)
-                }
-                Spacer(Modifier.height(6.dp))
+private fun AppRowItem(row: AppRow, onOpen: (AppRow) -> Unit, onSchedule: (String) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .clickable { onOpen(row) }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        AppIcon(row.packageName, size = 40.dp)
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    row.label,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = FocunoTheme.colors.textPrimary,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(durationText(row.foregroundMs), style = MaterialTheme.typography.titleSmall, color = FocunoTheme.colors.textSecondary)
+            }
+            Spacer(Modifier.height(6.dp))
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(FocunoTheme.colors.trackInactive),
+            ) {
                 Box(
                     Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth(row.fraction.coerceIn(0.02f, 1f))
                         .height(6.dp)
                         .clip(RoundedCornerShape(50))
-                        .background(FocunoTheme.colors.trackInactive),
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth(row.fraction.coerceIn(0.02f, 1f))
-                            .height(6.dp)
+                        .background(categoryColor(row.category)),
+                )
+            }
+        }
+        IconButton(onClick = { onSchedule(row.packageName) }) {
+            Icon(Icons.Rounded.Lock, contentDescription = stringResource(R.string.apps_schedule_block, row.label), tint = FocunoTheme.colors.textTertiary)
+        }
+    }
+}
+
+/** "↓ 20% vs yesterday" in green, or "↑ 15% vs yesterday" in amber. */
+@Composable
+private fun ChangeLine(totalMs: Long, previousMs: Long, today: Boolean) {
+    val percent = ((totalMs - previousMs) * 100 / previousMs).toInt()
+    val down = percent <= 0
+    Text(
+        stringResource(
+            if (down) {
+                if (today) R.string.change_down_yesterday else R.string.change_down_previous
+            } else {
+                if (today) R.string.change_up_yesterday else R.string.change_up_previous
+            },
+            kotlin.math.abs(percent),
+        ),
+        style = MaterialTheme.typography.labelLarge,
+        color = if (down) FocunoTheme.colors.productive else FocunoTheme.colors.warning,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppDetailSheet(
+    detail: AppDetail,
+    onDismiss: () -> Unit,
+    onSetCategory: (String, AppCategory) -> Unit,
+    onSetMindful: (String, Boolean) -> Unit,
+    onLimitOrBlock: () -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = FocunoTheme.colors.surfaceElevated,
+    ) {
+        Column(
+            Modifier.fillMaxWidth().navigationBarsPadding().padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                AppIcon(detail.packageName, size = 48.dp)
+                Column(Modifier.weight(1f)) {
+                    Text(detail.label, style = MaterialTheme.typography.titleLarge, color = FocunoTheme.colors.textPrimary, maxLines = 1)
+                    Text(
+                        pluralStringResource(R.plurals.app_opens, detail.dayOpens, detail.dayOpens),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = FocunoTheme.colors.textSecondary,
+                    )
+                }
+                Text(durationText(detail.dayMs), style = MaterialTheme.typography.headlineSmall, color = FocunoTheme.colors.textPrimary)
+            }
+            Column {
+                Text(stringResource(R.string.detail_week), style = MaterialTheme.typography.labelLarge, color = FocunoTheme.colors.textTertiary)
+                Spacer(Modifier.height(8.dp))
+                BarChart(
+                    values = detail.week.map { it.second / 60_000f },
+                    color = categoryColor(detail.category).copy(alpha = 0.5f),
+                    height = 96.dp,
+                    highlightIndex = detail.week.lastIndex,
+                    highlightColor = categoryColor(detail.category),
+                    startLabel = detail.week.first().first.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()),
+                    endLabel = stringResource(R.string.day_today),
+                )
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(AppCategory.PRODUCTIVE, AppCategory.NEUTRAL, AppCategory.DISTRACTING).forEach { category ->
+                    val selected = category == detail.category
+                    val color = categoryColor(category)
+                    Text(
+                        categoryLabel(category),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (selected) FocunoTheme.colors.textPrimary else FocunoTheme.colors.textSecondary,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .weight(1f)
                             .clip(RoundedCornerShape(50))
-                            .background(categoryColor(row.category)),
+                            .background(if (selected) color.copy(alpha = 0.35f) else FocunoTheme.colors.trackInactive)
+                            .clickable { onSetCategory(detail.packageName, category) }
+                            .padding(vertical = 10.dp),
                     )
                 }
             }
-            IconButton(onClick = { onSchedule(row.packageName) }) {
-                Icon(Icons.Rounded.Lock, contentDescription = stringResource(R.string.apps_schedule_block, row.label), tint = FocunoTheme.colors.textTertiary)
-            }
-        }
-        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-            AppCategory.entries.forEach { category ->
-                DropdownMenuItem(
-                    leadingIcon = { Box(Modifier.size(10.dp).background(categoryColor(category), CircleShape)) },
-                    text = { Text(categoryLabel(category)) },
-                    onClick = {
-                        menuOpen = false
-                        onSetCategory(row.packageName, category)
-                    },
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.when_mindful),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = FocunoTheme.colors.textPrimary,
+                    modifier = Modifier.weight(1f),
                 )
+                Switch(checked = detail.mindful, onCheckedChange = { onSetMindful(detail.packageName, it) })
+            }
+            Button(onClick = onLimitOrBlock, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+                Icon(Icons.Rounded.Lock, contentDescription = null)
+                Spacer(Modifier.size(8.dp))
+                Text(stringResource(R.string.detail_limit_or_block))
             }
         }
     }

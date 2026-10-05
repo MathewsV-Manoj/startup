@@ -553,4 +553,16 @@
     <string name="tile_start">Start %1$d min</string>
     <string name="tile_until">Until %1$s</string>
     <string name="focus_running_break">Break · apps are free</string>
+
+    <!-- App detail and day comparison -->
+    <plurals name="app_opens">
+        <item quantity="one">%1$d open</item>
+        <item quantity="other">%1$d opens</item>
+    </plurals>
+    <string name="detail_week">Last 7 days</string>
+    <string name="detail_limit_or_block">Limit or block</string>
+    <string name="change_down_yesterday">↓ %1$d%% vs yesterday</string>
+    <string name="change_up_yesterday">↑ %1$d%% vs yesterday</string>
+    <string name="change_down_previous">↓ %1$d%% vs the day before</string>
+    <string name="change_up_previous">↑ %1$d%% vs the day before</string>
 </resources>

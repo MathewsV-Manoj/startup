@@ -29,6 +29,10 @@ class SummaryRepository @Inject constructor(
     suspend fun summaries(from: LocalDate, to: LocalDate): List<DailySummaryEntity> =
         summaryDao.range(from.toString(), to.toString())
 
+    /** One app's saved daily use, for its detail sheet. Today is not saved yet, so callers add it live. */
+    suspend fun appHistory(packageName: String, from: LocalDate, to: LocalDate): List<DailyUsageEntity> =
+        usageDao.forPackage(packageName, from.toString(), to.toString())
+
     suspend fun existingDates(from: LocalDate, to: LocalDate): Set<String> =
         summaryDao.existingDates(from.toString(), to.toString()).toSet()
 
