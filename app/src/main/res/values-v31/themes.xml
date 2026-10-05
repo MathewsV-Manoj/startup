@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.Focuno" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/deep_void_purple</item>
+        <item name="android:windowSplashScreenBackground">@color/deep_void_purple</item>
+    </style>
+</resources>

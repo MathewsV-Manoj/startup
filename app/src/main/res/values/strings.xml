@@ -1,0 +1,617 @@
+<resources>
+    <string name="app_name">Focuno</string>
+
+    <!-- Accessibility service -->
+    <string name="accessibility_service_description">Focuno uses this to notice which app is in front, so it can pause apps you chose to block. If you block only Reels or Shorts, it also checks whether that video screen is open. It never reads your messages or anything you type.</string>
+
+    <!-- Notifications -->
+    <string name="channel_monitor_name">Focuno is running</string>
+    <string name="channel_monitor_description">A quiet reminder that Focuno is active, with today\'s focus score.</string>
+    <string name="channel_protection_name">Protection alerts</string>
+    <string name="channel_protection_description">Tells you right away if Android turns Focuno\'s blocking off.</string>
+    <string name="monitor_notification_title">Focuno is keeping watch</string>
+    <string name="monitor_notification_text">Today\'s focus score: %1$s</string>
+    <string name="protection_off_title">Focuno protection is OFF</string>
+    <string name="protection_off_text">Blocking is not running. Tap to turn back on: %1$s</string>
+    <string name="issue_accessibility">Accessibility</string>
+    <string name="issue_overlay">Display over other apps</string>
+    <string name="issue_usage_access">Usage access</string>
+    <string name="issue_notifications">Notifications</string>
+    <string name="issue_battery">Battery optimisation</string>
+
+    <!-- Nudges: warm, specific, never shaming -->
+    <string name="nudge_this_app">this app</string>
+    <plurals name="nudge_continuous">
+        <item quantity="one">You\'ve been on %1$s for %2$d minute. A short break might feel good.</item>
+        <item quantity="other">You\'ve been on %1$s for %2$d minutes. A short break might feel good.</item>
+    </plurals>
+    <string name="nudge_repeated_opens">You\'ve opened %1$s %2$d times in the last hour. Everything okay?</string>
+    <string name="nudge_goal_progress">You\'re at %1$d%% of today\'s screen-time goal.</string>
+    <string name="nudge_after_focus">Nice focus session. %1$s can wait a few more minutes.</string>
+
+    <!-- Durations -->
+    <string name="duration_hours_minutes">%1$dh %2$dm</string>
+    <string name="duration_hours">%1$dh</string>
+    <string name="duration_minutes">%1$dm</string>
+    <string name="duration_under_a_minute">&lt;1m</string>
+
+    <!-- Block screen -->
+    <string name="block_title">%1$s is paused</string>
+    <string name="block_source_quick">Quick block</string>
+    <string name="block_back_to_focus">Go back</string>
+    <string name="block_i_need_this">I need it</string>
+    <string name="block_cooldown">Ask again in %1$s</string>
+    <string name="block_strict_note">Strict mode: no unlock</string>
+    <string name="friction_calm_line">Take a slow breath.</string>
+    <plurals name="friction_wait_seconds">
+        <item quantity="one">Wait %1$d second</item>
+        <item quantity="other">Wait %1$d seconds</item>
+    </plurals>
+    <string name="friction_reason_prompt">Why do you need %1$s now?</string>
+    <string name="friction_reason_counter">%1$d / %2$d characters</string>
+    <string name="friction_unlock">Unlock for 5 min</string>
+
+    <!-- Common -->
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_ok">OK</string>
+    <string name="action_save">Save</string>
+    <string name="action_try_again">Try again</string>
+    <string name="error_generic">Couldn\'t load. Try again.</string>
+    <string name="day_today">Today</string>
+    <string name="day_yesterday">Yesterday</string>
+    <string name="days_every_day">Every day</string>
+    <string name="days_weekdays">Weekdays</string>
+    <string name="days_weekends">Weekends</string>
+    <string name="category_distracting">Time eater</string>
+    <string name="category_productive">Helpful</string>
+    <string name="category_neutral">Okay</string>
+
+    <!-- Tabs -->
+    <string name="tab_focus">Focus</string>
+    <string name="tab_block">Block</string>
+
+    <!-- Focus tab -->
+    <string name="gauge_dash">—</string>
+    <string name="gauge_label">Focus score</string>
+    <string name="focus_allow_usage_access">Allow usage access</string>
+    <string name="quick_block_label_focus">Focus session</string>
+
+    <!-- Protection banner -->
+    <string name="banner_fix_now">Fix</string>
+
+    <!-- Apps tab -->
+    <string name="apps_no_access_title">Allow usage access</string>
+    <string name="apps_no_access_message">Focuno needs usage access to count how long you spend in each app.</string>
+    <string name="apps_empty_title">No usage yet</string>
+    <string name="apps_schedule_block">Block %1$s</string>
+
+    <!-- Schedule editor -->
+    <string name="editor_pick_app">Pick an app</string>
+    <string name="editor_search_apps">Search apps</string>
+    <string name="editor_from">From</string>
+    <string name="editor_until">Until</string>
+    <string name="editor_start_time">Start time</string>
+    <string name="editor_end_time">End time</string>
+    <string name="editor_overnight">Ends the next morning</string>
+    <string name="editor_all_day">All day (24 hours)</string>
+    <string name="editor_pick_a_day">Pick at least one day</string>
+    <string name="editor_locked">Locked until %1$s</string>
+
+    <!-- Insights -->
+    <string name="insights_7_days">7 days</string>
+    <string name="insights_30_days">30 days</string>
+    <string name="insights_empty_title">Nothing yet</string>
+    <string name="insights_score_trend">Focus score</string>
+    <string name="insights_average_score">avg %1$d</string>
+    <string name="insights_distracting_trend">Time-eater minutes</string>
+    <string name="insights_worst_hour">Worst hour</string>
+    <string name="insights_bypass_title">Urges</string>
+    <string name="insights_bypass_abandoned">Resisted</string>
+    <string name="insights_bypass_granted">Unlocked</string>
+
+    <!-- Settings and privacy -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_goal_title">Daily screen-time goal</string>
+    <string name="settings_goal_explainer">Days under it grow your streak.</string>
+    <string name="settings_goal_value">%1$dh %2$02dm</string>
+    <string name="settings_nudges_title">Nudges</string>
+    <string name="settings_nudges_explainer">Gentle reminders, at most one every 20 minutes.</string>
+    <string name="settings_sensitivity">How often</string>
+    <string name="sensitivity_low">Low</string>
+    <string name="sensitivity_medium">Medium</string>
+    <string name="sensitivity_high">High</string>
+    <string name="settings_health_subtitle">Check that blocking works</string>
+    <string name="settings_privacy_subtitle">What Focuno reads, and never does</string>
+    <string name="privacy_title">Privacy</string>
+    <string name="privacy_paragraph">Focuno works entirely on your phone. It has no accounts, no analytics and no internet permission, so nothing about you can leave this device. Your usage history lives in a private database on this phone and is deleted when you uninstall.</string>
+    <string name="privacy_reads_title">What it reads</string>
+    <string name="privacy_reads_body">Which app is in front of you, and how long each app is used. If you choose to block only Reels or Shorts, Focuno also checks a few technical screen-part names inside Instagram or YouTube to see whether the video screen is open. That check only happens while such a rule exists and one of those apps is open.</string>
+    <string name="privacy_never_title">What it never touches</string>
+    <string name="privacy_never_body">Messages, photos, passwords, text on screen, usernames, captions, your location, contacts, or anything you type in other apps. The only text Focuno keeps is what you type into Focuno itself: unlock reasons, subject names and your exam name. It stays on this phone, and leaves it only if you export it to a file you choose.</string>
+
+    <!-- Health check -->
+    <string name="health_title">Health check</string>
+    <string name="health_all_good">Everything is working.</string>
+    <string name="health_needs_attention">Blocking needs one more permission.</string>
+    <string name="health_accessibility_why">Optional. Faster blocking, and blocking only Reels or Shorts.</string>
+    <string name="health_overlay_why">Shows the pause screen over a blocked app.</string>
+    <string name="health_usage_why">Counts screen time and sees which app is open.</string>
+    <string name="health_notifications_why">Warns you if blocking stops, and times your focus.</string>
+    <string name="health_battery_why">Stops your phone from closing Focuno.</string>
+    <string name="health_accessibility_idle">Switched on in Settings, but Android is not running it right now. Try switching it off and on again.</string>
+    <string name="health_fix">Fix</string>
+    <string name="health_status_ok">OK</string>
+    <string name="health_status_optional">Optional</string>
+    <string name="health_status_needs_fix">Needs fixing</string>
+
+    <!-- Restricted setting help (Android 13+) -->
+    <string name="restricted_title">Accessibility is greyed out?</string>
+    <string name="restricted_body">Android locks this switch for apps installed from a file instead of the Play Store. It is a safety rule, and you can unlock it yourself in about a minute:</string>
+    <string name="restricted_step1">Tap the greyed-out Focuno once in the Accessibility list. Android says \"Restricted setting\". Tap OK.</string>
+    <string name="restricted_step2">Come back here and tap the button below to open Focuno\'s app info.</string>
+    <string name="restricted_step3">Tap the three dots in the top right corner, then tap Allow restricted settings and confirm.</string>
+    <string name="restricted_step4">Go back to Accessibility, tap Focuno and switch it on.</string>
+    <string name="restricted_note">No three dots, or no Allow restricted settings? Do step 1 again first. The menu only appears after Android has shown that message.</string>
+    <string name="restricted_open_app_info">Open Focuno app info</string>
+
+    <!-- Phone-maker keep-alive guidance -->
+    <string name="oem_card_title">Keep Focuno running on %1$s</string>
+    <string name="oem_card_body">These settings stop your phone from quietly shutting Focuno down. Exact names vary a little between software versions.</string>
+    <string name="oem_open_settings">Open the settings screen</string>
+    <string name="oem_xiaomi_name">Xiaomi, Redmi or POCO</string>
+    <string name="oem_xiaomi_step1">Open Settings, then Apps, then Manage apps, then Focuno.</string>
+    <string name="oem_xiaomi_step2">Turn on Autostart, and set Battery saver to No restrictions.</string>
+    <string name="oem_xiaomi_step3">In the recent apps screen, press and hold Focuno and tap the lock icon.</string>
+    <string name="oem_oppo_name">Oppo or Realme</string>
+    <string name="oem_oppo_step1">Open Settings, then Apps, then App management, then Focuno.</string>
+    <string name="oem_oppo_step2">Turn on Allow auto-launch (or Auto-start).</string>
+    <string name="oem_oppo_step3">Under Battery usage, choose Allow background activity.</string>
+    <string name="oem_vivo_name">Vivo or iQOO</string>
+    <string name="oem_vivo_step1">Open Settings, then Battery, then Background power consumption management.</string>
+    <string name="oem_vivo_step2">Find Focuno and choose Allow high background power consumption.</string>
+    <string name="oem_vivo_step3">Open i Manager, then App manager, then Autostart, and turn Focuno on.</string>
+    <string name="oem_oneplus_name">OnePlus</string>
+    <string name="oem_oneplus_step1">Open Settings, then Battery, then Battery optimization, then Focuno.</string>
+    <string name="oem_oneplus_step2">Choose Don\'t optimize.</string>
+    <string name="oem_oneplus_step3">Open Settings, then Apps, then Focuno, and allow auto-launch and background activity.</string>
+    <string name="oem_samsung_name">Samsung</string>
+    <string name="oem_samsung_step1">Open Settings, then Battery, then Background usage limits.</string>
+    <string name="oem_samsung_step2">Add Focuno to Never sleeping apps.</string>
+    <string name="oem_samsung_step3">Open Settings, then Apps, then Focuno, then Battery, and choose Unrestricted.</string>
+    <string name="oem_other_name">your phone</string>
+    <string name="oem_other_step1">Open Settings, then Apps, then Focuno, then Battery.</string>
+    <string name="oem_other_step2">Choose Unrestricted (or Don\'t optimize) and allow background activity.</string>
+    <string name="oem_other_step3">If your phone has an Autostart or App launch setting, turn it on for Focuno.</string>
+
+    <!-- Onboarding -->
+    <string name="onb_purpose_title">Take your attention back</string>
+    <string name="onb_purpose_body">Block distracting apps. See your real screen time. Study more.</string>
+    <string name="onb_purpose_point1">No account, no ads, no internet</string>
+    <string name="onb_purpose_point2">Everything stays on this phone</string>
+    <string name="onb_purpose_point3">Setup takes about 2 minutes</string>
+    <string name="onb_purpose_cta">Let\'s start</string>
+    <string name="onb_exam_title">What are you preparing for?</string>
+    <string name="onb_exam_body">Add your exam and its date, and Focuno will count down the days.</string>
+    <string name="onb_usage_title">Count screen time</string>
+    <string name="onb_usage_body">Turn on Usage access for Focuno. It only sees app names and times.</string>
+    <string name="onb_accessibility_title">Faster blocking (optional)</string>
+    <string name="onb_accessibility_body">Only needed to block just Reels or Shorts. Skip it if Android says it is restricted.</string>
+    <string name="onb_overlay_title">Show the pause screen</string>
+    <string name="onb_overlay_body">Turn on Display over other apps, so the pause screen can show.</string>
+    <string name="onb_stay_alive_title">Keep Focuno running</string>
+    <string name="onb_stay_alive_body">Allow notifications and turn off battery optimisation, so your phone doesn\'t stop Focuno.</string>
+    <string name="onb_autostart_title">One more phone setting</string>
+    <string name="onb_autostart_body">Your phone maker adds its own battery saver. Do these steps once.</string>
+    <string name="onb_autostart_done">I\'ve done this</string>
+    <string name="onb_pick_title">Which apps pull you in?</string>
+    <string name="onb_pick_body">Switch on the ones to block.</string>
+    <string name="onb_schedule_title">When should they pause?</string>
+    <string name="onb_schedule_body">You can change this later.</string>
+    <string name="onb_schedule_create">Create schedule</string>
+    <string name="onb_schedule_skip">Skip for now</string>
+    <string name="onb_schedule_none_selected">Pick at least one app on the previous step to create a schedule.</string>
+    <string name="onb_schedule_honest">You can still get in after a short wait. Turn on Strict mode in the Block tab to stop that.</string>
+    <plurals name="onb_schedule_summary">
+        <item quantity="one">This will pause %1$d app.</item>
+        <item quantity="other">This will pause %1$d apps.</item>
+    </plurals>
+    <string name="preset_night">Night: %1$s to %2$s</string>
+    <string name="preset_study_day">Study day: %1$s to %2$s</string>
+    <string name="preset_evening">Evening: %1$s to %2$s</string>
+    <string name="onb_allow">Allow</string>
+    <string name="onb_open_settings">Open settings</string>
+    <string name="onb_skip">Skip for now</string>
+    <string name="onb_status_on">On</string>
+    <string name="onb_status_off">Not on yet</string>
+
+    <!-- Reels / Shorts blocking -->
+    <string name="feed_reels">Reels</string>
+    <string name="feed_shorts">Shorts</string>
+    <string name="block_title_feed">%1$s are paused</string>
+    <string name="block_leave_feed">Leave %1$s</string>
+
+    <!-- Easy add flow -->
+    <string name="editor_what_title">Block what?</string>
+    <string name="editor_what_app">Whole app</string>
+    <string name="editor_what_feed">Only %1$s</string>
+    <string name="editor_when_title">When?</string>
+    <string name="when_all_day">All day</string>
+    <string name="when_night">Night</string>
+    <string name="when_school">Study time</string>
+    <string name="when_evening">Evening</string>
+    <string name="when_custom">Pick my own time</string>
+
+    <!-- Screen time check -->
+    <string name="usage_check_title">Screen time check</string>
+    <string name="settings_usage_check_subtitle">Compare with Android Settings</string>
+    <string name="usage_check_counted_total">Counted today</string>
+    <string name="usage_check_updated">Updated %1$s</string>
+    <string name="usage_check_refresh">Refresh now</string>
+    <string name="usage_check_explainer">Android Settings counts every app except your home screen and the system bar. Focuno now does the same, including time spent inside Focuno. If the totals still differ by more than a couple of minutes, take a screenshot of this screen.</string>
+    <string name="usage_check_counted">Counted</string>
+    <string name="usage_check_not_counted">Not counted (home screen and system)</string>
+    <string name="usage_check_none">Nothing yet.</string>
+    <string name="usage_check_none_excluded">Nothing was left out.</string>
+
+    <!-- Blocker log -->
+    <string name="health_log_title">Blocker log</string>
+    <string name="health_log_explainer">What the blocker saw and decided, for finding problems. It only holds app names and decisions.</string>
+    <string name="health_log_copy">Copy</string>
+    <string name="health_log_empty">Nothing yet. Open a blocked app and come back.</string>
+
+    <!-- Tabs (game version) -->
+    <string name="tab_stats">Stats</string>
+    <string name="stats_trends">Trends</string>
+
+    <!-- Buddy and levels -->
+    <string name="buddy_description">Your Focuno buddy</string>
+    <string name="xp_progress">%1$d / %2$d</string>
+    <string-array name="level_titles">
+        <item>Seedling</item>
+        <item>Sprout</item>
+        <item>Explorer</item>
+        <item>Ranger</item>
+        <item>Guardian</item>
+        <item>Hero</item>
+        <item>Champion</item>
+        <item>Master</item>
+        <item>Legend</item>
+        <item>Mythic</item>
+    </string-array>
+
+    <!-- Missions -->
+    <string name="quests_title">Today\'s missions</string>
+    <string name="quest_reward">+%1$d</string>
+    <string name="quest_focus_title">Finish a focus timer</string>
+    <string name="quest_goal_title">Stay under your goal</string>
+    <string name="quest_goal_ok">%1$s left</string>
+    <string name="quest_goal_over">Over the goal today</string>
+    <string name="quest_urge_title">Resist one urge</string>
+
+    <!-- Trophies -->
+    <string name="badges_title">Badges</string>
+    <string name="badge_first_steps">First Steps</string>
+    <string name="badge_first_steps_hint">Set up Focuno</string>
+    <string name="badge_focus_starter">Focus Starter</string>
+    <string name="badge_focus_starter_hint">Finish 1 focus time</string>
+    <string name="badge_focus_pro">Focus Pro</string>
+    <string name="badge_focus_pro_hint">Finish 10 focus times</string>
+    <string name="badge_streak_3">3 Days</string>
+    <string name="badge_streak_3_hint">3 days in a row</string>
+    <string name="badge_streak_7">Week Warrior</string>
+    <string name="badge_streak_7_hint">7 days in a row</string>
+    <string name="badge_streak_30">Month Master</string>
+    <string name="badge_streak_30_hint">30 days in a row</string>
+    <string name="badge_urge_fighter">Urge Fighter</string>
+    <string name="badge_urge_fighter_hint">Say no 5 times</string>
+    <string name="badge_urge_master">Urge Master</string>
+    <string name="badge_urge_master_hint">Say no 25 times</string>
+    <string name="badge_shield_up">Shield Up</string>
+    <string name="badge_shield_up_hint">Your shield stops an app</string>
+    <string name="badge_rising_star">Rising Star</string>
+    <string name="badge_rising_star_hint">Reach level 5</string>
+    <string name="badge_legend">Legend</string>
+    <string name="badge_legend_hint">Reach level 10</string>
+    <string name="badge_deep_work">Deep Work</string>
+    <string name="badge_deep_work_hint">Focus for 2 hours in one day</string>
+    <string name="badge_goal_getter">Goal Getter</string>
+    <string name="badge_goal_getter_hint">Reach your daily study goal</string>
+    <string name="badge_focus_master">Focus Master</string>
+    <string name="badge_focus_master_hint">Finish 50 focus times</string>
+
+    <!-- Celebrations -->
+    <string name="celebrate_level_title">Level %1$d!</string>
+    <string name="celebrate_level_message">You are now a %1$s. Keep going!</string>
+    <string name="celebrate_level_and_badges">You are now a %1$s, and you won: %2$s.</string>
+    <string name="celebrate_badge_title">New badge!</string>
+    <string name="celebrate_badge_message">You won: %1$s.</string>
+    <string name="celebrate_button">Yay!</string>
+
+    <!-- Shield -->
+
+    <string name="issue_background">Focuno must be running (open the app)</string>
+    <string name="health_basic_mode">Blocking works. Accessibility is optional.</string>
+
+    <!-- Minimal redesign -->
+    <string name="tab_me">Me</string>
+    <string name="cd_screen_time_today">Screen time today: %1$s</string>
+    <string name="cd_minutes">%1$d minutes</string>
+    <string name="cd_focused_today">Focused today: %1$s of %2$s</string>
+    <string name="study_progress">%1$s / %2$s</string>
+    <string name="home_minutes_unit">min</string>
+    <string name="home_start">Start</string>
+    <string name="home_focusing">Focusing</string>
+    <string name="home_locked_until">Locked until %1$s</string>
+    <string name="home_end_early">End early</string>
+    <string name="timer_clock">%1$02d:%2$02d</string>
+    <string name="end_early_title">End early?</string>
+    <string name="end_early_body">You won\'t get the +30 points.\n\nTip: turn on Strict mode next time, so you can\'t quit halfway.</string>
+    <string name="end_early_keep_going">Keep going</string>
+    <string name="end_early_confirm">End</string>
+
+    <!-- Strict mode -->
+    <string name="strict_label">Strict mode</string>
+    <string name="strict_on_note">Locked. No ending early, no unlock.</string>
+    <string name="strict_off_warning">You can still end early. Turn on to lock it.</string>
+    <string name="strict_needs_break">Needs a break in the day</string>
+    <string name="strict_confirm_title">Lock for %1$d min?</string>
+    <string name="strict_confirm_body">You won\'t be able to end early or unlock apps until the timer ends.</string>
+    <string name="strict_confirm_ok">Lock and start</string>
+    <string name="when_not_with_strict">Not with Strict</string>
+    <string name="cd_strict_on">Strict: can\'t end early</string>
+    <string name="cd_strict_off">Not strict: can end early</string>
+
+    <!-- Block tab -->
+    <string name="status_on">On</string>
+    <string name="status_off">Off</string>
+    <string name="block_add">Add app</string>
+    <string name="block_empty">No blocks yet</string>
+    <string name="block_focus_running">Focus on · %1$s left</string>
+    <string name="block_row_feed">%1$s · %2$s</string>
+    <string name="banner_blocking_off">Blocking is off</string>
+    <string name="banner_usage_off">Screen time can\'t be counted</string>
+    <string name="block_left">left</string>
+    <string name="block_focus_instead">Focus %1$d min instead</string>
+
+    <!-- Stats and Me -->
+    <string name="stats_day">Day</string>
+    <string name="insights_sessions">Focus done</string>
+    <string name="level_number">Level %1$d</string>
+    <string name="streak_label">streak</string>
+    <string name="points_label">points</string>
+
+    <!-- Daily limits -->
+    <string name="when_limit">Daily time limit</string>
+    <string name="when_limit_sub">Per day</string>
+    <string name="limit_title">How long per day?</string>
+    <string name="limit_locked">Time is up today. Locked until midnight.</string>
+    <string name="limit_strict_on">No unlock once the time is used up.</string>
+    <string name="limit_strict_off">You can still unlock it after a wait. Turn on to lock it.</string>
+    <string name="limit_used">%1$s of %2$s today</string>
+    <string name="section_limits">Daily limits</string>
+    <string name="section_schedules">Time slots</string>
+    <string name="block_title_limit">Time\'s up for %1$s today</string>
+    <string name="block_source_limit">Daily limit: %1$s</string>
+    <string name="block_until_midnight">until midnight</string>
+    <plurals name="limit_warning">
+        <item quantity="one">%1$d minute left on %2$s today</item>
+        <item quantity="other">%1$d minutes left on %2$s today</item>
+    </plurals>
+
+    <!-- Subjects -->
+    <string name="action_done">Done</string>
+    <string name="subject_add">+ Subject</string>
+    <string name="subject_manage">Edit subjects</string>
+    <string name="subject_dialog_title">Subjects</string>
+    <string name="subject_remove">Remove %1$s</string>
+    <string name="subject_hint">e.g. Signals</string>
+    <string name="subject_add_button">Add</string>
+    <string name="subject_none">No subject</string>
+    <string name="insights_study_time">Study time</string>
+    <string name="subject_quick_add">Or add a whole set</string>
+    <string name="subject_set_gate_ece">GATE ECE</string>
+    <string name="subject_set_jee">JEE</string>
+    <string name="subject_set_neet">NEET</string>
+    <string name="subject_set_upsc">UPSC</string>
+    <string-array name="subjects_gate_ece">
+        <item>Maths</item>
+        <item>Networks</item>
+        <item>Signals and Systems</item>
+        <item>Electronic Devices</item>
+        <item>Analog Circuits</item>
+        <item>Digital Circuits</item>
+        <item>Control Systems</item>
+        <item>Communications</item>
+        <item>Electromagnetics</item>
+        <item>Aptitude</item>
+    </string-array>
+    <string-array name="subjects_jee">
+        <item>Physics</item>
+        <item>Chemistry</item>
+        <item>Maths</item>
+    </string-array>
+    <string-array name="subjects_neet">
+        <item>Physics</item>
+        <item>Chemistry</item>
+        <item>Botany</item>
+        <item>Zoology</item>
+    </string-array>
+    <string-array name="subjects_upsc">
+        <item>GS 1</item>
+        <item>GS 2</item>
+        <item>GS 3</item>
+        <item>GS 4</item>
+        <item>CSAT</item>
+        <item>Optional</item>
+        <item>Essay</item>
+    </string-array>
+    <string name="insights_recent_sessions">Recent sessions</string>
+    <string name="session_finished">Finished</string>
+    <string name="session_unfinished">Ended early or running</string>
+
+    <!-- Focus sounds -->
+    <string name="sound_title">Focus sound</string>
+    <string name="sound_off">Off</string>
+    <string name="sound_white">White noise</string>
+    <string name="sound_pink">Soft rain</string>
+    <string name="sound_brown">Deep waterfall</string>
+    <string name="sound_waves">Ocean waves</string>
+
+    <!-- Focus modes -->
+    <string name="mode_timer">Timer</string>
+    <string name="mode_pomodoro">Pomodoro</string>
+    <string name="mode_stopwatch">Stopwatch</string>
+    <string name="pomodoro_caption">%1$d min focus · %2$d min break</string>
+    <string name="pomodoro_rounds">%1$d×</string>
+    <string name="pomodoro_shape">%1$d / %2$d</string>
+    <string name="cd_rounds">%1$d rounds</string>
+    <string name="stopwatch_caption">Count up. Stop when you\'re done.</string>
+    <string name="timer_clock_hours">%1$d:%2$02d:%3$02d</string>
+    <string name="home_round">Round %1$d of %2$d</string>
+    <string name="home_break">Break · apps are free</string>
+    <string name="home_finish">Finish</string>
+    <string name="finish_short_title">Finish now?</string>
+    <string name="finish_short_body">Under 10 minutes doesn\'t count as a finished session.</string>
+    <string name="channel_focus_name">Focus timer</string>
+    <string name="channel_focus_description">Break time, back to focus, and done.</string>
+    <plurals name="focus_break_title">
+        <item quantity="one">Break time · %1$d min</item>
+        <item quantity="other">Break time · %1$d min</item>
+    </plurals>
+    <string name="focus_break_text">Round %1$d of %2$d done. Stand up and stretch.</string>
+    <string name="focus_back_title">Back to focus</string>
+    <string name="focus_back_text">Round %1$d of %2$d has started.</string>
+    <string name="focus_done_title">Focus done!</string>
+    <string name="focus_done_text">Nice work. Open Focuno to see your points.</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Screen time, streak and a one-tap focus timer</string>
+    <string name="widget_screen_time">screen time today</string>
+    <string name="widget_start">Start %1$d min focus</string>
+    <plurals name="widget_streak">
+        <item quantity="one">%1$d day streak</item>
+        <item quantity="other">%1$d-day streak</item>
+    </plurals>
+
+    <!-- Focus calendar -->
+    <string name="calendar_title">Focus calendar</string>
+    <string name="calendar_less">Less</string>
+    <string name="calendar_more">More</string>
+
+    <!-- Weekly report -->
+    <string name="channel_report_name">Weekly report</string>
+    <string name="channel_report_description">Your week in numbers, every Monday morning.</string>
+    <string name="report_title">Last week: %1$s a day</string>
+    <string name="report_change_down">%1$d%% less than the week before</string>
+    <string name="report_change_up">%1$d%% more than the week before</string>
+    <string name="report_change_same">Same as the week before</string>
+    <string name="report_focus">%1$s focused</string>
+    <plurals name="report_goal_days">
+        <item quantity="one">%1$d day under your goal</item>
+        <item quantity="other">%1$d days under your goal</item>
+    </plurals>
+
+    <!-- Time-eater budget -->
+    <string name="budget_title">Time-eater budget</string>
+    <string name="budget_off">Off · tap to set one</string>
+    <string name="budget_off_short">Off</string>
+    <string name="budget_body">One daily limit for all your time-eater apps together.</string>
+    <string name="block_title_budget">Time-eater time is up for today</string>
+    <string name="block_source_budget">All time-eaters: %1$s a day</string>
+    <plurals name="budget_warning">
+        <item quantity="one">%1$d minute of time-eater time left today</item>
+        <item quantity="other">%1$d minutes of time-eater time left today</item>
+    </plurals>
+
+    <!-- Export -->
+    <string name="export_title">Export my data</string>
+    <string name="export_subtitle">Save your history as a CSV file</string>
+    <string name="export_done">Saved</string>
+    <string name="export_failed">Could not save the file</string>
+
+    <!-- Lock mode -->
+    <string name="pause_time_eaters">Pauses time-eater apps</string>
+    <string name="pause_all">Pauses all apps (Lock mode)</string>
+    <plurals name="pause_allowed_count">
+        <item quantity="one">%1$d app allowed</item>
+        <item quantity="other">%1$d apps allowed</item>
+    </plurals>
+    <string name="pause_dialog_title">What should focus pause?</string>
+    <string name="pause_option_eaters">Time-eaters</string>
+    <string name="pause_option_all">All apps</string>
+    <string name="pause_all_note">Phone, Settings and your keyboard always work. Tick the apps you need for study.</string>
+
+    <!-- Study goal -->
+    <string name="settings_study_goal_title">Daily study goal</string>
+    <string name="settings_study_goal_explainer">How long you want to focus each day.</string>
+
+    <!-- Open limits -->
+    <string name="limit_off">Off</string>
+    <string name="limit_opens_title">Opens per day</string>
+    <string name="limit_opens_used">%1$d of %2$d opens</string>
+    <string name="block_title_opens">No more opens of %1$s today</string>
+    <plurals name="block_source_opens">
+        <item quantity="one">Daily limit: %1$d open</item>
+        <item quantity="other">Daily limit: %1$d opens</item>
+    </plurals>
+
+    <!-- Exam countdown -->
+    <string name="exam_title">Your exam</string>
+    <string name="exam_name_hint">e.g. GATE 2027</string>
+    <string name="exam_pick_date">Pick the date</string>
+    <string name="exam_clear">Clear</string>
+    <string name="exam_today">%1$s is today. You\'ve got this!</string>
+    <string name="exam_today_unnamed">Exam day. You\'ve got this!</string>
+    <plurals name="exam_days_left">
+        <item quantity="one">%1$d day left</item>
+        <item quantity="other">%1$d days left</item>
+    </plurals>
+    <plurals name="exam_countdown">
+        <item quantity="one">%1$s · %2$d day left</item>
+        <item quantity="other">%1$s · %2$d days left</item>
+    </plurals>
+
+    <string name="feed_needs_accessibility">Blocking only %1$s needs Accessibility, which is off. Until it is on, this rule won\'t work. Whole-app blocking works without it.</string>
+    <string name="feed_needs_accessibility_short">Needs Accessibility to work</string>
+
+    <!-- Pause before opening -->
+    <string name="when_mindful">Pause before opening</string>
+    <string name="when_mindful_sub">5 seconds to breathe first</string>
+    <string name="section_mindful">Pause before opening</string>
+    <string name="mindful_remove">Stop pausing %1$s</string>
+    <string name="mindful_title">Opening %1$s</string>
+    <string name="mindful_question">Take a breath. Do you really want to?</string>
+    <string name="mindful_open">Open %1$s</string>
+
+    <!-- What's new -->
+    <string name="new_title">New in Focuno</string>
+    <string name="new_focus_modes">Pomodoro, stopwatch and focus sounds</string>
+    <string name="new_strict">Strict mode: no ending early</string>
+    <string name="new_limits">Daily limits by minutes or opens</string>
+    <string name="new_lock_mode">Lock mode: pause every app but the ones you allow</string>
+    <string name="new_mindful">Pause before opening an app</string>
+    <string name="new_exam">Exam countdown and study goal (in Settings)</string>
+    <string name="new_widget">A home-screen widget</string>
+    <string name="new_ok">Let\'s go</string>
+
+    <!-- Quick Settings tile and running notification -->
+    <string name="tile_label">Focus</string>
+    <string name="tile_start">Start %1$d min</string>
+    <string name="tile_until">Until %1$s</string>
+    <string name="focus_running_break">Break · apps are free</string>
+
+    <!-- App detail and day comparison -->
+    <plurals name="app_opens">
+        <item quantity="one">%1$d open</item>
+        <item quantity="other">%1$d opens</item>
+    </plurals>
+    <string name="detail_week">Last 7 days</string>
+    <string name="detail_limit_or_block">Limit or block</string>
+    <string name="change_down_yesterday">↓ %1$d%% vs yesterday</string>
+    <string name="change_up_yesterday">↑ %1$d%% vs yesterday</string>
+    <string name="change_down_previous">↓ %1$d%% vs the day before</string>
+    <string name="change_up_previous">↑ %1$d%% vs the day before</string>
+</resources>
