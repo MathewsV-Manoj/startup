@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -73,12 +74,13 @@ fun HealthScreen(onBack: () -> Unit, modifier: Modifier = Modifier, viewModel: H
                 },
             )
 
+            // What blocking needs comes first; Accessibility is optional, so it is last.
             val items = listOf(
-                ProtectionIssue.ACCESSIBILITY to R.string.health_accessibility_why,
-                ProtectionIssue.OVERLAY to R.string.health_overlay_why,
                 ProtectionIssue.USAGE_ACCESS to R.string.health_usage_why,
+                ProtectionIssue.OVERLAY to R.string.health_overlay_why,
                 ProtectionIssue.NOTIFICATIONS to R.string.health_notifications_why,
                 ProtectionIssue.BATTERY to R.string.health_battery_why,
+                ProtectionIssue.ACCESSIBILITY to R.string.health_accessibility_why,
             )
             items.forEach { (issue, whyRes) ->
                 HealthRow(
@@ -108,12 +110,28 @@ private fun isGranted(status: ProtectionStatus, issue: ProtectionIssue): Boolean
 
 @Composable
 private fun HealthRow(issue: ProtectionIssue, why: String, granted: Boolean, note: String?, onFix: () -> Unit) {
+    // Accessibility is optional: when it is off that is a choice, not a fault, so it is not shown in red.
+    val optional = issue == ProtectionIssue.ACCESSIBILITY
     Panel(Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Icon(
-                imageVector = if (granted) Icons.Rounded.CheckCircle else Icons.Rounded.Warning,
-                contentDescription = stringResource(if (granted) R.string.health_status_ok else R.string.health_status_needs_fix),
-                tint = if (granted) FocunoTheme.colors.productive else FocunoTheme.colors.distracting,
+                imageVector = when {
+                    granted -> Icons.Rounded.CheckCircle
+                    optional -> Icons.Rounded.Info
+                    else -> Icons.Rounded.Warning
+                },
+                contentDescription = stringResource(
+                    when {
+                        granted -> R.string.health_status_ok
+                        optional -> R.string.health_status_optional
+                        else -> R.string.health_status_needs_fix
+                    },
+                ),
+                tint = when {
+                    granted -> FocunoTheme.colors.productive
+                    optional -> FocunoTheme.colors.textTertiary
+                    else -> FocunoTheme.colors.distracting
+                },
             )
             Column(Modifier.weight(1f)) {
                 Text(issueLabel(issue), style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textPrimary)

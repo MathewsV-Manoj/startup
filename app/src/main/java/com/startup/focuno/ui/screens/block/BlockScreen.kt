@@ -143,7 +143,7 @@ fun BlockContent(
                     if (state.items.isNotEmpty()) {
                         item { SectionLabel(stringResource(R.string.section_schedules)) }
                         val accessibilityOn = state.protection?.accessibilityEnabled != false
-                    items(state.items, key = { "schedule:${it.row.schedule.id}" }) { item -> ScheduleRow(item, accessibilityOn, onEdit, onToggle) }
+                        items(state.items, key = { "schedule:${it.row.schedule.id}" }) { item -> ScheduleRow(item, accessibilityOn, onEdit, onToggle) }
                     }
                 }
             }

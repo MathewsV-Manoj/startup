@@ -3,6 +3,7 @@ package com.startup.focuno.ui.screens.onboarding
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.startup.focuno.data.local.SettingsStore
+import com.startup.focuno.data.model.AppSettings
 import com.startup.focuno.data.repository.AppCategoryRepository
 import com.startup.focuno.data.repository.InstalledApp
 import com.startup.focuno.data.repository.InstalledAppsRepository
@@ -171,6 +172,8 @@ class OnboardingViewModel @Inject constructor(
                     },
                 )
             }
+            // Everything is new to someone who just set up, so there is no "What's new" to show them.
+            settingsStore.setWhatsNewSeen(AppSettings.WHATS_NEW_VERSION)
             settingsStore.setOnboardingCompleted(true)
         }
     }

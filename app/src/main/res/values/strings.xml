@@ -130,20 +130,21 @@
     <string name="privacy_reads_title">What it reads</string>
     <string name="privacy_reads_body">Which app is in front of you, and how long each app is used. If you choose to block only Reels or Shorts, Focuno also checks a few technical screen-part names inside Instagram or YouTube to see whether the video screen is open. That check only happens while such a rule exists and one of those apps is open.</string>
     <string name="privacy_never_title">What it never touches</string>
-    <string name="privacy_never_body">Messages, photos, passwords, text on screen, usernames, captions, your location, contacts, or anything you type in other apps. The only text Focuno keeps is the reason you give when you ask to unlock an app, and that stays on this phone.</string>
+    <string name="privacy_never_body">Messages, photos, passwords, text on screen, usernames, captions, your location, contacts, or anything you type in other apps. The only text Focuno keeps is what you type into Focuno itself: unlock reasons, subject names and your exam name. It stays on this phone, and leaves it only if you export it to a file you choose.</string>
 
     <!-- Health check -->
     <string name="health_title">Health check</string>
-    <string name="health_all_good">Everything Focuno needs to block apps is on.</string>
-    <string name="health_needs_attention">Something needs your attention so blocking can work.</string>
-    <string name="health_accessibility_why">Optional. Makes blocking faster and lets Focuno block only Reels or Shorts. Focuno still blocks apps without it.</string>
-    <string name="health_overlay_why">Lets the pause screen appear over a blocked app.</string>
-    <string name="health_usage_why">Lets Focuno count your screen time in each app.</string>
-    <string name="health_notifications_why">Lets Focuno warn you straight away if protection turns off.</string>
-    <string name="health_battery_why">Stops your phone\'s battery saver from quietly shutting Focuno down.</string>
+    <string name="health_all_good">Everything is working.</string>
+    <string name="health_needs_attention">Blocking needs one more permission.</string>
+    <string name="health_accessibility_why">Optional. Faster blocking, and blocking only Reels or Shorts.</string>
+    <string name="health_overlay_why">Shows the pause screen over a blocked app.</string>
+    <string name="health_usage_why">Counts screen time and sees which app is open.</string>
+    <string name="health_notifications_why">Warns you if blocking stops, and times your focus.</string>
+    <string name="health_battery_why">Stops your phone from closing Focuno.</string>
     <string name="health_accessibility_idle">Switched on in Settings, but Android is not running it right now. Try switching it off and on again.</string>
     <string name="health_fix">Fix</string>
     <string name="health_status_ok">OK</string>
+    <string name="health_status_optional">Optional</string>
     <string name="health_status_needs_fix">Needs fixing</string>
 
     <!-- Restricted setting help (Android 13+) -->
@@ -324,7 +325,7 @@
     <!-- Shield -->
 
     <string name="issue_background">Focuno must be running (open the app)</string>
-    <string name="health_basic_mode">Basic blocking is working. Turn on Accessibility for faster blocking and Reels-only blocking.</string>
+    <string name="health_basic_mode">Blocking works. Accessibility is optional.</string>
 
     <!-- Minimal redesign -->
     <string name="tab_me">Me</string>
