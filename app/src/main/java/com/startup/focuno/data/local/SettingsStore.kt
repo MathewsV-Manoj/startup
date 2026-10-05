@@ -55,6 +55,9 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
         val celebratedLevel = intPreferencesKey("celebrated_level")
         val subjects = stringPreferencesKey("subjects")
         val focusSound = stringPreferencesKey("focus_sound")
+        val weeklyReportWeek = stringPreferencesKey("weekly_report_week")
+        val budgetMinutes = intPreferencesKey("budget_minutes")
+        val budgetStrict = booleanPreferencesKey("budget_strict")
     }
 
     val settings: Flow<AppSettings> = context.focunoDataStore.data
@@ -92,6 +95,9 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
                 focusSound = prefs[Keys.focusSound]
                     ?.let { name -> FocusSound.entries.firstOrNull { it.name == name } }
                     ?: defaults.focusSound,
+                weeklyReportWeek = prefs[Keys.weeklyReportWeek],
+                budgetMinutes = prefs[Keys.budgetMinutes] ?: defaults.budgetMinutes,
+                budgetStrict = prefs[Keys.budgetStrict] ?: defaults.budgetStrict,
                 subjects = prefs[Keys.subjects]?.split(SUBJECT_SEPARATOR)?.filter { it.isNotBlank() } ?: defaults.subjects,
             )
         }
@@ -169,6 +175,17 @@ class SettingsStore @Inject constructor(@ApplicationContext private val context:
             it[Keys.xpBanked] = (it[Keys.xpBanked] ?: 0) + amount
             it[Keys.xpBankedThrough] = throughDay
         }
+    }
+
+    suspend fun setTimeEaterBudget(minutes: Int, strict: Boolean) {
+        context.focunoDataStore.edit {
+            it[Keys.budgetMinutes] = minutes
+            it[Keys.budgetStrict] = strict
+        }
+    }
+
+    suspend fun setWeeklyReportWeek(weekStart: String) {
+        context.focunoDataStore.edit { it[Keys.weeklyReportWeek] = weekStart }
     }
 
     suspend fun setFocusSound(sound: FocusSound) {

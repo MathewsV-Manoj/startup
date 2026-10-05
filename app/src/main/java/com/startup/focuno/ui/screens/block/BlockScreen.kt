@@ -19,19 +19,26 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.HourglassBottom
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.LockOpen
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +59,7 @@ import com.startup.focuno.ui.components.Panel
 import com.startup.focuno.ui.components.ProtectionBanner
 import com.startup.focuno.ui.components.RefreshWhileResumed
 import com.startup.focuno.ui.components.ScreenTitle
+import com.startup.focuno.ui.components.StrictSwitch
 import com.startup.focuno.ui.components.durationText
 import com.startup.focuno.ui.components.formatClock
 import com.startup.focuno.ui.components.shortVideoName
@@ -82,6 +90,7 @@ fun BlockScreen(
         onToggle = viewModel::setEnabled,
         onEditLimit = { onEditLimit(it.limit, it.lockedUntilMs) },
         onToggleLimit = viewModel::setLimitEnabled,
+        onSetBudget = viewModel::setBudget,
         modifier = modifier,
     )
 }
@@ -95,9 +104,14 @@ fun BlockContent(
     onToggle: (BlockSchedule, Boolean) -> Unit,
     onEditLimit: (LimitItem) -> Unit,
     onToggleLimit: (LimitItem, Boolean) -> Unit,
+    onSetBudget: (minutes: Int, strict: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val isEmpty = state.items.isEmpty() && state.limits.isEmpty()
+    var editingBudget by rememberSaveable { mutableStateOf(false) }
+    if (editingBudget) {
+        BudgetDialog(state.budget, onSave = onSetBudget, onDismiss = { editingBudget = false })
+    }
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             ScreenTitle(stringResource(R.string.tab_block)) { ShieldDot(state.protection, onOpenHealth) }
@@ -110,6 +124,7 @@ fun BlockContent(
                 ) {
                     item { ProtectionBanner(state.protection, onFix = onOpenHealth) }
                     item { FocusRunningRow(state.focusUntilMs) }
+                    item { BudgetRow(state.budget, onClick = { editingBudget = true }) }
                     if (isEmpty) {
                         item { EmptyBlocks(onAdd) }
                     }
@@ -235,6 +250,119 @@ private fun ScheduleRow(item: ScheduleItem, onEdit: (BlockSchedule) -> Unit, onT
         }
     }
 }
+
+/** One budget for all time-eater apps together. Always shown, so it is easy to find and switch on. */
+@Composable
+private fun BudgetRow(budget: BudgetUi, onClick: () -> Unit) {
+    val on = budget.minutes > 0
+    val dailyMs = budget.minutes * 60_000L
+    val over = on && budget.usedMs >= dailyMs
+    Panel(
+        modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).clickable(onClick = onClick),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Box(
+                Modifier.size(44.dp).clip(CircleShape).background(FocunoTheme.colors.distracting.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Rounded.HourglassBottom, contentDescription = null, tint = FocunoTheme.colors.distracting)
+            }
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.budget_title), style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textPrimary)
+                Text(
+                    if (on) stringResource(R.string.limit_used, durationText(budget.usedMs), durationText(dailyMs)) else stringResource(R.string.budget_off),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (over) FocunoTheme.colors.distracting else FocunoTheme.colors.textSecondary,
+                )
+                if (on) {
+                    Spacer(Modifier.height(6.dp))
+                    Box(
+                        Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(50)).background(FocunoTheme.colors.trackInactive),
+                    ) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth((budget.usedMs.toFloat() / dailyMs).coerceIn(0.02f, 1f))
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(if (over) FocunoTheme.colors.distracting else FocunoTheme.colors.warning),
+                        )
+                    }
+                }
+            }
+            if (on) {
+                Icon(
+                    imageVector = if (budget.strict) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
+                    contentDescription = stringResource(if (budget.strict) R.string.cd_strict_on else R.string.cd_strict_off),
+                    tint = if (budget.strict) FocunoTheme.colors.productive else FocunoTheme.colors.warning,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BudgetDialog(budget: BudgetUi, onSave: (Int, Boolean) -> Unit, onDismiss: () -> Unit) {
+    val locked = budget.lockedUntilMs != null
+    var minutes by rememberSaveable { mutableIntStateOf(budget.minutes) }
+    var strict by rememberSaveable { mutableStateOf(budget.strict) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Rounded.HourglassBottom, contentDescription = null) },
+        title = { Text(stringResource(R.string.budget_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.budget_body), style = MaterialTheme.typography.bodyMedium)
+                if (locked) {
+                    Text(stringResource(R.string.limit_locked), style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.warning)
+                }
+                BUDGET_CHOICES.chunked(3).forEach { row ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        row.forEach { option ->
+                            val selected = option == minutes
+                            Box(
+                                Modifier
+                                    .weight(1f)
+                                    .height(44.dp)
+                                    .clip(RoundedCornerShape(50))
+                                    .background(if (selected) MaterialTheme.colorScheme.primary else FocunoTheme.colors.trackInactive)
+                                    .clickable(enabled = !locked) { minutes = option },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    if (option == 0) stringResource(R.string.budget_off_short) else durationText(option * 60_000L),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = if (selected) FocunoTheme.colors.textPrimary else FocunoTheme.colors.textSecondary,
+                                )
+                            }
+                        }
+                    }
+                }
+                if (minutes > 0) {
+                    StrictSwitch(
+                        strict = strict,
+                        onChange = { strict = it },
+                        enabled = !locked,
+                        note = stringResource(if (strict) R.string.limit_strict_on else R.string.limit_strict_off),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    onSave(minutes, strict)
+                    onDismiss()
+                },
+                enabled = !locked,
+            ) { Text(stringResource(R.string.action_save)) }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+    )
+}
+
+private val BUDGET_CHOICES = listOf(0, 30, 60, 90, 120, 180)
 
 @Composable
 private fun SectionLabel(text: String) {

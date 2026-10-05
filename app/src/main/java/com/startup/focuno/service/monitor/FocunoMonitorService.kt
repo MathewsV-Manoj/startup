@@ -49,6 +49,7 @@ class FocunoMonitorService : Service() {
     @Inject lateinit var computeDayStats: ComputeDayStatsUseCase
     @Inject lateinit var engine: BlockEngine
     @Inject lateinit var engineLog: EngineLog
+    @Inject lateinit var weeklyReport: WeeklyReportSender
 
     private var backgroundScope: CoroutineScope? = null
     private var mainScope: CoroutineScope? = null
@@ -136,6 +137,7 @@ class FocunoMonitorService : Service() {
                         notificationHelper.updateMonitor(text)
                     }
                     FocusWidget.refresh(this@FocunoMonitorService)
+                    weeklyReport.maybeSend()
                 }
             } catch (e: CancellationException) {
                 throw e

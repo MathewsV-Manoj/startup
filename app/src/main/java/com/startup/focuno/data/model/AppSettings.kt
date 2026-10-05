@@ -1,5 +1,6 @@
 package com.startup.focuno.data.model
 
+import com.startup.focuno.domain.model.AppLimit
 import com.startup.focuno.domain.model.FocusMode
 import com.startup.focuno.domain.model.FocusPlan
 import com.startup.focuno.domain.model.FocusSound
@@ -40,7 +41,20 @@ data class AppSettings(
     val subjects: List<String> = emptyList(),
     /** Background sound that plays during a focus timer. */
     val focusSound: FocusSound = FocusSound.OFF,
+    /** Monday of the last week a weekly report was sent for, as "2026-09-28". */
+    val weeklyReportWeek: String? = null,
+    /** One daily budget for all time-eater apps together, in minutes. 0 means off. */
+    val budgetMinutes: Int = 0,
+    val budgetStrict: Boolean = false,
 ) {
+    /** The time-eater budget as a limit, so it follows exactly the same rules as a per-app limit. */
+    val timeEaterBudget: AppLimit?
+        get() = if (budgetMinutes > 0) AppLimit(BUDGET_KEY, budgetMinutes, budgetStrict) else null
+
+    companion object {
+        const val BUDGET_KEY = "*time-eaters*"
+    }
+
     /** The focus timer in progress, or null. Pomodoro breaks are part of the plan. */
     val focusPlan: FocusPlan?
         get() {

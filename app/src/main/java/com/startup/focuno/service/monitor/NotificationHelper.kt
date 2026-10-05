@@ -11,7 +11,9 @@ import androidx.core.app.NotificationManagerCompat
 import com.startup.focuno.R
 import com.startup.focuno.data.repository.ProtectionIssue
 import com.startup.focuno.data.repository.ProtectionStatus
+import com.startup.focuno.domain.usecase.WeeklyReport
 import com.startup.focuno.ui.MainActivity
+import com.startup.focuno.ui.components.formatDuration
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -34,6 +36,12 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
             NotificationChannelCompat.Builder(CHANNEL_FOCUS, NotificationManagerCompat.IMPORTANCE_HIGH)
                 .setName(context.getString(R.string.channel_focus_name))
                 .setDescription(context.getString(R.string.channel_focus_description))
+                .build(),
+        )
+        manager.createNotificationChannel(
+            NotificationChannelCompat.Builder(CHANNEL_REPORT, NotificationManagerCompat.IMPORTANCE_DEFAULT)
+                .setName(context.getString(R.string.channel_report_name))
+                .setDescription(context.getString(R.string.channel_report_description))
                 .build(),
         )
         manager.createNotificationChannel(
@@ -111,6 +119,36 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
         notifyFocus(context.getString(R.string.focus_back_title), context.getString(R.string.focus_back_text, round, rounds))
     }
 
+    @SuppressLint("MissingPermission")
+    fun notifyWeeklyReport(report: WeeklyReport) {
+        ensureChannels()
+        if (!manager.areNotificationsEnabled()) return
+        val resources = context.resources
+        val parts = buildList {
+            report.changePercent?.let { change ->
+                add(
+                    when {
+                        change < 0 -> context.getString(R.string.report_change_down, -change)
+                        change > 0 -> context.getString(R.string.report_change_up, change)
+                        else -> context.getString(R.string.report_change_same)
+                    },
+                )
+            }
+            if (report.focusMs > 0) add(context.getString(R.string.report_focus, formatDuration(resources, report.focusMs)))
+            add(resources.getQuantityString(R.plurals.report_goal_days, report.daysUnderGoal, report.daysUnderGoal))
+        }
+        val text = parts.joinToString(" · ")
+        val notification = NotificationCompat.Builder(context, CHANNEL_REPORT)
+            .setSmallIcon(R.drawable.ic_stat_focuno)
+            .setContentTitle(context.getString(R.string.report_title, formatDuration(resources, report.averageDailyMs)))
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setAutoCancel(true)
+            .setContentIntent(openAppIntent(openHealth = false))
+            .build()
+        manager.notify(REPORT_ID, notification)
+    }
+
     fun notifyFocusDone() {
         notifyFocus(context.getString(R.string.focus_done_title), context.getString(R.string.focus_done_text))
     }
@@ -148,8 +186,10 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
         const val CHANNEL_MONITOR = "focuno_monitor"
         const val CHANNEL_PROTECTION = "focuno_protection"
         const val CHANNEL_FOCUS = "focuno_focus"
+        const val CHANNEL_REPORT = "focuno_report"
         const val MONITOR_ID = 1001
         const val PROTECTION_ID = 1002
         const val FOCUS_ID = 1003
+        const val REPORT_ID = 1004
     }
 }

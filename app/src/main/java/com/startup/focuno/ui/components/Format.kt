@@ -1,6 +1,8 @@
 package com.startup.focuno.ui.components
 
+import android.content.res.Resources
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.startup.focuno.R
 import java.util.Locale
@@ -9,15 +11,18 @@ fun formatClock(minuteOfDay: Int): String = String.format(Locale.ROOT, "%02d:%02
 
 /** "1h 20m", "45m" or "<1m". Rounds up so a countdown never shows 0 while time is left. */
 @Composable
-fun durationText(ms: Long, roundUp: Boolean = false): String {
+fun durationText(ms: Long, roundUp: Boolean = false): String = formatDuration(LocalContext.current.resources, ms, roundUp)
+
+/** The same as [durationText], for notifications and widgets, which have no Compose. */
+fun formatDuration(resources: Resources, ms: Long, roundUp: Boolean = false): String {
     val totalMinutes = if (roundUp) (ms + 59_999) / 60_000 else ms / 60_000
     val hours = (totalMinutes / 60).toInt()
     val minutes = (totalMinutes % 60).toInt()
     return when {
-        hours > 0 && minutes > 0 -> stringResource(R.string.duration_hours_minutes, hours, minutes)
-        hours > 0 -> stringResource(R.string.duration_hours, hours)
-        minutes > 0 -> stringResource(R.string.duration_minutes, minutes)
-        else -> stringResource(R.string.duration_under_a_minute)
+        hours > 0 && minutes > 0 -> resources.getString(R.string.duration_hours_minutes, hours, minutes)
+        hours > 0 -> resources.getString(R.string.duration_hours, hours)
+        minutes > 0 -> resources.getString(R.string.duration_minutes, minutes)
+        else -> resources.getString(R.string.duration_under_a_minute)
     }
 }
 

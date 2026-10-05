@@ -1,6 +1,6 @@
 package com.startup.focuno.domain.model
 
-enum class BlockKind { SCHEDULE, QUICK_BLOCK, DAILY_LIMIT }
+enum class BlockKind { SCHEDULE, QUICK_BLOCK, DAILY_LIMIT, TIME_BUDGET }
 
 /** Everything the block screen needs to explain itself calmly. */
 data class BlockOverlayModel(

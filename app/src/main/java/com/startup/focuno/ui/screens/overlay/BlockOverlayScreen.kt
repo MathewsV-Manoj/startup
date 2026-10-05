@@ -99,6 +99,7 @@ fun BlockOverlayScreen(
                 text = when {
                     isFeed -> stringResource(R.string.block_title_feed, shortVideoName(model.packageName))
                     model.kind == BlockKind.DAILY_LIMIT -> stringResource(R.string.block_title_limit, model.appName)
+                    model.kind == BlockKind.TIME_BUDGET -> stringResource(R.string.block_title_budget)
                     else -> stringResource(R.string.block_title, model.appName)
                 },
                 style = MaterialTheme.typography.headlineSmall,
@@ -115,6 +116,7 @@ fun BlockOverlayScreen(
                     }
                     BlockKind.QUICK_BLOCK -> model.quickLabel.ifBlank { stringResource(R.string.block_source_quick) }
                     BlockKind.DAILY_LIMIT -> stringResource(R.string.block_source_limit, durationText(model.limitMinutes * 60_000L))
+                    BlockKind.TIME_BUDGET -> stringResource(R.string.block_source_budget, durationText(model.limitMinutes * 60_000L))
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = FocunoTheme.colors.textTertiary,
@@ -126,7 +128,9 @@ fun BlockOverlayScreen(
                 color = FocunoTheme.colors.productive,
             )
             Text(
-                stringResource(if (model.kind == BlockKind.DAILY_LIMIT) R.string.block_until_midnight else R.string.block_left),
+                stringResource(
+                    if (model.kind == BlockKind.DAILY_LIMIT || model.kind == BlockKind.TIME_BUDGET) R.string.block_until_midnight else R.string.block_left,
+                ),
                 style = MaterialTheme.typography.titleMedium,
                 color = FocunoTheme.colors.textSecondary,
             )

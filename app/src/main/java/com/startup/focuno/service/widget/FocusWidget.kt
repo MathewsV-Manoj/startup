@@ -16,6 +16,7 @@ import com.startup.focuno.data.repository.UsageTrackingRepository
 import com.startup.focuno.domain.model.FocusMode
 import com.startup.focuno.service.focus.FocusController
 import com.startup.focuno.ui.MainActivity
+import com.startup.focuno.ui.components.formatDuration
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -108,7 +109,7 @@ object FocusWidget {
         val plan = settings.focusPlan?.takeIf { it.isRunning(now) }
 
         val views = RemoteViews(context.packageName, R.layout.widget_focus)
-        views.setTextViewText(R.id.widget_time, totalMs?.let { durationText(context, it) } ?: context.getString(R.string.gauge_dash))
+        views.setTextViewText(R.id.widget_time, totalMs?.let { formatDuration(context.resources, it) } ?: context.getString(R.string.gauge_dash))
         views.setTextViewText(R.id.widget_streak, context.resources.getQuantityString(R.plurals.widget_streak, settings.streakCount, settings.streakCount))
         views.setOnClickPendingIntent(R.id.widget_root, openApp(context))
 
@@ -131,17 +132,6 @@ object FocusWidget {
             views.setOnClickPendingIntent(R.id.widget_action, openApp(context))
         }
         manager.updateAppWidget(ids, views)
-    }
-
-    private fun durationText(context: Context, ms: Long): String {
-        val totalMinutes = ms / 60_000
-        val hours = (totalMinutes / 60).toInt()
-        val minutes = (totalMinutes % 60).toInt()
-        return when {
-            hours > 0 -> context.getString(R.string.duration_hours_minutes, hours, minutes)
-            minutes > 0 -> context.getString(R.string.duration_minutes, minutes)
-            else -> context.getString(R.string.duration_under_a_minute)
-        }
     }
 
     private fun openApp(context: Context): PendingIntent = PendingIntent.getActivity(
