@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.startup.focuno.data.local.SettingsStore
+import com.startup.focuno.data.model.AppSettings
 import com.startup.focuno.domain.usecase.RunDailyRollupUseCase
 import com.startup.focuno.service.monitor.MonitorServiceLauncher
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,13 +28,22 @@ sealed interface AppUiState {
 @HiltViewModel
 class AppViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    settingsStore: SettingsStore,
+    private val settingsStore: SettingsStore,
     private val rollup: RunDailyRollupUseCase,
 ) : ViewModel() {
 
     val state: StateFlow<AppUiState> = settingsStore.settings
         .map { if (it.onboardingCompleted) AppUiState.Main else AppUiState.Onboarding }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppUiState.Loading)
+
+    /** True once, after an update that brought something worth pointing out. */
+    val showWhatsNew: StateFlow<Boolean> = settingsStore.settings
+        .map { it.onboardingCompleted && it.whatsNewSeen < AppSettings.WHATS_NEW_VERSION }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    fun dismissWhatsNew() {
+        viewModelScope.launch { settingsStore.setWhatsNewSeen(AppSettings.WHATS_NEW_VERSION) }
+    }
 
     init {
         viewModelScope.launch {

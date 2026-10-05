@@ -41,6 +41,7 @@ import com.startup.focuno.ui.screens.trophies.TrophiesScreen
 import com.startup.focuno.ui.screens.trophies.badgeName
 import com.startup.focuno.ui.components.CelebrationDialog
 import com.startup.focuno.ui.components.RefreshWhileResumed
+import com.startup.focuno.ui.components.WhatsNewDialog
 import com.startup.focuno.ui.screens.block.BlockScreen
 import com.startup.focuno.ui.screens.block.ScheduleEditorSheet
 import com.startup.focuno.ui.screens.block.ScheduleEditorViewModel
@@ -69,11 +70,15 @@ private const val ROUTE_USAGE_CHECK = 3
 @Composable
 fun FocunoApp(openHealthRequest: Int = 0, appViewModel: AppViewModel = hiltViewModel()) {
     val state by appViewModel.state.collectAsStateWithLifecycle()
+    val showWhatsNew by appViewModel.showWhatsNew.collectAsStateWithLifecycle()
     Box(Modifier.fillMaxSize().background(DeepVoidPurple)) {
         when (state) {
             AppUiState.Loading -> Unit
             AppUiState.Onboarding -> OnboardingScreen()
-            AppUiState.Main -> MainScaffold(openHealthRequest)
+            AppUiState.Main -> {
+                MainScaffold(openHealthRequest)
+                if (showWhatsNew) WhatsNewDialog(onDismiss = appViewModel::dismissWhatsNew)
+            }
         }
     }
 }

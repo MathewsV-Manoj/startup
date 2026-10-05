@@ -56,6 +56,8 @@ data class AppSettings(
     val focusAllowed: Set<String> = emptySet(),
     /** Apps that get a short breathing pause each time they are opened. */
     val mindfulApps: Set<String> = emptySet(),
+    /** The last "What's new" sheet the person has seen. */
+    val whatsNewSeen: Int = 0,
 ) {
     /** The time-eater budget as a limit, so it follows exactly the same rules as a per-app limit. */
     val timeEaterBudget: AppLimit?
@@ -63,6 +65,9 @@ data class AppSettings(
 
     companion object {
         const val BUDGET_KEY = "*time-eaters*"
+
+        /** Raise this when there is something new worth showing once after an update. */
+        const val WHATS_NEW_VERSION = 1
     }
 
     /** The focus timer in progress, or null. Pomodoro breaks are part of the plan. */
