@@ -69,6 +69,10 @@ class FocusSessionRepository @Inject constructor(
 
     suspend fun lastCompletedEndMs(): Long? = dao.lastCompletedEnd()
 
+    /** Start and end of every bit of focus since [sinceMs]; a running session ends at [nowMs]. */
+    suspend fun focusSpans(sinceMs: Long, nowMs: Long): List<Pair<Long, Long>> =
+        dao.startedBetween(sinceMs, nowMs).map { it.startTs to minOf(it.endTs, nowMs) }
+
     suspend fun completedBetween(fromMs: Long, toMs: Long): Int = dao.completedBetween(fromMs, toMs)
 
     fun observeCompletedCount(sinceMs: Long): Flow<Int> = dao.observeCompletedCount(sinceMs)

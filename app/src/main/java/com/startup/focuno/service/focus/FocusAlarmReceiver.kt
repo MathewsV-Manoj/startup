@@ -6,6 +6,7 @@ import android.content.Intent
 import android.util.Log
 import com.startup.focuno.data.local.SettingsStore
 import com.startup.focuno.service.monitor.NotificationHelper
+import com.startup.focuno.service.widget.FocusWidget
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -47,6 +48,8 @@ class FocusAlarmReceiver : BroadcastReceiver() {
                     }
                 }
                 deps.focusAlarms().scheduleNext(plan, now)
+                // The widget's countdown runs to the end of a phase, so it needs the next phase now.
+                FocusWidget.refresh(context)
             } catch (e: Exception) {
                 Log.w(TAG, "Focus alarm failed", e)
             } finally {

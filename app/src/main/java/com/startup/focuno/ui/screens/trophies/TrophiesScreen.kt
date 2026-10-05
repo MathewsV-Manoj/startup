@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,6 +57,7 @@ import com.startup.focuno.R
 import com.startup.focuno.domain.model.BadgeId
 import com.startup.focuno.domain.model.Quest
 import com.startup.focuno.domain.model.QuestKind
+import com.startup.focuno.domain.usecase.FocusCalendar
 import com.startup.focuno.ui.components.BuddyMood
 import com.startup.focuno.ui.components.BuddyView
 import com.startup.focuno.ui.components.LoadingState
@@ -89,6 +91,9 @@ fun TrophiesContent(game: GameUiState, modifier: Modifier = Modifier) {
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) { LevelHeader(game) }
             item(span = { GridItemSpan(maxLineSpan) }) { NumbersRow(game) }
+            if (game.calendar.isNotEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) { FocusCalendarCard(game.calendar, game.calendarTotalMs) }
+            }
             if (game.quests.isNotEmpty()) {
                 item(span = { GridItemSpan(maxLineSpan) }) { Missions(game.quests) }
             }
@@ -172,6 +177,48 @@ private fun NumberTile(icon: ImageVector, tint: Color, value: String, label: Str
             Text(label, style = MaterialTheme.typography.labelSmall, color = FocunoTheme.colors.textTertiary)
         }
     }
+}
+
+/** Twelve weeks of focus, one square per day, darker for days with more focus. */
+@Composable
+private fun FocusCalendarCard(calendar: List<List<Long?>>, totalMs: Long) {
+    Panel(Modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            SectionTitle(stringResource(R.string.calendar_title), Modifier.weight(1f))
+            Text(durationText(totalMs), style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.productive)
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            calendar.forEach { week ->
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    week.forEach { ms -> CalendarCell(ms) }
+                }
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.calendar_less), style = MaterialTheme.typography.labelSmall, color = FocunoTheme.colors.textTertiary)
+            listOf(0L, 10 * 60_000L, 30 * 60_000L, 90 * 60_000L, 150 * 60_000L).forEach { CalendarCell(it, size = 12.dp) }
+            Text(stringResource(R.string.calendar_more), style = MaterialTheme.typography.labelSmall, color = FocunoTheme.colors.textTertiary)
+        }
+    }
+}
+
+@Composable
+private fun CalendarCell(ms: Long?, size: Dp = 18.dp) {
+    val color = when (ms?.let { FocusCalendar.level(it) }) {
+        null -> Color.Transparent
+        0 -> FocunoTheme.colors.trackInactive
+        1 -> FocunoTheme.colors.productive.copy(alpha = 0.3f)
+        2 -> FocunoTheme.colors.productive.copy(alpha = 0.5f)
+        3 -> FocunoTheme.colors.productive.copy(alpha = 0.75f)
+        else -> FocunoTheme.colors.productive
+    }
+    Box(Modifier.size(size).clip(RoundedCornerShape(4.dp)).background(color))
 }
 
 @Composable

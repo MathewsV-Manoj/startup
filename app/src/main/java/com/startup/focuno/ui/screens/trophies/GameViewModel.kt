@@ -13,6 +13,7 @@ import com.startup.focuno.domain.model.LevelProgress
 import com.startup.focuno.domain.model.Quest
 import com.startup.focuno.domain.usecase.Badges
 import com.startup.focuno.domain.usecase.ComputeDayStatsUseCase
+import com.startup.focuno.domain.usecase.FocusCalendar
 import com.startup.focuno.domain.usecase.GameRules
 import com.startup.focuno.domain.usecase.Quests
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,6 +42,9 @@ data class GameUiState(
     val badges: List<BadgeUi> = BadgeId.entries.map { BadgeUi(it, false) },
     val streak: Int = 0,
     val celebration: Celebration? = null,
+    /** FocusCalendar.WEEKS columns of 7 days; null marks days still to come. */
+    val calendar: List<List<Long?>> = emptyList(),
+    val calendarTotalMs: Long = 0L,
 )
 
 @HiltViewModel
@@ -86,6 +90,9 @@ class GameViewModel @Inject constructor(
         val hitsTotal = bypassRepository.blockHitsTotal()
         val todayMs = if (usageRepository.hasUsageAccess()) computeDayStats(today).totalMs else 0L
 
+        val calendarStart = FocusCalendar.firstDay(today).atStartOfDay(zone).toInstant().toEpochMilli()
+        val focusByDay = FocusCalendar.msByDay(focusSessions.focusSpans(calendarStart, now), zone)
+
         val actionXp = GameRules.actionXp(sessionsToday, urgesToday)
         val totalXp = settings.xpBanked + actionXp
         val level = GameRules.levelFor(totalXp)
@@ -111,6 +118,8 @@ class GameViewModel @Inject constructor(
             badges = BadgeId.entries.map { BadgeUi(it, it in earned || it.name in unlocked) },
             streak = settings.streakCount,
             celebration = celebration,
+            calendar = FocusCalendar.grid(focusByDay, today),
+            calendarTotalMs = focusByDay.values.sum(),
         )
     }
 

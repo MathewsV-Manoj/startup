@@ -1,4 +1,12 @@
 <resources>
     <!-- Window, splash and launcher only. App UI colours live in ui/theme/Color.kt. -->
     <color name="deep_void_purple">#FF0D0417</color>
+
+    <!-- Home-screen widget. RemoteViews cannot read Compose colours, so the same palette is repeated here. -->
+    <color name="widget_surface">#FF1A0F2E</color>
+    <color name="widget_text_primary">#FFF4F0FA</color>
+    <color name="widget_text_secondary">#FFB3A6C9</color>
+    <color name="widget_accent">#FF9D4EDD</color>
+    <color name="widget_streak">#FFFFB84D</color>
+    <color name="widget_focus">#FF64FFDA</color>
 </resources>

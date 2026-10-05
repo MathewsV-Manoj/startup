@@ -437,4 +437,18 @@
     <string name="focus_back_text">Round %1$d of %2$d has started.</string>
     <string name="focus_done_title">Focus done!</string>
     <string name="focus_done_text">Nice work. Open Focuno to see your points.</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Screen time, streak and a one-tap focus timer</string>
+    <string name="widget_screen_time">screen time today</string>
+    <string name="widget_start">Start %1$d min focus</string>
+    <plurals name="widget_streak">
+        <item quantity="one">%1$d day streak</item>
+        <item quantity="other">%1$d-day streak</item>
+    </plurals>
+
+    <!-- Focus calendar -->
+    <string name="calendar_title">Focus calendar</string>
+    <string name="calendar_less">Less</string>
+    <string name="calendar_more">More</string>
 </resources>

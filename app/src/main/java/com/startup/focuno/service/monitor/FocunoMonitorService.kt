@@ -18,6 +18,7 @@ import com.startup.focuno.domain.usecase.ComputeDayStatsUseCase
 import com.startup.focuno.service.accessibility.BlockEngine
 import com.startup.focuno.service.accessibility.EngineLog
 import com.startup.focuno.service.accessibility.FocunoAccessibilityService
+import com.startup.focuno.service.widget.FocusWidget
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -134,6 +135,7 @@ class FocunoMonitorService : Service() {
                         lastScoreText = text
                         notificationHelper.updateMonitor(text)
                     }
+                    FocusWidget.refresh(this@FocunoMonitorService)
                 }
             } catch (e: CancellationException) {
                 throw e

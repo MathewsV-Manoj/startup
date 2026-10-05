@@ -1,9 +1,7 @@
 package com.startup.focuno.ui.screens.focus
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.startup.focuno.R
 import com.startup.focuno.data.local.SettingsStore
 import com.startup.focuno.data.repository.FocusSessionRepository
 import com.startup.focuno.data.repository.InstalledAppsRepository
@@ -18,10 +16,9 @@ import com.startup.focuno.domain.model.FocusPlan
 import com.startup.focuno.domain.model.FocusSound
 import com.startup.focuno.domain.usecase.ComputeDayStatsUseCase
 import com.startup.focuno.domain.usecase.StreakCalculator
-import com.startup.focuno.service.focus.FocusAlarms
+import com.startup.focuno.service.focus.FocusController
 import com.startup.focuno.service.sound.FocusSoundPlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,7 +60,6 @@ data class FocusUiState(
 
 @HiltViewModel
 class FocusViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val computeDayStats: ComputeDayStatsUseCase,
     private val usageRepository: UsageTrackingRepository,
     private val protectionRepository: ProtectionRepository,
@@ -72,7 +68,7 @@ class FocusViewModel @Inject constructor(
     private val installedApps: InstalledAppsRepository,
     private val focusSessions: FocusSessionRepository,
     private val soundPlayer: FocusSoundPlayer,
-    private val focusAlarms: FocusAlarms,
+    private val focusController: FocusController,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FocusUiState())
@@ -144,18 +140,15 @@ class FocusViewModel @Inject constructor(
     /** [amount] is minutes for a timer and rounds for a Pomodoro; a stopwatch ignores it. */
     fun startFocusSession(mode: FocusMode, amount: Int, strict: Boolean, subject: String) {
         viewModelScope.launch {
-            // The pause screen shows this, so "Signals" says more than "Focus session".
-            val label = subject.ifBlank { context.getString(R.string.quick_block_label_focus) }
-            val now = System.currentTimeMillis()
-            val plan = when (mode) {
-                FocusMode.TIMER -> FocusPlan(FocusMode.TIMER, now, now + amount * 60_000L)
-                FocusMode.POMODORO -> FocusPlan.pomodoro(now, FocusPlan.POMODORO_FOCUS_MIN, FocusPlan.POMODORO_BREAK_MIN, amount)
-                FocusMode.STOPWATCH -> FocusPlan(FocusMode.STOPWATCH, now, now + FocusSessionRepository.STOPWATCH_MAX_MS)
-            }
-            // A stopwatch is meant to be stopped by hand, so it is never strict.
-            focusSessions.start(plan, label, strict && mode != FocusMode.STOPWATCH, subject)
-            soundPlayer.play(settingsStore.settings.first().focusSound, untilMs = plan.endMs)
-            focusAlarms.scheduleNext(plan, now)
+            focusController.start(mode, amount, strict, subject)
+            refresh()
+        }
+    }
+
+    /** Does nothing during a strict session: the repository refuses to end it early. */
+    fun stopFocusSession() {
+        viewModelScope.launch {
+            focusController.stop()
             refresh()
         }
     }
@@ -187,17 +180,6 @@ class FocusViewModel @Inject constructor(
     fun removeSubject(name: String) {
         viewModelScope.launch {
             settingsStore.setSubjects(settingsStore.settings.first().subjects - name)
-            refresh()
-        }
-    }
-
-    /** Does nothing during a strict session: the repository refuses to end it early. */
-    fun stopFocusSession() {
-        viewModelScope.launch {
-            if (focusSessions.stopEarly()) {
-                soundPlayer.stop()
-                focusAlarms.cancel()
-            }
             refresh()
         }
     }
