@@ -191,7 +191,8 @@ private fun TopRow(focus: FocusUiState, onOpenSettings: () -> Unit, onOpenHealth
             onClick = if (focus.hasUsageAccess) null else onOpenHealth,
         )
         val goalMs = focus.studyGoalMinutes * 60_000L
-        val focused = durationText(focus.todayFocusMs)
+        // "0m / 4h" reads better than "<1m / 4h" before the first minute of the day.
+        val focused = if (focus.todayFocusMs < 60_000L) stringResource(R.string.duration_minutes, 0) else durationText(focus.todayFocusMs)
         val goal = durationText(goalMs)
         val reached = goalMs > 0 && focus.todayFocusMs >= goalMs
         Pill(
@@ -227,7 +228,7 @@ private fun Pill(icon: ImageVector, text: String, tint: Color, description: Stri
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(18.dp))
-        Text(text, style = MaterialTheme.typography.labelLarge, color = FocunoTheme.colors.textPrimary)
+        Text(text, style = MaterialTheme.typography.labelLarge, color = FocunoTheme.colors.textPrimary, maxLines = 1)
     }
 }
 

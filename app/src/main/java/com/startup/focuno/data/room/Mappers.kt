@@ -25,6 +25,8 @@ fun BlockSchedule.toEntity() = BlockScheduleEntity(
     strictMode = strictMode,
 )
 
-fun AppLimitEntity.toDomain() = AppLimit(packageName = packageName, dailyMinutes = dailyMinutes, strict = strict, enabled = enabled)
+fun AppLimitEntity.toDomain() =
+    AppLimit(packageName = packageName, dailyMinutes = dailyMinutes, strict = strict, enabled = enabled, maxOpens = maxOpens)
 
-fun AppLimit.toEntity() = AppLimitEntity(packageName = packageName, dailyMinutes = dailyMinutes, strict = strict, enabled = enabled)
+fun AppLimit.toEntity() =
+    AppLimitEntity(packageName = packageName, dailyMinutes = dailyMinutes, strict = strict, enabled = enabled, maxOpens = maxOpens)

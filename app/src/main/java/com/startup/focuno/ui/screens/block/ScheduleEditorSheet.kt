@@ -82,6 +82,7 @@ fun ScheduleEditorSheet(
     onDelete: () -> Unit,
     onChooseLimit: () -> Unit,
     onSetLimitMinutes: (Int) -> Unit,
+    onSetLimitOpens: (Int) -> Unit,
     onSaveLimit: () -> Unit,
     onDeleteLimit: () -> Unit,
 ) {
@@ -96,7 +97,7 @@ fun ScheduleEditorSheet(
             EditorStep.WHAT -> WhatStep(state, onChooseScope, onStepBack)
             EditorStep.WHEN -> WhenStep(state, onChoosePreset, onChooseCustomTime, onChooseLimit, onSetStrict, onStepBack)
             EditorStep.DETAILS -> Details(state, onShowTimePicker, onToggleDay, onSetStrict, onSave, onDelete, onStepBack)
-            EditorStep.LIMIT -> LimitStep(state, onSetLimitMinutes, onSetStrict, onSaveLimit, onDeleteLimit, onStepBack)
+            EditorStep.LIMIT -> LimitStep(state, onSetLimitMinutes, onSetLimitOpens, onSetStrict, onSaveLimit, onDeleteLimit, onStepBack)
         }
     }
     state.timePickerFor?.let { field ->
@@ -240,6 +241,7 @@ private fun WhenStep(
 private fun LimitStep(
     state: ScheduleEditorUiState,
     onSetMinutes: (Int) -> Unit,
+    onSetOpens: (Int) -> Unit,
     onSetStrict: (Boolean) -> Unit,
     onSave: () -> Unit,
     onDelete: () -> Unit,
@@ -259,28 +261,21 @@ private fun LimitStep(
                 Text(stringResource(R.string.limit_locked), style = MaterialTheme.typography.bodyMedium, color = FocunoTheme.colors.warning)
             }
         }
-        LIMIT_CHOICES.chunked(3).forEach { row ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                row.forEach { minutes ->
-                    val selected = minutes == state.limitMinutes
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(if (selected) MaterialTheme.colorScheme.primary else FocunoTheme.colors.trackInactive)
-                            .clickable(enabled = !locked, role = Role.RadioButton) { onSetMinutes(minutes) },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            durationText(minutes * 60_000L),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = if (selected) FocunoTheme.colors.textPrimary else FocunoTheme.colors.textSecondary,
-                        )
-                    }
-                }
-            }
-        }
+        PillGrid(
+            options = LIMIT_CHOICES,
+            selected = state.limitMinutes,
+            enabled = !locked,
+            label = { if (it == 0) stringResource(R.string.limit_off) else durationText(it * 60_000L) },
+            onSelect = onSetMinutes,
+        )
+        Text(stringResource(R.string.limit_opens_title), style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textSecondary)
+        PillGrid(
+            options = OPEN_CHOICES,
+            selected = state.limitOpens,
+            enabled = !locked,
+            label = { if (it == 0) stringResource(R.string.limit_off) else it.toString() },
+            onSelect = onSetOpens,
+        )
         StrictSwitch(
             strict = state.strict,
             onChange = onSetStrict,
@@ -293,11 +288,40 @@ private fun LimitStep(
                     Text(stringResource(R.string.action_delete))
                 }
             }
-            Button(onClick = onSave, enabled = !locked, modifier = Modifier.weight(1f).height(52.dp), shape = RoundedCornerShape(50)) {
+            Button(onClick = onSave, enabled = state.canSaveLimit, modifier = Modifier.weight(1f).height(52.dp), shape = RoundedCornerShape(50)) {
                 Text(stringResource(R.string.action_save))
             }
         }
         Spacer(Modifier.height(16.dp))
+    }
+}
+
+/** Equal-width pills, three to a row, one selected. */
+@Composable
+private fun PillGrid(options: List<Int>, selected: Int, enabled: Boolean, label: @Composable (Int) -> String, onSelect: (Int) -> Unit) {
+    options.chunked(3).forEach { row ->
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            row.forEach { option ->
+                val isSelected = option == selected
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(if (isSelected) MaterialTheme.colorScheme.primary else FocunoTheme.colors.trackInactive)
+                        .clickable(enabled = enabled, role = Role.RadioButton) { onSelect(option) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        label(option),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (isSelected) FocunoTheme.colors.textPrimary else FocunoTheme.colors.textSecondary,
+                    )
+                }
+            }
+            // Keep the last row's pills the same width as the rows above.
+            repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+        }
     }
 }
 

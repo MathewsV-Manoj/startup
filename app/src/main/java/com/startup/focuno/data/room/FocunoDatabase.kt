@@ -15,7 +15,7 @@ import androidx.room.RoomDatabase
         AppCategoryEntity::class,
         AppLimitEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class FocunoDatabase : RoomDatabase() {

@@ -175,6 +175,7 @@ private fun MainScaffold(openHealthRequest: Int) {
         onDelete = editor::delete,
         onChooseLimit = editor::chooseLimit,
         onSetLimitMinutes = editor::setLimitMinutes,
+        onSetLimitOpens = editor::setLimitOpens,
         onSaveLimit = editor::saveLimit,
         onDeleteLimit = editor::deleteLimit,
     )

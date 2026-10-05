@@ -377,8 +377,16 @@ private fun SectionLabel(text: String) {
 @Composable
 private fun LimitRow(item: LimitItem, onEdit: (LimitItem) -> Unit, onToggle: (LimitItem, Boolean) -> Unit) {
     val limit = item.limit
-    val fraction = (item.usedMs.toFloat() / limit.dailyMs).coerceIn(0f, 1f)
-    val over = item.usedMs >= limit.dailyMs
+    val hasTime = limit.dailyMinutes > 0
+    val hasOpens = limit.maxOpens > 0
+    // The bar shows whichever budget is closer to running out.
+    val fraction = maxOf(
+        if (hasTime) item.usedMs.toFloat() / limit.dailyMs else 0f,
+        if (hasOpens) item.opensToday.toFloat() / limit.maxOpens else 0f,
+    ).coerceIn(0f, 1f)
+    val over = (hasTime && item.usedMs >= limit.dailyMs) || (hasOpens && item.opensToday > limit.maxOpens)
+    val timeText = if (hasTime) stringResource(R.string.limit_used, durationText(item.usedMs), durationText(limit.dailyMs)) else null
+    val opensText = if (hasOpens) stringResource(R.string.limit_opens_used, item.opensToday, limit.maxOpens) else null
     Panel(
         modifier = Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).clickable { onEdit(item) },
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
@@ -388,7 +396,7 @@ private fun LimitRow(item: LimitItem, onEdit: (LimitItem) -> Unit, onToggle: (Li
             Column(Modifier.weight(1f)) {
                 Text(item.label, style = MaterialTheme.typography.titleMedium, color = FocunoTheme.colors.textPrimary, maxLines = 1)
                 Text(
-                    stringResource(R.string.limit_used, durationText(item.usedMs), durationText(limit.dailyMs)),
+                    listOfNotNull(timeText, opensText).joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (over) FocunoTheme.colors.distracting else FocunoTheme.colors.textSecondary,
                     maxLines = 1,

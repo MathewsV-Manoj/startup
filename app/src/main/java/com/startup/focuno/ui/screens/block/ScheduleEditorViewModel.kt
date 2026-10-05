@@ -29,8 +29,11 @@ enum class TimeField { START, END }
  */
 enum class EditorStep { PICK_APP, WHAT, WHEN, DETAILS, LIMIT }
 
-/** Daily budgets offered as one-tap pills, in minutes. */
-val LIMIT_CHOICES = listOf(15, 30, 45, 60, 90, 120)
+/** Daily budgets offered as one-tap pills, in minutes. 0 means no time limit (opens only). */
+val LIMIT_CHOICES = listOf(0, 15, 30, 60, 90, 120)
+
+/** Daily open caps offered as pills. 0 means no cap. */
+val OPEN_CHOICES = listOf(0, 3, 5, 10, 20)
 
 /** One-tap times for the add flow. start == end means all day. */
 enum class WhenPreset(val startMinute: Int, val endMinute: Int) {
@@ -59,12 +62,14 @@ data class ScheduleEditorUiState(
     /** When non-null the schedule is a strict window that is open right now and cannot be changed. */
     val lockedUntilMs: Long? = null,
     val limitMinutes: Int = 30,
+    val limitOpens: Int = 0,
     /** True while editing a daily limit that already exists. */
     val isEditingLimit: Boolean = false,
 ) {
     val isEditing: Boolean get() = id != 0L
     val isOvernight: Boolean get() = endMinute <= startMinute
     val strictAllowed: Boolean get() = StrictLock.allowsStrict(startMinute, endMinute, daysMask)
+    val canSaveLimit: Boolean get() = lockedUntilMs == null && (limitMinutes > 0 || limitOpens > 0)
     val canSave: Boolean get() = packageName != null && daysMask != 0 && lockedUntilMs == null && (!strict || strictAllowed)
     val supportsShortVideo: Boolean get() = ShortVideoApps.supports(packageName)
 }
@@ -123,6 +128,7 @@ class ScheduleEditorViewModel @Inject constructor(
                 packageName = limit.packageName,
                 appLabel = label,
                 limitMinutes = limit.dailyMinutes,
+                limitOpens = limit.maxOpens,
                 strict = limit.strict,
                 enabled = limit.enabled,
                 lockedUntilMs = lockedUntilMs,
@@ -139,12 +145,16 @@ class ScheduleEditorViewModel @Inject constructor(
         if (_state.value.lockedUntilMs == null) _state.update { it.copy(limitMinutes = minutes) }
     }
 
+    fun setLimitOpens(opens: Int) {
+        if (_state.value.lockedUntilMs == null) _state.update { it.copy(limitOpens = opens) }
+    }
+
     fun saveLimit() {
         val current = _state.value
         val pkg = current.packageName ?: return
-        if (current.lockedUntilMs != null) return
+        if (!current.canSaveLimit) return
         viewModelScope.launch {
-            limitRepository.save(AppLimit(pkg, current.limitMinutes, current.strict, current.enabled))
+            limitRepository.save(AppLimit(pkg, current.limitMinutes, current.strict, current.enabled, current.limitOpens))
             dismiss()
         }
     }

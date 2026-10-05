@@ -1,5 +1,11 @@
 package com.startup.focuno.ui.screens.overlay
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +18,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -22,7 +29,6 @@ import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -34,6 +40,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -99,6 +108,7 @@ fun BlockOverlayScreen(
             Text(
                 text = when {
                     isFeed -> stringResource(R.string.block_title_feed, shortVideoName(model.packageName))
+                    model.kind == BlockKind.DAILY_LIMIT && model.limitOpens > 0 -> stringResource(R.string.block_title_opens, model.appName)
                     model.kind == BlockKind.DAILY_LIMIT -> stringResource(R.string.block_title_limit, model.appName)
                     model.kind == BlockKind.TIME_BUDGET -> stringResource(R.string.block_title_budget)
                     else -> stringResource(R.string.block_title, model.appName)
@@ -116,7 +126,11 @@ fun BlockOverlayScreen(
                         "${formatClock(model.startMinuteOfDay)}–${formatClock(model.endMinuteOfDay)}"
                     }
                     BlockKind.QUICK_BLOCK -> model.quickLabel.ifBlank { stringResource(R.string.block_source_quick) }
-                    BlockKind.DAILY_LIMIT -> stringResource(R.string.block_source_limit, durationText(model.limitMinutes * 60_000L))
+                    BlockKind.DAILY_LIMIT -> if (model.limitOpens > 0) {
+                        pluralStringResource(R.plurals.block_source_opens, model.limitOpens, model.limitOpens)
+                    } else {
+                        stringResource(R.string.block_source_limit, durationText(model.limitMinutes * 60_000L))
+                    }
                     BlockKind.TIME_BUDGET -> stringResource(R.string.block_source_budget, durationText(model.limitMinutes * 60_000L))
                 },
                 style = MaterialTheme.typography.bodyMedium,
@@ -219,17 +233,8 @@ private fun BypassSection(
                 color = FocunoTheme.colors.textSecondary,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(12.dp))
-            LinearProgressIndicator(
-                progress = { 1f - friction.secondsLeft / BypassPolicy.FRICTION_COUNTDOWN_SECONDS.toFloat() },
-                modifier = Modifier.fillMaxWidth(),
-                color = FocunoTheme.colors.productive,
-                trackColor = FocunoTheme.colors.trackInactive,
-            )
-            Spacer(Modifier.height(12.dp))
-            OutlinedButton(onClick = {}, enabled = false, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(50)) {
-                Text(pluralStringResource(R.plurals.friction_wait_seconds, friction.secondsLeft, friction.secondsLeft))
-            }
+            Spacer(Modifier.height(16.dp))
+            BreathingCircle(friction.secondsLeft)
         }
 
         is FrictionState.Reason -> {
@@ -272,6 +277,33 @@ private fun BypassSection(
         }
     }
 }
+
+/** A soft circle that grows for four seconds and shrinks for four, to breathe along with, and the seconds left. */
+@Composable
+private fun BreathingCircle(secondsLeft: Int) {
+    val transition = rememberInfiniteTransition(label = "breathing")
+    val scale by transition.animateFloat(
+        initialValue = 0.55f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(BREATH_MS, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "breath",
+    )
+    val description = pluralStringResource(R.plurals.friction_wait_seconds, secondsLeft, secondsLeft)
+    Box(Modifier.size(150.dp).semantics { contentDescription = description }, contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .background(FocunoTheme.colors.productive.copy(alpha = 0.18f), CircleShape),
+        )
+        Text(secondsLeft.toString(), style = MaterialTheme.typography.headlineLarge, color = FocunoTheme.colors.productive)
+    }
+}
+
+private const val BREATH_MS = 4_000
 
 /** Live version: reads state from the engine and keeps its own clock for the countdowns. */
 @Composable

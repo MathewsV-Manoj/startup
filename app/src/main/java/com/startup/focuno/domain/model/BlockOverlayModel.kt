@@ -19,4 +19,6 @@ data class BlockOverlayModel(
     val bypassAvailableAtMs: Long?,
     /** For DAILY_LIMIT: the daily budget in minutes. */
     val limitMinutes: Int = 0,
+    /** For DAILY_LIMIT reached by opens rather than time: the number of opens allowed. */
+    val limitOpens: Int = 0,
 )

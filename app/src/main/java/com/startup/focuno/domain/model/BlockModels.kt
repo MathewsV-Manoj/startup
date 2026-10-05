@@ -31,12 +31,16 @@ data class BlockSchedule(
     }
 }
 
-/** A daily time budget for one app. Once today's use reaches it, the app is paused until midnight. */
+/**
+ * A daily budget for one app: minutes of use, number of opens, or both (0 turns either off). Once today's
+ * use reaches it, the app is paused until midnight.
+ */
 data class AppLimit(
     val packageName: String,
     val dailyMinutes: Int,
     val strict: Boolean = false,
     val enabled: Boolean = true,
+    val maxOpens: Int = 0,
 ) {
     val dailyMs: Long get() = dailyMinutes * 60_000L
 }

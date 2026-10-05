@@ -51,3 +51,10 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         db.execSQL("ALTER TABLE `focus_session` ADD COLUMN `subject` TEXT NOT NULL DEFAULT ''")
     }
 }
+
+/** v4 -> v5: daily limits can also cap the number of opens. Existing limits get no open cap. */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `app_limit` ADD COLUMN `maxOpens` INTEGER NOT NULL DEFAULT 0")
+    }
+}

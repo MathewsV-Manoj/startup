@@ -94,8 +94,10 @@ class UsageTrackingRepository @Inject constructor(
     }
 
     /** Today's foreground time for every app that was used. */
-    suspend fun foregroundMsToday(): Map<String, Long> =
-        getUsageForDay(LocalDate.now()).apps.associate { it.packageName to it.foregroundMs }
+    suspend fun foregroundMsToday(): Map<String, Long> = usageToday().mapValues { it.value.foregroundMs }
+
+    /** Today's time and number of opens for every app that was used. */
+    suspend fun usageToday(): Map<String, AppUsageRaw> = getUsageForDay(LocalDate.now()).apps.associateBy { it.packageName }
 
     /** The app on screen right now, from recent events, used to seed the blocker after a restart. */
     suspend fun currentForegroundPackage(): String? = withContext(Dispatchers.IO) {

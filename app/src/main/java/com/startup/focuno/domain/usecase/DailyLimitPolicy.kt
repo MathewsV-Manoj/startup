@@ -19,20 +19,23 @@ object DailyLimitPolicy {
         return measuredMs + if (inFront) (nowMs - measuredAtMs).coerceAtLeast(0) else 0L
     }
 
-    fun isReached(limit: AppLimit, usedMs: Long): Boolean = limit.enabled && usedMs >= limit.dailyMs
+    fun isReached(limit: AppLimit, usedMs: Long): Boolean = limit.enabled && limit.dailyMinutes > 0 && usedMs >= limit.dailyMs
+
+    /** "At most 5 opens" lets the fifth open run and pauses the sixth. */
+    fun opensReached(limit: AppLimit, opensToday: Int): Boolean = limit.enabled && limit.maxOpens > 0 && opensToday > limit.maxOpens
 
     fun remainingMs(limit: AppLimit, usedMs: Long): Long = (limit.dailyMs - usedMs).coerceAtLeast(0)
 
     /** Still under the limit, but within the last few minutes of it. */
     fun shouldWarn(limit: AppLimit, usedMs: Long): Boolean {
         val remaining = remainingMs(limit, usedMs)
-        return limit.enabled && remaining in 1..WARN_BEFORE_MS
+        return limit.enabled && limit.dailyMinutes > 0 && remaining in 1..WARN_BEFORE_MS
     }
 
     fun nextMidnightMs(now: ZonedDateTime): Long =
         now.toLocalDate().plusDays(1).atStartOfDay(now.zone).toInstant().toEpochMilli()
 
-    /** A strict limit that is used up cannot be raised, paused or deleted until midnight. */
-    fun lockedUntilMs(limit: AppLimit, usedMs: Long, now: ZonedDateTime): Long? =
-        if (limit.strict && isReached(limit, usedMs)) nextMidnightMs(now) else null
+    /** A strict limit that is used up (time or opens) cannot be raised, paused or deleted until midnight. */
+    fun lockedUntilMs(limit: AppLimit, usedMs: Long, now: ZonedDateTime, opensToday: Int = 0): Long? =
+        if (limit.strict && (isReached(limit, usedMs) || opensReached(limit, opensToday))) nextMidnightMs(now) else null
 }

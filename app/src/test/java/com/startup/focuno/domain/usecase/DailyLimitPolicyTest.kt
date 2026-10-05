@@ -60,4 +60,27 @@ class DailyLimitPolicyTest {
         assertNull(DailyLimitPolicy.lockedUntilMs(strict, 10 * min, now))
         assertNull(DailyLimitPolicy.lockedUntilMs(strict.copy(strict = false), 31 * min, now))
     }
+
+    @Test
+    fun openCapLetsTheLastAllowedOpenRunAndPausesTheNext() {
+        val limit = AppLimit("ig", dailyMinutes = 0, maxOpens = 5)
+        assertFalse(DailyLimitPolicy.opensReached(limit, 5))
+        assertTrue(DailyLimitPolicy.opensReached(limit, 6))
+        assertFalse(DailyLimitPolicy.opensReached(limit.copy(maxOpens = 0), 50))
+    }
+
+    @Test
+    fun noTimeLimitMeansTimeNeverRunsOut() {
+        val opensOnly = AppLimit("ig", dailyMinutes = 0, maxOpens = 5)
+        assertFalse(DailyLimitPolicy.isReached(opensOnly, 10 * 60 * min))
+        assertFalse(DailyLimitPolicy.shouldWarn(opensOnly, 0))
+    }
+
+    @Test
+    fun strictOpenCapLocksUntilMidnight() {
+        val now = day.atTime(20, 0).atZone(zone)
+        val limit = AppLimit("ig", dailyMinutes = 0, strict = true, maxOpens = 3)
+        assertEquals(day.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli(), DailyLimitPolicy.lockedUntilMs(limit, 0, now, opensToday = 4))
+        assertNull(DailyLimitPolicy.lockedUntilMs(limit, 0, now, opensToday = 3))
+    }
 }

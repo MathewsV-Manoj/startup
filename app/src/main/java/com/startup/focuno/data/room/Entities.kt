@@ -91,4 +91,5 @@ data class AppLimitEntity(
     val dailyMinutes: Int,
     val strict: Boolean,
     val enabled: Boolean,
+    val maxOpens: Int = 0,
 )

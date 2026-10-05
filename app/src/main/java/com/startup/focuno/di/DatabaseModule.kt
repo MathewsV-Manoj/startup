@@ -6,6 +6,7 @@ import com.startup.focuno.data.room.FocunoDatabase
 import com.startup.focuno.data.room.MIGRATION_1_2
 import com.startup.focuno.data.room.MIGRATION_2_3
 import com.startup.focuno.data.room.MIGRATION_3_4
+import com.startup.focuno.data.room.MIGRATION_4_5
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +22,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): FocunoDatabase =
         Room.databaseBuilder(context, FocunoDatabase::class.java, "focuno.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
             .build()
 
     @Provides fun dailyUsageDao(db: FocunoDatabase) = db.dailyUsageDao()

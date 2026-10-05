@@ -111,6 +111,7 @@ class BlockEngine @Inject constructor(
     private var budgetUse: MeasuredUse? = null
     private val limitWarned = HashSet<String>()
     private var measuring = false
+    private var remeasureAfter = false
 
     private var ignoredPackages: Set<String> = emptySet()
     private var neverBlockPackages: Set<String> = emptySet()
@@ -201,6 +202,7 @@ class BlockEngine @Inject constructor(
         limitUsage.clear()
         budgetUse = null
         measuring = false
+        remeasureAfter = false
     }
 
     /** Called for every window-state change. Only the package name is looked at. */
@@ -329,7 +331,13 @@ class BlockEngine @Inject constructor(
     private fun measureLimits(force: Boolean) {
         val packages = limits.filterValues { it.enabled }.keys
         val budget = settings.timeEaterBudget
-        if ((packages.isEmpty() && budget == null) || measuring) return
+        if (packages.isEmpty() && budget == null) return
+        if (measuring) {
+            // An app was just opened while a reading was running; read again straight after, so an open
+            // limit is checked against this open and not a minute later.
+            if (force) remeasureAfter = true
+            return
+        }
         if (!force) {
             val pkg = currentPackage ?: return
             val last = when {
@@ -344,9 +352,9 @@ class BlockEngine @Inject constructor(
         activeScope.launch {
             try {
                 val now = System.currentTimeMillis()
-                val used = usageRepository.foregroundMsToday()
-                packages.forEach { limitUsage[it] = MeasuredUse(used[it] ?: 0L, now) }
-                budgetUse = MeasuredUse(used.filterKeys(::isTimeEater).values.sum(), now)
+                val usage = usageRepository.usageToday()
+                packages.forEach { limitUsage[it] = MeasuredUse(usage[it]?.foregroundMs ?: 0L, now, usage[it]?.openCount ?: 0) }
+                budgetUse = MeasuredUse(usage.filterKeys(::isTimeEater).values.sumOf { it.foregroundMs }, now)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -355,6 +363,10 @@ class BlockEngine @Inject constructor(
                 measuring = false
             }
             reevaluate()
+            if (remeasureAfter) {
+                remeasureAfter = false
+                measureLimits(force = true)
+            }
         }
     }
 
@@ -367,6 +379,10 @@ class BlockEngine @Inject constructor(
         val inFront = screenOn && currentPackage?.let(::isTimeEater) == true
         return DailyLimitPolicy.usedNowMs(measured.usedMs, measured.atMs, nowMs, inFront, dayStartMs)
     }
+
+    /** Opens so far today, from the last reading. A reading from before midnight counts as none. */
+    private fun opensToday(pkg: String, dayStartMs: Long): Int =
+        limitUsage[pkg]?.takeIf { it.atMs >= dayStartMs }?.opens ?: 0
 
     private fun usedTodayMs(pkg: String, nowMs: Long, dayStartMs: Long): Long? {
         val measured = limitUsage[pkg] ?: return null
@@ -438,10 +454,9 @@ class BlockEngine @Inject constructor(
         // During a Pomodoro break apps are free; the pause screen counts down to the end of the round.
         val focusEndsAt = settings.focusPlan?.phaseAt(nowMs)?.takeIf { it.focusing }?.endsAtMs
         val pausedByFocus = FocusPauseRule.pauses(pkg, isDistracting, settings.focusLockAll, settings.focusAllowed, essentialPackages)
-        val usedLimit = limits[pkg]?.takeIf { limit ->
-            val used = usedTodayMs(pkg, nowMs, dayStart)
-            used != null && DailyLimitPolicy.isReached(limit, used)
-        }
+        val appLimit = limits[pkg]
+        val timeUp = appLimit != null && usedTodayMs(pkg, nowMs, dayStart)?.let { DailyLimitPolicy.isReached(appLimit, it) } == true
+        val opensUp = appLimit != null && DailyLimitPolicy.opensReached(appLimit, opensToday(pkg, dayStart))
         val usedBudget = settings.timeEaterBudget?.takeIf { budget ->
             val used = if (isDistracting) budgetUsedMs(nowMs, dayStart) else null
             used != null && DailyLimitPolicy.isReached(budget, used)
@@ -450,9 +465,12 @@ class BlockEngine @Inject constructor(
             appWindow != null -> buildModel(pkg, BlockKind.SCHEDULE, BlockScope.APP, appWindow.startMinuteOfDay, appWindow.endMinuteOfDay, appWindow.endsAtMs, appWindow.strict, "")
             focusEndsAt != null && pausedByFocus ->
                 buildModel(pkg, BlockKind.QUICK_BLOCK, BlockScope.APP, 0, 0, focusEndsAt, settings.quickBlockStrict, settings.quickBlockLabel)
-            usedLimit != null ->
-                buildModel(pkg, BlockKind.DAILY_LIMIT, BlockScope.APP, 0, 0, DailyLimitPolicy.nextMidnightMs(zoned), usedLimit.strict, "")
-                    .copy(limitMinutes = usedLimit.dailyMinutes)
+            appLimit != null && (timeUp || opensUp) ->
+                buildModel(pkg, BlockKind.DAILY_LIMIT, BlockScope.APP, 0, 0, DailyLimitPolicy.nextMidnightMs(zoned), appLimit.strict, "")
+                    .copy(
+                        limitMinutes = if (timeUp) appLimit.dailyMinutes else 0,
+                        limitOpens = if (opensUp && !timeUp) appLimit.maxOpens else 0,
+                    )
             usedBudget != null ->
                 buildModel(pkg, BlockKind.TIME_BUDGET, BlockScope.APP, 0, 0, DailyLimitPolicy.nextMidnightMs(zoned), usedBudget.strict, "")
                     .copy(limitMinutes = usedBudget.dailyMinutes)
@@ -601,7 +619,7 @@ class BlockEngine @Inject constructor(
         }
     }
 
-    private data class MeasuredUse(val usedMs: Long, val atMs: Long)
+    private data class MeasuredUse(val usedMs: Long, val atMs: Long, val opens: Int = 0)
 
     private companion object {
         /**

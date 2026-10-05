@@ -34,12 +34,16 @@ data class ScheduleRowUi(val schedule: BlockSchedule, val lockedUntilMs: Long?)
 data class ScheduleItem(val label: String, val row: ScheduleRowUi)
 
 /** A daily limit with today's use so far. [lockedUntilMs] is set while a used-up strict limit cannot change. */
-data class LimitItem(val label: String, val limit: AppLimit, val usedMs: Long, val lockedUntilMs: Long?)
+data class LimitItem(val label: String, val limit: AppLimit, val usedMs: Long, val lockedUntilMs: Long?, val opensToday: Int = 0)
 
 /** The time-eater budget: [minutes] 0 means off. [lockedUntilMs] is set while a used-up strict budget cannot change. */
 data class BudgetUi(val minutes: Int = 0, val strict: Boolean = false, val usedMs: Long = 0L, val lockedUntilMs: Long? = null)
 
-private data class UsageSnapshot(val perApp: Map<String, Long> = emptyMap(), val timeEaterMs: Long = 0L)
+private data class UsageSnapshot(
+    val perApp: Map<String, Long> = emptyMap(),
+    val opens: Map<String, Int> = emptyMap(),
+    val timeEaterMs: Long = 0L,
+)
 
 data class BlockUiState(
     val isLoading: Boolean = true,
@@ -69,10 +73,16 @@ class BlockViewModel @Inject constructor(
     fun refreshUsage() {
         viewModelScope.launch {
             usedToday.value = try {
-                val perApp = usageRepository.foregroundMsToday()
+                val usage = usageRepository.usageToday()
                 val overrides = categoryRepository.overrides()
-                val timeEaters = perApp.filterKeys { categoryRepository.resolve(it, overrides) == AppCategory.DISTRACTING }
-                UsageSnapshot(perApp, timeEaters.values.sum())
+                val timeEaterMs = usage.values
+                    .filter { categoryRepository.resolve(it.packageName, overrides) == AppCategory.DISTRACTING }
+                    .sumOf { it.foregroundMs }
+                UsageSnapshot(
+                    perApp = usage.mapValues { it.value.foregroundMs },
+                    opens = usage.mapValues { it.value.openCount },
+                    timeEaterMs = timeEaterMs,
+                )
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
@@ -98,7 +108,8 @@ class BlockViewModel @Inject constructor(
         val limitItems = limits
             .map { limit ->
                 val usedMs = used.perApp[limit.packageName] ?: 0L
-                LimitItem(labels.getValue(limit.packageName), limit, usedMs, DailyLimitPolicy.lockedUntilMs(limit, usedMs, now))
+                val opens = used.opens[limit.packageName] ?: 0
+                LimitItem(labels.getValue(limit.packageName), limit, usedMs, DailyLimitPolicy.lockedUntilMs(limit, usedMs, now, opens), opens)
             }
             .sortedBy { it.label.lowercase() }
         val items = schedules

@@ -497,4 +497,14 @@
     <!-- Study goal -->
     <string name="settings_study_goal_title">Daily study goal</string>
     <string name="settings_study_goal_explainer">How long you want to focus each day.</string>
+
+    <!-- Open limits -->
+    <string name="limit_off">Off</string>
+    <string name="limit_opens_title">Opens per day</string>
+    <string name="limit_opens_used">%1$d of %2$d opens</string>
+    <string name="block_title_opens">No more opens of %1$s today</string>
+    <plurals name="block_source_opens">
+        <item quantity="one">Daily limit: %1$d open</item>
+        <item quantity="other">Daily limit: %1$d opens</item>
+    </plurals>
 </resources>
